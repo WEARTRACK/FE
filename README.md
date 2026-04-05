@@ -63,6 +63,8 @@ app/
 src/
   config/
   lib/
+    api/
+    storage/
   providers/
   stores/
 ```
