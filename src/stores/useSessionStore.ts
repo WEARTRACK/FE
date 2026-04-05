@@ -19,6 +19,6 @@ export const useSessionStore = create<SessionState>()(
     {
       name: "weartrack-session",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );

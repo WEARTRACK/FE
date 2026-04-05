@@ -35,6 +35,10 @@ npm run ios
 npm run android
 npm run web
 npm run typecheck
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
 ```
 
 ## Environment Variables
@@ -62,6 +66,15 @@ src/
   providers/
   stores/
 ```
+
+## Lint / Format
+
+ESLint와 Prettier가 함께 설정되어 있고, VS Code 저장 시 자동 포맷이 동작하도록 맞춰져 있습니다.
+
+- `npm run lint`: 린트 검사
+- `npm run lint:fix`: 자동 수정 가능한 린트 문제 수정
+- `npm run format`: 전체 파일 포맷 적용
+- `npm run format:check`: 포맷 상태 검사
 
 ## iOS Setup
 

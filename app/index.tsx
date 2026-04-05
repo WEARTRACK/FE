@@ -22,7 +22,9 @@ export default function HomeScreen() {
       </View>
 
       <View className="mt-4 rounded-3xl bg-white p-6">
-        <Text className="text-sm font-medium uppercase tracking-[1px] text-muted">Zustand Store</Text>
+        <Text className="text-sm font-medium uppercase tracking-[1px] text-muted">
+          Zustand Store
+        </Text>
         <Text className="mt-2 text-base text-ink">App launches counted locally: {launchCount}</Text>
         <Text
           className="mt-3 text-base font-semibold text-brand-dark"
