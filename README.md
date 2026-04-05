@@ -94,3 +94,88 @@ git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
 git branch -M main
 git push -u origin main
 ```
+
+## Git Workflow
+
+이 프로젝트는 아래 브랜치 전략으로 작업합니다.
+
+- `main`: 배포 브랜치
+- `develop`: 개발 통합 브랜치
+- `feature/*`: 기능 개발 브랜치
+- `fix/*`: 일반 버그 수정 브랜치
+- `hotfix/*`: 운영 긴급 수정 브랜치
+
+기본 작업 원칙:
+
+- 기본 작업 시작 브랜치는 `develop`입니다.
+- 새로운 기능은 항상 `develop`에서 브랜치를 분기합니다.
+- 작업 완료 후 `feature/*` 브랜치를 `develop`으로 반영합니다.
+- `main` 브랜치는 최종 배포 시점에만 반영합니다.
+- `main` 브랜치에는 직접 작업하지 않습니다.
+
+브랜치 네이밍 예시:
+
+- `feature/login-ui`
+- `feature/onboarding-flow`
+- `feature/profile-edit`
+- `fix/header-layout`
+- `fix/token-refresh-bug`
+- `hotfix/login-crash`
+
+브랜치 이름은 아래 규칙을 따릅니다.
+
+- 소문자 사용
+- 단어 구분은 `-`
+- 작업 내용을 짧고 명확하게 작성
+
+작업 순서:
+
+1. `develop` 최신화
+
+```bash
+git checkout develop
+git pull origin develop
+```
+
+2. 작업 브랜치 생성
+
+```bash
+git checkout -b feature/login-ui
+```
+
+3. 작업 후 커밋
+
+```bash
+git add .
+git commit -m "feat: add login ui"
+```
+
+4. 원격 푸시
+
+```bash
+git push -u origin feature/login-ui
+```
+
+5. GitHub에서 `develop` 대상으로 Pull Request 생성
+
+커밋 메시지 규칙:
+
+- `feat`: 기능 추가
+- `fix`: 버그 수정
+- `chore`: 설정, 패키지, 빌드 관련 변경
+- `refactor`: 기능 변경 없는 구조 개선
+- `style`: 포맷, 세미콜론 등 스타일 수정
+- `docs`: 문서 수정
+
+예시:
+
+- `feat: add login screen`
+- `fix: handle token refresh error`
+- `chore: add eslint config`
+
+배포 플로우:
+
+- 기능 개발은 `feature/*` 브랜치에서 진행합니다.
+- 기능이 완료되면 `develop`에 반영합니다.
+- 통합 테스트 및 검증은 `develop`에서 진행합니다.
+- 최종 배포 시점에 `develop`을 `main`에 반영합니다.
