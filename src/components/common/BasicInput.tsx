@@ -1,26 +1,37 @@
 import React from "react";
 import { View, Text, TextInput, TextInputProps } from "react-native";
+import { colors } from "@/constants/colors";
 
 interface BasicInputProps extends TextInputProps {
   label?: string;
-  unit?: string; // '원' 같은 단위를 붙이기 위해 추가
-  error?: string;
+  unit?: string;
+  isPrice?: boolean;
 }
 
-const BasicInput = ({ label, unit, error, ...props }: BasicInputProps) => {
+const BasicInput = ({ label, unit, isPrice, value, ...props }: BasicInputProps) => {
+  const hasValue = value && value.length > 0;
+
   return (
     <View className="mb-4">
-      {label && <Text className="text-main font-regular mb-2 text-[12px]">{label}</Text>}
+      {label && <Text className="text-text-DEFAULT font-pretendard text-body mb-2">{label}</Text>}
 
       <View className="flex-row items-center">
         <TextInput
-          className="border-gray-disabled h-[58px] flex-1 rounded-[8px] border bg-white px-[28px] py-[19px] text-base"
-          placeholderTextColor="#D1D1D1" // disabled 색상 계열
+          className={`text-body font-pretendard h-[50px] flex-1 rounded-[8px] px-[20px] ${
+            isPrice
+              ? `border-disabled border-[0.5px] bg-white`
+              : hasValue
+                ? `border-disabled bg-cool text-bg-dark border-[0.5px] border-solid`
+                : `border-disabled border-[0.5px] border-dashed bg-white`
+          }`}
+          placeholderTextColor={colors.disabled}
+          value={value}
+          textAlignVertical="center"
+          style={{ paddingVertical: 0 }}
           {...props}
         />
-        {unit && <Text className="text-main ml-2">{unit}</Text>}
+        {unit && <Text className="text-text-DEFAULT font-pretendard ml-2">{unit}</Text>}
       </View>
-      {error && <Text className="mt-2 text-[12px] text-red-500">{error}</Text>}
     </View>
   );
 };
