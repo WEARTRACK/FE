@@ -2,7 +2,7 @@ import { Href, Link } from "expo-router";
 import { Pressable, Text } from "react-native";
 
 type ButtonVariant = "primary" | "secondary";
-type ButtonSize = "md" | "lg";
+type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = {
   label: string;
@@ -10,32 +10,64 @@ type ButtonProps = {
   variant?: ButtonVariant;
   size?: ButtonSize;
   disabled?: boolean;
+  fullWidth?: boolean;
   onPress?: () => void;
+  className?: string;
+  textClassName?: string;
 };
 
-function getContainerClassName(variant: ButtonVariant, size: ButtonSize, disabled: boolean) {
-  const baseClassName = "items-center justify-center rounded-2xl";
-  const variantClassName =
-    variant === "secondary" ? "border border-slate-200 bg-white" : "bg-brand";
-  const sizeClassName = size === "lg" ? "px-5 py-4" : "px-4 py-3";
-  const disabledClassName = disabled ? "opacity-50" : "";
+function getContainerClassName(
+  variant: ButtonVariant,
+  size: ButtonSize,
+  disabled: boolean,
+  fullWidth: boolean,
+  className?: string,
+) {
+  const baseClassName = "items-center justify-center rounded-lg";
+  const widthClassName = fullWidth ? "w-full" : "";
+  const sizeClassName =
+    size === "lg" ? "h-[58px] px-5" : size === "md" ? "h-[50px] px-5" : "h-[50px] px-4";
 
-  return `${baseClassName} ${variantClassName} ${sizeClassName} ${disabledClassName}`.trim();
+  const variantClassName = disabled
+    ? "bg-disabled"
+    : variant === "secondary"
+      ? "border-[0.5px] border-text-subdued bg-white"
+      : "bg-bg-dark";
+
+  return [baseClassName, widthClassName, sizeClassName, variantClassName, className]
+    .filter(Boolean)
+    .join(" ");
 }
 
-function getLabelClassName(variant: ButtonVariant, size: ButtonSize) {
-  const colorClassName = variant === "secondary" ? "text-ink" : "text-brand-foreground";
-  const sizeClassName = size === "lg" ? "text-base" : "text-sm";
+function getLabelClassName(
+  variant: ButtonVariant,
+  size: ButtonSize,
+  disabled: boolean,
+  textClassName?: string,
+) {
+  const colorClassName = disabled
+    ? "text-bg-light"
+    : variant === "secondary"
+      ? "text-text"
+      : "text-white";
 
-  return `${colorClassName} ${sizeClassName} font-semibold`;
+  const sizeClassName =
+    size === "lg"
+      ? "font-pretendard-semibold text-button-lg"
+      : "font-pretendard-semibold text-button-md";
+
+  return [colorClassName, sizeClassName, textClassName].filter(Boolean).join(" ");
 }
 
-type ButtonContentProps = {
+type ButtonInnerProps = {
   label: string;
   variant: ButtonVariant;
   size: ButtonSize;
   disabled?: boolean;
+  fullWidth: boolean;
   onPress?: () => void;
+  className?: string;
+  textClassName?: string;
 };
 
 function ButtonContent({
@@ -43,15 +75,21 @@ function ButtonContent({
   variant,
   size,
   disabled = false,
+  fullWidth,
   onPress,
-}: ButtonContentProps) {
+  className,
+  textClassName,
+}: ButtonInnerProps) {
   return (
     <Pressable
-      className={getContainerClassName(variant, size, disabled)}
+      className={getContainerClassName(variant, size, disabled, fullWidth, className)}
       disabled={disabled}
       onPress={onPress}
+      style={({ pressed }) => ({
+        opacity: !disabled && pressed ? 0.7 : 1,
+      })}
     >
-      <Text className={getLabelClassName(variant, size)}>{label}</Text>
+      <Text className={getLabelClassName(variant, size, disabled, textClassName)}>{label}</Text>
     </Pressable>
   );
 }
@@ -62,12 +100,23 @@ export function Button({
   variant = "primary",
   size = "lg",
   disabled = false,
+  fullWidth = false,
   onPress,
+  className,
+  textClassName,
 }: ButtonProps) {
   if (href) {
     return (
       <Link href={href} asChild>
-        <ButtonContent label={label} variant={variant} size={size} disabled={disabled} />
+        <ButtonContent
+          label={label}
+          variant={variant}
+          size={size}
+          disabled={disabled}
+          fullWidth={fullWidth}
+          className={className}
+          textClassName={textClassName}
+        />
       </Link>
     );
   }
@@ -78,7 +127,10 @@ export function Button({
       variant={variant}
       size={size}
       disabled={disabled}
+      fullWidth={fullWidth}
       onPress={onPress}
+      className={className}
+      textClassName={textClassName}
     />
   );
 }

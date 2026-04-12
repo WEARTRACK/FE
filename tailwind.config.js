@@ -63,6 +63,20 @@ module.exports = {
             letterSpacing: "-0.5px",
           },
         ],
+        "button-lg": [
+          "18px",
+          {
+            lineHeight: "18px",
+            letterSpacing: "0px",
+          },
+        ],
+        "button-md": [
+          "16px",
+          {
+            lineHeight: "16px",
+            letterSpacing: "0px",
+          },
+        ],
       },
     },
   },
