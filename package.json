@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/node": "^25.5.2",
     "@types/react": "~19.1.0",
+    "babel-preset-expo": "^55.0.17",
     "eslint": "^9.39.4",
     "eslint-config-expo": "^55.0.0",
     "eslint-config-prettier": "^10.1.8",
