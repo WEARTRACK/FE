@@ -31,6 +31,7 @@ module.exports = {
         disabled: "#BDBDBD",
       },
       fontFamily: {
+        "pretendard-light": ["PretendardLight"],
         pretendard: ["PretendardRegular"],
         "pretendard-semibold": ["PretendardSemiBold"],
       },
