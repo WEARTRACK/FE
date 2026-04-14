@@ -14,9 +14,9 @@ export function SplashScreen() {
   }, [router]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-brand px-6">
-      <Text className="text-4xl font-semibold tracking-[3px] text-brand-foreground">WEARTRACK</Text>
-      <Text className="mt-3 text-base text-brand-foreground/80">
+    <View className="flex-1 items-center justify-center bg-bg-dark px-6">
+      <Text className="text-4xl font-semibold tracking-[3px] text-white">WEARTRACK</Text>
+      <Text className="mt-3 text-base text-primary">
         Your AI-powered digital closet
       </Text>
       <ActivityIndicator className="mt-8" color="#F8FAFC" />
