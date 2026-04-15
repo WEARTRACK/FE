@@ -114,6 +114,7 @@ export function Button({
           size={size}
           disabled={disabled}
           fullWidth={fullWidth}
+          onPress={onPress}
           className={className}
           textClassName={textClassName}
         />
