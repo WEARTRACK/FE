@@ -38,7 +38,7 @@ const SignupInput = ({ label, error, isSuccess, maxLength, value, ...props }: Si
         <Text
           className={`text-caption font-pretendard flex-1 ${error ? "text-error" : "text-transparent"}`}
         >
-          {error || "spacer"}
+          {error || "\u00A0"}
         </Text>
 
         {maxLength && (
