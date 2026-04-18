@@ -1,5 +1,6 @@
 import { Href, Link } from "expo-router";
-import { Pressable, Text } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, Text, View } from "react-native";
 
 type ButtonVariant = "primary" | "secondary";
 type ButtonSize = "sm" | "md" | "lg";
@@ -14,7 +15,20 @@ type ButtonProps = {
   onPress?: () => void;
   className?: string;
   textClassName?: string;
+  leadingIcon?: ReactNode;
+  leadingIconClassName?: string;
 };
+
+function hasUtilityClass(className: string | undefined, prefixes: string[]) {
+  if (!className) {
+    return false;
+  }
+
+  return className
+    .split(/\s+/)
+    .filter(Boolean)
+    .some((token) => prefixes.some((prefix) => token.startsWith(prefix)));
+}
 
 function getContainerClassName(
   variant: ButtonVariant,
@@ -26,13 +40,24 @@ function getContainerClassName(
   const baseClassName = "items-center justify-center rounded-lg";
   const widthClassName = fullWidth ? "w-full" : "";
   const sizeClassName =
-    size === "lg" ? "h-[58px] px-5" : size === "md" ? "h-[50px] px-5" : "h-[50px] px-4";
+    size === "lg" ? "h-[55px] px-5" : size === "md" ? "h-[50px] px-5" : "h-[50px] px-4";
+  const hasBackgroundOverride = hasUtilityClass(className, ["bg-"]);
+  const hasBorderOverride = hasUtilityClass(className, ["border-"]);
 
   const variantClassName = disabled
-    ? "bg-disabled"
+    ? hasBackgroundOverride
+      ? ""
+      : "bg-disabled"
     : variant === "secondary"
-      ? "border-[0.5px] border-text-subdued bg-white"
-      : "bg-bg-dark";
+      ? [
+          hasBorderOverride ? "" : "border-[0.5px] border-text-subdued",
+          hasBackgroundOverride ? "" : "bg-white",
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : hasBackgroundOverride
+        ? ""
+        : "bg-bg-dark";
 
   return [baseClassName, widthClassName, sizeClassName, variantClassName, className]
     .filter(Boolean)
@@ -45,11 +70,14 @@ function getLabelClassName(
   disabled: boolean,
   textClassName?: string,
 ) {
-  const colorClassName = disabled
-    ? "text-bg-light"
-    : variant === "secondary"
-      ? "text-text"
-      : "text-white";
+  const hasTextOverride = hasUtilityClass(textClassName, ["text-"]);
+  const colorClassName = hasTextOverride
+    ? ""
+    : disabled
+      ? "text-bg-light"
+      : variant === "secondary"
+        ? "text-text"
+        : "text-white";
 
   const sizeClassName =
     size === "lg"
@@ -68,6 +96,8 @@ type ButtonInnerProps = {
   onPress?: () => void;
   className?: string;
   textClassName?: string;
+  leadingIcon?: ReactNode;
+  leadingIconClassName?: string;
 };
 
 function ButtonContent({
@@ -79,6 +109,8 @@ function ButtonContent({
   onPress,
   className,
   textClassName,
+  leadingIcon,
+  leadingIconClassName,
 }: ButtonInnerProps) {
   return (
     <Pressable
@@ -89,7 +121,21 @@ function ButtonContent({
         opacity: !disabled && pressed ? 0.7 : 1,
       })}
     >
-      <Text className={getLabelClassName(variant, size, disabled, textClassName)}>{label}</Text>
+      <View className="relative w-full items-center justify-center">
+        {leadingIcon ? (
+          <View
+            className={[
+              "absolute inset-y-0 left-[12px] items-center justify-center",
+              leadingIconClassName,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {leadingIcon}
+          </View>
+        ) : null}
+        <Text className={getLabelClassName(variant, size, disabled, textClassName)}>{label}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -104,6 +150,8 @@ export function Button({
   onPress,
   className,
   textClassName,
+  leadingIcon,
+  leadingIconClassName,
 }: ButtonProps) {
   if (href) {
     return (
@@ -117,6 +165,8 @@ export function Button({
           onPress={onPress}
           className={className}
           textClassName={textClassName}
+          leadingIcon={leadingIcon}
+          leadingIconClassName={leadingIconClassName}
         />
       </Link>
     );
@@ -132,6 +182,8 @@ export function Button({
       onPress={onPress}
       className={className}
       textClassName={textClassName}
+      leadingIcon={leadingIcon}
+      leadingIconClassName={leadingIconClassName}
     />
   );
 }
