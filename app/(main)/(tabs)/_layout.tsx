@@ -11,8 +11,15 @@ export default function MainTabsLayout() {
 
   const tabBarBottomSpacing = useMemo(() => insets.bottom + 20, [insets.bottom]);
 
-  const getTab = (name: TabRouteName) => {
-    return tabsConfig.find((tab) => tab.name === name);
+  const tabBarItemStyle = {
+    flex: 1,
+    minWidth: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  };
+  const baseTabLabelStyle = {
+    fontFamily: "PretendardLight",
+    fontSize: 10,
   };
 
   return (
@@ -34,78 +41,23 @@ export default function MainTabsLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="home/index"
-        options={{
-          title: getTab("home")?.title,
-          tabBarIcon: ({ focused }) => <TabBarIcon tab="home" focused={focused} />,
-          tabBarItemStyle: {
-            flex: 1,
-            minWidth: 44,
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          tabBarLabelStyle: {
-            fontFamily: "PretendardLight",
-            fontSize: 10,
-            marginTop: getTab("home")?.labelSpacing,
-          },
-        }}
-      />
-      <Tabs.Screen
-        name="closet/index"
-        options={{
-          title: getTab("closet")?.title,
-          tabBarIcon: ({ focused }) => <TabBarIcon tab="closet" focused={focused} />,
-          tabBarItemStyle: {
-            flex: 1,
-            minWidth: 44,
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          tabBarLabelStyle: {
-            fontFamily: "PretendardLight",
-            fontSize: 10,
-            marginTop: getTab("closet")?.labelSpacing,
-          },
-        }}
-      />
-      <Tabs.Screen
-        name="report/index"
-        options={{
-          title: getTab("report")?.title,
-          tabBarIcon: ({ focused }) => <TabBarIcon tab="report" focused={focused} />,
-          tabBarItemStyle: {
-            flex: 1,
-            minWidth: 44,
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          tabBarLabelStyle: {
-            fontFamily: "PretendardLight",
-            fontSize: 10,
-            marginTop: getTab("report")?.labelSpacing,
-          },
-        }}
-      />
-      <Tabs.Screen
-        name="mypage/index"
-        options={{
-          title: getTab("mypage")?.title,
-          tabBarIcon: ({ focused }) => <TabBarIcon tab="mypage" focused={focused} />,
-          tabBarItemStyle: {
-            flex: 1,
-            minWidth: 44,
-            alignItems: "center",
-            justifyContent: "center",
-          },
-          tabBarLabelStyle: {
-            fontFamily: "PretendardLight",
-            fontSize: 10,
-            marginTop: getTab("mypage")?.labelSpacing,
-          },
-        }}
-      />
+      {tabsConfig.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={`${tab.name}/index`}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon tab={tab.name as TabRouteName} focused={focused} />
+            ),
+            tabBarItemStyle,
+            tabBarLabelStyle: {
+              ...baseTabLabelStyle,
+              marginTop: tab.labelSpacing,
+            },
+          }}
+        />
+      ))}
     </Tabs>
   );
 }
