@@ -20,7 +20,7 @@ export function MainHomeScreen() {
           Next Step
         </Text>
         <Text className="mt-3 font-pretendard text-body text-text">
-          추후 `closet`, `search`, `inventory` 같은 기능이 확정되면 `app/(main)`과
+          추후 `closet`, `search`, `inventory` 같은 기능이 확정되면 `app/(main)/(tabs)`과
           `src/features` 아래에 도메인 폴더를 추가하는 방식으로 자연스럽게 확장하면 됩니다.
         </Text>
 
