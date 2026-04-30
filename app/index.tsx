@@ -1,8 +1,5 @@
-import React from "react";
-import { Redirect } from "expo-router";
+import { SplashScreen } from "@/features/entry/screens/SplashScreen";
 
 export default function RootIndexRoute() {
-  // return <Redirect href="/home" />;
-  // return <Redirect href="auth/sign-up" />;
-  return <Redirect href="/auth/sign-up-success" />;
+  return <SplashScreen />;
 }
