@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
@@ -10,6 +10,8 @@ import { checkNicknameDuplicate } from "@/features/entry/api/checkNicknameDuplic
 import { saveNickname } from "@/features/entry/api/saveNickname";
 import { getNicknameInputState } from "@/features/entry/utils/getNicknameInputState";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { ApiError } from "@/lib/api/errors";
+import { showToast } from "@/lib/ui/showToast";
 
 export function SetNicknameScreen() {
   const router = useRouter();
@@ -29,12 +31,17 @@ export function SetNicknameScreen() {
   const isEligibleForDuplicateCheck = baseState.canSubmit;
   const isWaitingForDebounce = isEligibleForDuplicateCheck && debouncedNickname !== nickname;
 
-  const { data: duplicateResult, isFetching: isCheckingDuplicate } = useQuery({
+  const {
+    data: duplicateResult,
+    isFetching: isCheckingDuplicate,
+    isError: isDuplicateCheckError,
+  } = useQuery({
     queryKey: ["nickname-duplicate", debouncedNickname],
     queryFn: () => checkNicknameDuplicate(debouncedNickname),
     enabled: isEligibleForDuplicateCheck && debouncedNickname.length > 0,
     staleTime: 0,
     gcTime: 0,
+    retry: false,
   });
 
   const duplicateErrorMessage =
@@ -46,7 +53,16 @@ export function SetNicknameScreen() {
       ? "이미 사용 중인 닉네임이에요."
       : undefined;
 
-  const errorMessage = baseState.errorMessage || duplicateErrorMessage;
+  const duplicateCheckErrorMessage =
+    isEligibleForDuplicateCheck &&
+    !isWaitingForDebounce &&
+    !isCheckingDuplicate &&
+    debouncedNickname === nickname &&
+    isDuplicateCheckError
+      ? "중복 확인에 실패했어요. 다시 시도해주세요."
+      : undefined;
+
+  const errorMessage = baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
   const successMessage =
     !errorMessage &&
     isEligibleForDuplicateCheck &&
@@ -60,15 +76,43 @@ export function SetNicknameScreen() {
     isEligibleForDuplicateCheck &&
     !isWaitingForDebounce &&
     !isCheckingDuplicate &&
+    !isDuplicateCheckError &&
     Boolean(duplicateResult) &&
     !duplicateResult?.isDuplicate;
   const { mutate: saveNicknameMutate, isPending: isSavingNickname } = useMutation({
     mutationFn: saveNickname,
-    onSuccess: () => {
-      router.replace("/(main)/home");
+    onSuccess: (response) => {
+      if (response.result.profileCompleted) {
+        router.replace("/home");
+        return;
+      }
+
+      showToast("닉네임 저장은 완료됐지만 프로필 설정이 끝나지 않았어요. 다시 시도해주세요.");
     },
-    onError: () => {
-      Alert.alert("저장에 실패했어요. 다시 시도해주세요.");
+    onError: (error) => {
+      if (error instanceof ApiError) {
+        if (error.code === "AUTH_REQUIRED" || error.status === 401 || error.status === 403) {
+          showToast("인증이 필요합니다. 다시 로그인해주세요.");
+          return;
+        }
+
+        if (error.code === "MEMBER_409_1") {
+          showToast("이미 사용 중인 닉네임이에요.");
+          return;
+        }
+
+        if (error.code === "COMMON_400") {
+          showToast("닉네임 형식을 다시 확인해주세요.");
+          return;
+        }
+
+        if (error.code === "NETWORK_ERROR") {
+          showToast("네트워크 연결을 확인해주세요.");
+          return;
+        }
+      }
+
+      showToast("저장에 실패했어요. 다시 시도해주세요.");
     },
   });
 
