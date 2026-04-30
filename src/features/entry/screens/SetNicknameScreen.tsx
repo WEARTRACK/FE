@@ -180,11 +180,11 @@ export function SetNicknameScreen() {
       <View className="mt-auto">
         <Button
           label="옷장 관리 시작하기"
+          variant="primary"
+          size="lg"
           onPress={handleComplete}
           fullWidth
           disabled={!canSubmit || isSavingNickname}
-          className="h-[52px] rounded-[6px]"
-          textClassName="text-[14px]"
         />
       </View>
     </View>
