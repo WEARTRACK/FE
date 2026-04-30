@@ -18,11 +18,11 @@ export default function MyPageTabRoute() {
           Nickname API (Planned)
         </Text>
         <Text className="mt-3 font-pretendard text-body text-text">
-          닉네임 설정 API는 인증 토큰이 필요하고, 닉네임은 중복 불가이며 최대 30자 제한이
+          닉네임 설정 API는 인증 토큰이 필요하고, 닉네임은 중복 불가이며 최대 5자 제한이
           있습니다.
         </Text>
         <Text className="mt-2 font-pretendard text-body text-text">
-          설정 성공 시 `profileCompleted` 값이 `true`로 반환되도록 `api-spec.md` 기준으로 연동할
+          설정 성공 시 `profileCompleted` 값이 `true`로 반환되도록 `member_api.md` 기준으로 연동할
           예정입니다.
         </Text>
       </View>

@@ -25,7 +25,7 @@ export function SignUpSuccessScreen() {
       </Text>
 
       <View className="mt-auto">
-        <Link href="/auth/set-nickname" replace asChild>
+        <Link href="../auth/set-nickname" replace asChild>
           <Pressable className="h-[56px] items-center justify-center rounded-[12px] bg-bg-dark">
             <Text className="font-pretendard-semibold text-button-lg text-white">
               시작하기

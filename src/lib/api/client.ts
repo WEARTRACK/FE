@@ -1,7 +1,8 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosHeaders } from "axios";
 
 import { env } from "@/config/env";
 import { ApiError, createApiError, isApiErrorResponse } from "@/lib/api/errors";
+import { useSessionStore } from "@/stores/useSessionStore";
 
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
@@ -11,7 +12,52 @@ export const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
+function resolveRequestPathname(url: string | undefined, baseURL: string | undefined) {
+  if (!url) {
+    return "";
+  }
+
+  try {
+    const parsedUrl = baseURL ? new URL(url, baseURL) : new URL(url);
+    return parsedUrl.pathname;
+  } catch {
+    return url;
+  }
+}
+
+function isAuthRequiredPath(pathname: string) {
+  return pathname === "/api/members/me/nickname" || pathname.startsWith("/api/members/me/");
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  const pathname = resolveRequestPathname(config.url, config.baseURL);
+  const requiresAuth = isAuthRequiredPath(pathname);
+
+  if (requiresAuth && !useSessionStore.persist.hasHydrated()) {
+    await useSessionStore.persist.rehydrate();
+  }
+
+  const accessToken = useSessionStore.getState().accessToken;
+
+  if (requiresAuth && !accessToken) {
+    throw new ApiError({
+      code: "AUTH_REQUIRED",
+      message: "인증이 필요합니다.",
+      status: 401,
+    });
+  }
+
+  if (requiresAuth && accessToken) {
+    const headers = AxiosHeaders.from(config.headers);
+    const existingAuthorization = headers.get("Authorization");
+
+    if (!existingAuthorization) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+
+    config.headers = headers;
+  }
+
   return config;
 });
 

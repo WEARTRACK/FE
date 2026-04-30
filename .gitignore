@@ -42,12 +42,3 @@ yarn-error.*
 # generated native folders
 /ios
 /android
-
-# api
-api-spec.md
-
-# convention
-CONVENTION.md
-
-# my-plan
-plan.md
