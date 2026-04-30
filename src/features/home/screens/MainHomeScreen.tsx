@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 
 export function MainHomeScreen() {
   return (
-    <View className="flex-1 bg-bg-light px-6 pt-24">
+    <View className="flex-1 bg-bg-light px-6 pt-8">
       <View className="rounded-3xl bg-white p-6">
         <Text className="font-pretendard-semibold text-caption uppercase tracking-[1.5px] text-accent">
           1. Main Home

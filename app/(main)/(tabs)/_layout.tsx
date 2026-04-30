@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { useMemo } from "react";
 
+import { CommonHeader } from "@/components/common/CommonHeader";
 import { colors } from "@/constants/colors";
 import { TabBarIcon } from "@/features/navigation/components/TabBarIcon";
 import { tabsConfig, type TabRouteName } from "@/features/navigation/tabs.config";
@@ -10,6 +11,8 @@ export default function MainTabsLayout() {
   const insets = useSafeAreaInsets();
 
   const tabBarBottomSpacing = useMemo(() => insets.bottom + 20, [insets.bottom]);
+  const homeTab = tabsConfig.find((tab) => tab.name === "home");
+  const otherTabs = tabsConfig.filter((tab) => tab.name !== "home");
 
   const tabBarItemStyle = {
     flex: 1,
@@ -41,7 +44,25 @@ export default function MainTabsLayout() {
         },
       }}
     >
-      {tabsConfig.map((tab) => (
+      {homeTab ? (
+        <Tabs.Screen
+          key={homeTab.name}
+          name={`${homeTab.name}/index`}
+          options={{
+            title: homeTab.title,
+            header: () => <CommonHeader />,
+            headerShown: true,
+            tabBarIcon: ({ focused }) => <TabBarIcon tab={homeTab.name} focused={focused} />,
+            tabBarItemStyle,
+            tabBarLabelStyle: {
+              ...baseTabLabelStyle,
+              marginTop: homeTab.labelSpacing,
+            },
+          }}
+        />
+      ) : null}
+
+      {otherTabs.map((tab) => (
         <Tabs.Screen
           key={tab.name}
           name={`${tab.name}/index`}
