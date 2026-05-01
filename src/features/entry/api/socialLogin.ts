@@ -5,8 +5,9 @@ export type SocialAuthProvider = "GOOGLE" | "KAKAO" | "NAVER";
 
 export type SocialLoginPayload = {
   provider: SocialAuthProvider;
-  authorizationCode: string;
+  authorizationCode?: string | null;
   state?: string | null;
+  handoffToken?: string | null;
 };
 
 export type SocialLoginResult = {
@@ -66,13 +67,15 @@ function isSocialLoginResponse(value: unknown): value is SocialLoginResponse {
 
 export async function socialLogin({
   provider,
-  authorizationCode,
+  authorizationCode = null,
   state = null,
+  handoffToken = null,
 }: SocialLoginPayload): Promise<SocialLoginResult> {
   const response = await apiClient.post<SocialLoginResponse>("/api/auth/social/login", {
     provider,
     authorizationCode,
     state,
+    handoffToken,
   });
 
   if (!isSocialLoginResponse(response.data)) {
