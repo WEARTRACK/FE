@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClosetFrame from "../../../../assets/closet-frame.svg";
 import { Button } from "@/components/common/Button";
+import { colors } from "@/constants/colors";
 import { CLOSET_LAYOUTS } from "@/features/closet/constants/closet-layouts";
 import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
@@ -69,8 +70,8 @@ export function ClosetMainScreen() {
                     height: `${slot.height}%`,
                     borderRadius: 8,
                     borderWidth: 1,
-                    borderColor: "#B1C9FF",
-                    backgroundColor: "#FFFFFF",
+                    borderColor: colors.blue[3],
+                    backgroundColor: colors.white,
                     paddingLeft: 20,
                     paddingTop: isCompactHeight ? 0 : 15,
                     justifyContent: isCompactHeight ? "center" : "flex-start",
