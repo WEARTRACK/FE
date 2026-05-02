@@ -1,7 +1,33 @@
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
 
-export type ClosetColor = "navy" | "white" | "blue" | "pink" | "gray" | "black" | "beige";
-export type ClosetCategory = "dress" | "shirt" | "shorts" | "jacket" | "coat" | "skirt";
+export type ClosetColor =
+  | "red"
+  | "pink"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "navy"
+  | "purple"
+  | "white"
+  | "beige"
+  | "brown"
+  | "gray"
+  | "black";
+export type ClosetCategory =
+  | "tshirt"
+  | "shirt"
+  | "knit"
+  | "hoodie"
+  | "vest"
+  | "cardigan"
+  | "pants"
+  | "shorts"
+  | "skirt"
+  | "dress"
+  | "jacket"
+  | "coat"
+  | "padding";
 
 export type ClosetItem = {
   id: string;
