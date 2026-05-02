@@ -11,6 +11,7 @@ export default function MainLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg.light },
+          animation: "slide_from_right",
         }}
       />
     </>

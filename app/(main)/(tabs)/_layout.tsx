@@ -36,6 +36,7 @@ export default function MainTabsLayout() {
           height: 56 + tabBarBottomSpacing,
           paddingTop: 8,
           paddingBottom: tabBarBottomSpacing,
+          backgroundColor: colors.bg.light,
         },
         tabBarLabelPosition: "below-icon",
         tabBarLabelStyle: {
@@ -65,7 +66,7 @@ export default function MainTabsLayout() {
       {otherTabs.map((tab) => (
         <Tabs.Screen
           key={tab.name}
-          name={`${tab.name}/index`}
+          name={tab.name === "closet" ? "closet" : `${tab.name}/index`}
           options={{
             title: tab.title,
             tabBarIcon: ({ focused }) => (
