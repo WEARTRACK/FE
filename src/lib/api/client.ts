@@ -26,7 +26,11 @@ function resolveRequestPathname(url: string | undefined, baseURL: string | undef
 }
 
 function isAuthRequiredPath(pathname: string) {
-  return pathname === "/api/members/me/nickname" || pathname.startsWith("/api/members/me/");
+  return (
+    pathname === "/api/members/nickname/check" ||
+    pathname === "/api/members/me/nickname" ||
+    pathname.startsWith("/api/members/me/")
+  );
 }
 
 apiClient.interceptors.request.use(async (config) => {
