@@ -11,6 +11,7 @@ export default function RootLayout() {
     PretendardLight: require("../assets/fonts/Pretendard-Light.otf"),
     PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
     PretendardRegular: require("../assets/fonts/Pretendard-Regular.otf"),
+    PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
   });
 
   const layout = (
