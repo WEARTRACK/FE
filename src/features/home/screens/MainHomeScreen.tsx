@@ -1,6 +1,6 @@
 import { Href, Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import ClosetFrame from "../../../../assets/closet-frame.svg";
@@ -159,7 +159,52 @@ function ClosetRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[14px] leading-[20px] text-white">
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+              촬영하기
+            </Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function ClothesRegistrationGuideModal({
+  visible,
+  onClose,
+  onPressCapture,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onPressCapture: () => void;
+}) {
+  return (
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+      <Pressable className="flex-1 justify-center bg-black/25 px-6" onPress={onClose}>
+        <Pressable
+          className="items-center rounded-xl bg-white px-[38px] pb-[29px] pt-[30px]"
+          onPress={(event) => event.stopPropagation()}
+        >
+          <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
+            옷 등록하기
+          </Text>
+
+          <View className="mt-[24px] h-[257px] w-[180px] items-center justify-center overflow-hidden bg-cool">
+            <ClothesIcon width={124} height={124} />
+          </View>
+
+          <Text className="mt-[33px] text-center font-pretendard text-[12px] leading-[20px] text-bg-dark">
+            예시 이미지처럼 옷 전체가 보이도록 촬영해주세요.
+          </Text>
+
+          <Pressable
+            className="mt-[31px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            onPress={onPressCapture}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
               촬영하기
             </Text>
           </Pressable>
@@ -172,19 +217,21 @@ function ClosetRegistrationGuideModal({
 export function MainHomeScreen() {
   const router = useRouter();
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
+  const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
   const handlePressCapture = () => {
     setIsClosetGuideVisible(false);
     router.push(clothesRegistrationRoutes.preview);
   };
 
+  const handlePressClothesCapture = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.clothesPreview);
+  };
+
   return (
     <>
-      <ScrollView
-        className="flex-1 bg-bg-light"
-        contentContainerClassName="px-6 pb-8 pt-4"
-        showsVerticalScrollIndicator={false}
-      >
+      <View className="flex-1 bg-bg-light px-6 pb-8 pt-4">
         <SummaryCard summary={closetSummary} />
 
         <View className="mt-[34px] flex-row gap-[18px]">
@@ -194,7 +241,7 @@ export function MainHomeScreen() {
             emphasis="옷장"
           />
           <QuickActionButton
-            href={"/clothes/register" as Href}
+            onPress={() => setIsClothesGuideVisible(true)}
             icon={<ClothesIcon width={60} height={55} />}
             emphasis="옷"
           />
@@ -222,12 +269,17 @@ export function MainHomeScreen() {
             <SearchCard emphasis="카테고리" suffix="로 찾기" />
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       <ClosetRegistrationGuideModal
         visible={isClosetGuideVisible}
         onClose={() => setIsClosetGuideVisible(false)}
         onPressCapture={handlePressCapture}
+      />
+      <ClothesRegistrationGuideModal
+        visible={isClothesGuideVisible}
+        onClose={() => setIsClothesGuideVisible(false)}
+        onPressCapture={handlePressClothesCapture}
       />
     </>
   );
