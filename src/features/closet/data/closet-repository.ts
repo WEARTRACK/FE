@@ -5,12 +5,14 @@ import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/cl
 
 export type ClosetDataRepository = {
   getTemplate: () => Promise<ClosetTemplate>;
+  getAllItems: () => Promise<ClosetItem[]>;
   getItemsBySectionId: (sectionId: ClosetSectionId) => Promise<ClosetItem[]>;
   getItemById: (sectionId: ClosetSectionId, itemId: string) => Promise<ClosetItem | null>;
 };
 
 export const mockClosetRepository: ClosetDataRepository = {
   getTemplate: async () => structuredClone(MOCK_CLOSET_TEMPLATE),
+  getAllItems: async () => structuredClone(MOCK_CLOSET_ITEMS),
   getItemsBySectionId: async (sectionId) =>
     structuredClone(MOCK_CLOSET_ITEMS.filter((item) => item.sectionId === sectionId)),
   getItemById: async (sectionId, itemId) => {
