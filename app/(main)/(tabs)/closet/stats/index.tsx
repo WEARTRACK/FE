@@ -1,5 +1,5 @@
-import { ClosetStatsPlaceholderScreen } from "@/features/closet/screens/closet-stats-placeholder-screen";
+import { ClosetStatsScreen } from "@/features/closet/screens/closet-stats-screen";
 
 export default function ClosetStatsRoute() {
-  return <ClosetStatsPlaceholderScreen />;
+  return <ClosetStatsScreen />;
 }

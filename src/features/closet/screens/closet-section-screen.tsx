@@ -41,6 +41,7 @@ import WhiteTagIcon from "../../../../assets/color/white-active.svg";
 import YellowTagIcon from "../../../../assets/color/yellow-active.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
+import { colors } from "@/constants/colors";
 import {
   useClosetItem,
   useClosetItemsBySection,
@@ -373,7 +374,7 @@ export function ClosetSectionScreen() {
                         height="301"
                         rx="12"
                         fill="none"
-                        stroke="#BDBDBD"
+                        stroke={colors.disabled}
                         strokeDasharray="2 2"
                         strokeWidth="1"
                       />

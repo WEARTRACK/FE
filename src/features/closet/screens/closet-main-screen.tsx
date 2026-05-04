@@ -26,7 +26,16 @@ export function ClosetMainScreen() {
   const sectionNameById = new Map(template.sections.map((section) => [section.id, section.sectionName]));
   const availableSectionIds = new Set(slots.map((slot) => slot.id));
 
+  // const handleOpenStats = () => {
+  //   router.push("/closet/stats");
+  // };
+
   const handleOpenStats = () => {
+    if (template.templateId === "LAYOUT_E") {
+      router.push("/closet/stats");
+      return;
+    }
+
     router.push("/closet/stats");
   };
 
