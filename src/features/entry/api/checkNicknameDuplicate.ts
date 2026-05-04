@@ -109,7 +109,9 @@ export async function checkNicknameDuplicate(
       throw createInvalidResponseError(response.data);
     }
 
-    return { isDuplicate: resolveDuplicateFlag(response.data.result as CheckNicknameDuplicateApiResult) };
+    return {
+      isDuplicate: resolveDuplicateFlag(response.data.result as CheckNicknameDuplicateApiResult),
+    };
   } catch (error) {
     if (error instanceof ApiError && error.code === "MEMBER_409_1") {
       return { isDuplicate: true };
