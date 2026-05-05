@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
-import {
-  mockClosetRepository,
-  type ClosetDataRepository,
-} from "@/features/closet/data/closet-repository";
+import type { ClosetDataRepository } from "@/features/closet/data/closet-repository";
+import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import { MOCK_CLOSET_TEMPLATE } from "@/features/closet/mock/closet-template";
+import type { ClosetStatisticsSummary } from "@/features/closet/types/closet-statistics";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
+import { buildClosetStatistics } from "@/features/closet/utils/closet-statistics";
 
-export function useClosetTemplate(repository: ClosetDataRepository = mockClosetRepository) {
+export function useClosetTemplate(repository: ClosetDataRepository = getClosetRepository()) {
   const [revision, setRevision] = useState(0);
   const [template, setTemplate] = useState<Awaited<ReturnType<ClosetDataRepository["getTemplate"]>>>(
     MOCK_CLOSET_TEMPLATE,
@@ -53,7 +53,7 @@ export function useClosetTemplate(repository: ClosetDataRepository = mockClosetR
 
 export function useClosetItemsBySection(
   sectionId: ClosetSectionId,
-  repository: ClosetDataRepository = mockClosetRepository,
+  repository: ClosetDataRepository = getClosetRepository(),
 ) {
   const [revision, setRevision] = useState(0);
   const [items, setItems] = useState<Awaited<ReturnType<ClosetDataRepository["getItemsBySectionId"]>>>([]);
@@ -99,7 +99,7 @@ export function useClosetItemsBySection(
 export function useClosetItem(
   sectionId: ClosetSectionId,
   itemId: string | null,
-  repository: ClosetDataRepository = mockClosetRepository,
+  repository: ClosetDataRepository = getClosetRepository(),
 ) {
   const [revision, setRevision] = useState(0);
   const [item, setItem] = useState<Awaited<ReturnType<ClosetDataRepository["getItemById"]>>>(null);
@@ -148,4 +148,49 @@ export function useClosetItem(
   }, [itemId, repository, revision, sectionId]);
 
   return { item, isLoading, error, refetch };
+}
+
+export function useClosetStatistics(repository: ClosetDataRepository = getClosetRepository()) {
+  const [revision, setRevision] = useState(0);
+  const [statistics, setStatistics] = useState<ClosetStatisticsSummary>({
+    totalCount: 0,
+    rankedCategories: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const refetch = useCallback(() => {
+    setRevision((prev) => prev + 1);
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchStatistics() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const items = await repository.getAllItems();
+        if (!isActive) {
+          return;
+        }
+        setStatistics(buildClosetStatistics(items));
+      } catch (targetError) {
+        if (!isActive) {
+          return;
+        }
+        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet statistics"));
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchStatistics();
+    return () => {
+      isActive = false;
+    };
+  }, [repository, revision]);
+
+  return { statistics, isLoading, error, refetch };
 }
