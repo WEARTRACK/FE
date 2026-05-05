@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
@@ -125,7 +126,7 @@ export function ClosetLabelingScreen() {
             opacity: pressed ? 0.65 : 1,
           })}
         >
-          <Text className="font-pretendard text-[32px] leading-[32px] text-bg-dark">‹</Text>
+          <ArrowBackIcon width={24} height={24} />
         </Pressable>
         <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
           옷장등록

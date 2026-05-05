@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { Button } from "@/components/common/Button";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
@@ -35,7 +36,7 @@ export function ClosetAnalysisFailureScreen() {
             opacity: pressed ? 0.65 : 1,
           })}
         >
-          <Text className="font-pretendard text-[32px] leading-[32px] text-bg-dark">‹</Text>
+          <ArrowBackIcon width={24} height={24} />
         </Pressable>
         <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
           옷장등록

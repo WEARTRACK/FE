@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
+import ArrowBackIcon from "../../../../assets/arrow_back.svg";
+
 export function ClothesRegistrationHeader({ title = "옷등록" }: { title?: string }) {
   const router = useRouter();
 
@@ -14,7 +16,7 @@ export function ClothesRegistrationHeader({ title = "옷등록" }: { title?: str
           opacity: pressed ? 0.65 : 1,
         })}
       >
-        <Text className="font-pretendard text-[32px] leading-[32px] text-bg-dark">‹</Text>
+        <ArrowBackIcon width={24} height={24} />
       </Pressable>
       <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
         {title}

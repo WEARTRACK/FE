@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import ArrowBackIcon from "../../../../assets/arrow_back.svg";
+
 type RouteAction = {
   label: string;
   href: Href;
@@ -42,7 +44,7 @@ export function ClothesRegistrationRouteScaffold({
             router.back();
           }}
         >
-          <Text className="font-pretendard-semibold text-[22px] leading-[24px] text-text">‹</Text>
+          <ArrowBackIcon width={24} height={24} />
         </Pressable>
         <Text className="font-pretendard-semibold text-[14px] leading-[20px] text-text">
           옷장등록

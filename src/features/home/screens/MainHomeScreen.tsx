@@ -2,8 +2,9 @@ import { Href, Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 
+import ClotheExample from "../../../../assets/clotheExample.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
-import ClosetFrame from "../../../../assets/closet-frame.svg";
+import ClosetExample from "../../../../assets/closetExample.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import HangerIcon from "../../../../assets/hanger-icon.svg";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
@@ -145,7 +146,7 @@ function ClosetRegistrationGuideModal({
           </Text>
 
           <View className="mt-[20px] h-[257px] w-[180px] items-center justify-center overflow-hidden bg-cool">
-            <ClosetFrame width={172} height={258} />
+            <ClosetExample width={180} height={257} />
           </View>
 
           <Text className="mt-[18px] text-center font-pretendard text-[12px] leading-[20px] text-text">
@@ -189,8 +190,8 @@ function ClothesRegistrationGuideModal({
             옷 등록하기
           </Text>
 
-          <View className="mt-[24px] h-[257px] w-[180px] items-center justify-center overflow-hidden bg-cool">
-            <ClothesIcon width={124} height={124} />
+          <View className="mt-[24px] h-[240px] w-[180px] items-center justify-center overflow-hidden bg-cool">
+            <ClotheExample width={180} height={257} />
           </View>
 
           <Text className="mt-[33px] text-center font-pretendard text-[12px] leading-[20px] text-bg-dark">
