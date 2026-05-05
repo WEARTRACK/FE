@@ -30,6 +30,30 @@ function hasUtilityClass(className: string | undefined, prefixes: string[]) {
     .some((token) => prefixes.some((prefix) => token.startsWith(prefix)));
 }
 
+function hasTextColorClass(className: string | undefined) {
+  if (!className) {
+    return false;
+  }
+
+  return className
+    .split(/\s+/)
+    .filter(Boolean)
+    .some((token) => {
+      if (!token.startsWith("text-")) {
+        return false;
+      }
+
+      return ![
+        "text-[",
+        "text-button-",
+        "text-headline",
+        "text-subhead",
+        "text-body",
+        "text-caption",
+      ].some((prefix) => token.startsWith(prefix));
+    });
+}
+
 function getContainerClassName(
   variant: ButtonVariant,
   size: ButtonSize,
@@ -70,7 +94,7 @@ function getLabelClassName(
   disabled: boolean,
   textClassName?: string,
 ) {
-  const hasTextOverride = hasUtilityClass(textClassName, ["text-"]);
+  const hasTextOverride = hasTextColorClass(textClassName);
   const colorClassName = hasTextOverride
     ? ""
     : disabled
@@ -84,7 +108,7 @@ function getLabelClassName(
       ? "font-pretendard-semibold text-button-lg"
       : "font-pretendard-semibold text-button-md";
 
-  return [colorClassName, sizeClassName, textClassName].filter(Boolean).join(" ");
+  return [colorClassName, textClassName ?? sizeClassName].filter(Boolean).join(" ");
 }
 
 type ButtonInnerProps = {

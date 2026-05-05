@@ -34,6 +34,7 @@ module.exports = {
         "pretendard-light": ["PretendardLight"],
         pretendard: ["PretendardRegular"],
         "pretendard-semibold": ["PretendardSemiBold"],
+        "pretendard-bold": ["PretendardBold"],
       },
       fontSize: {
         headline: [

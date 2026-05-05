@@ -7,6 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -37,7 +38,6 @@
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
     "tailwindcss": "^3.4.19",
-    "victory-native": "^41.20.2",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -53,7 +53,8 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "react-native-svg-transformer": "^1.5.3",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.5"
   },
   "private": true
 }
