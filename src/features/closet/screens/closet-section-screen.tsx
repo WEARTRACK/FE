@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,7 +29,7 @@ import VestTagIcon from "../../../../assets/category/vest-active.svg";
 import BeigeTagIcon from "../../../../assets/color/beige-active.svg";
 import BlackTagIcon from "../../../../assets/color/black-active.svg";
 import BlueTagIcon from "../../../../assets/color/blue-active.svg";
-import BrownTagIcon from "../../../../assets/color/state=default.svg";
+import BrownTagIcon from "../../../../assets/color/brown-active.svg";
 import GrayTagIcon from "../../../../assets/color/gray-active.svg";
 import GreenTagIcon from "../../../../assets/color/green-active.svg";
 import NavyTagIcon from "../../../../assets/color/navy-active.svg";
@@ -93,7 +93,6 @@ const categoryIconMap: Record<ClosetCategory, React.ComponentType<SvgProps>> = {
 };
 
 export function ClosetSectionScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
@@ -177,14 +176,10 @@ export function ClosetSectionScreen() {
     console.warn("TODO: delete item", selectedItem.id);
   };
 
-  const handleRegisterItem = () => {
-    console.warn("TODO: navigate to item registration");
-  };
-
   return (
     <View className="flex-1 bg-bg-light px-6">
       <View className="absolute left-6 z-10" style={{ top: backButtonTop }}>
-        <BackButton accessibilityLabel="내 옷장으로 돌아가기" onPress={() => router.back()} />
+        <BackButton accessibilityLabel="내 옷장으로 돌아가기" />
       </View>
 
       <Text
@@ -326,8 +321,8 @@ export function ClosetSectionScreen() {
       ) : null}
 
       {sectionItems.length === 0 ? (
-        <View className="absolute bottom-2 left-6 right-6">
-          <Button fullWidth label="옷 등록하기" onPress={handleRegisterItem} size="lg" variant="primary" />
+        <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
+          <Button fullWidth label="옷 등록하기" onPress={() => {}} size="lg" variant="primary" />
         </View>
       ) : null}
 
