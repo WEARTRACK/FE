@@ -21,7 +21,6 @@ export function ClosetMainScreen() {
   const frameWidth = screenWidth - 48;
   const frameHeight = (frameWidth * 517) / 345;
   const frameTop = insets.top + 96;
-  const buttonTop = frameTop + frameHeight + 24;
 
   const sectionNameById = new Map(template.sections.map((section) => [section.id, section.sectionName]));
   const availableSectionIds = new Set(slots.map((slot) => slot.id));
@@ -96,7 +95,7 @@ export function ClosetMainScreen() {
         </View>
       </View>
 
-      <View className="absolute left-6 right-6" style={{ top: buttonTop }}>
+      <View className="absolute bottom-2 left-6 right-6">
         <Button fullWidth label="옷장 열기" onPress={handleOpenStats} size="lg" variant="primary" />
       </View>
     </View>
