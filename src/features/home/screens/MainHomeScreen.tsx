@@ -109,10 +109,19 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SearchCard({ emphasis, suffix }: { emphasis: string; suffix: string }) {
+function SearchCard({
+  emphasis,
+  suffix,
+  onPress,
+}: {
+  emphasis: string;
+  suffix: string;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       className="h-[76px] flex-1 flex-row items-center justify-center rounded-lg bg-cool"
+      onPress={onPress}
       style={({ pressed }) => ({
         opacity: pressed ? 0.72 : 1,
       })}
@@ -230,6 +239,13 @@ export function MainHomeScreen() {
     router.push(clothesRegistrationRoutes.clothesPreview);
   };
 
+  const openClosetSearch = (mode: "color" | "category") => {
+    router.push({
+      pathname: "/home/search/select",
+      params: { mode, entryKey: Date.now().toString() },
+    });
+  };
+
   return (
     <>
       <View className="flex-1 bg-bg-light px-6 pb-8 pt-4">
@@ -266,8 +282,16 @@ export function MainHomeScreen() {
             내 옷 찾기
           </Text>
           <View className="mt-[12px] flex-row gap-[18px]">
-            <SearchCard emphasis="색상" suffix="으로 찾기" />
-            <SearchCard emphasis="카테고리" suffix="로 찾기" />
+            <SearchCard
+              emphasis="색상"
+              suffix="으로 찾기"
+              onPress={() => openClosetSearch("color")}
+            />
+            <SearchCard
+              emphasis="카테고리"
+              suffix="로 찾기"
+              onPress={() => openClosetSearch("category")}
+            />
           </View>
         </View>
       </View>

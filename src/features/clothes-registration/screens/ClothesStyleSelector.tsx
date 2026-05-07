@@ -17,8 +17,8 @@ type ColorChipProps = {
   onPress: () => void;
 };
 
-function getReadableColorText(colorName: string) {
-  return ["White", "Yellow", "Green", "Pink", "Beige"].includes(colorName) ? "#2B2F3A" : "#FFFFFF";
+function getActiveColorText(color: (typeof clothingColors)[number]) {
+  return ["Navy", "Black"].includes(color.name) ? "#FFFFFF" : color.borderColor;
 }
 
 function ColorChip({ color, selected, onPress }: ColorChipProps) {
@@ -43,7 +43,7 @@ function ColorChip({ color, selected, onPress }: ColorChipProps) {
       <Text
         className="font-pretendard text-[12px] leading-[14px]"
         style={{
-          color: selected ? getReadableColorText(color.name) : "#FFFFFF",
+          color: selected ? getActiveColorText(color) : "#FFFFFF",
         }}
       >
         {color.name}
