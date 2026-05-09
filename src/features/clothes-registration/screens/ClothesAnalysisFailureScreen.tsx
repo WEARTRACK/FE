@@ -1,10 +1,17 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import { Button } from "@/components/common/Button";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
+import { launchClothesCamera } from "@/features/clothes-registration/utils/launchClothesCamera";
+import {
+  getParamString,
+  normalizeCategoryName,
+  normalizeColorName,
+} from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { showToast } from "@/lib/ui/showToast";
 
 function ErrorBadge() {
   return (
@@ -15,7 +22,43 @@ function ErrorBadge() {
 }
 
 export function ClothesAnalysisFailureScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const {
+    imageUri: imageUriParam,
+    imageUrl: imageUrlParam,
+    photoId: photoIdParam,
+    predictedColor: predictedColorParam,
+    predictedCategory: predictedCategoryParam,
+  } = useLocalSearchParams<{
+    imageUri?: string;
+    imageUrl?: string;
+    photoId?: string;
+    predictedColor?: string;
+    predictedCategory?: string;
+  }>();
+  const imageUri = getParamString(imageUriParam);
+  const imageUrl = getParamString(imageUrlParam);
+  const photoId = getParamString(photoIdParam);
+  const predictedColor = normalizeColorName(getParamString(predictedColorParam));
+  const predictedCategory = normalizeCategoryName(getParamString(predictedCategoryParam));
+
+  const handleRetakePhoto = async () => {
+    try {
+      const nextImageUri = await launchClothesCamera();
+
+      if (!nextImageUri) {
+        return;
+      }
+
+      router.replace({
+        pathname: "/clothes/register/preview",
+        params: { imageUri: nextImageUri },
+      });
+    } catch {
+      showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+    }
+  };
 
   return (
     <View
@@ -46,7 +89,7 @@ export function ClothesAnalysisFailureScreen() {
       <View className="gap-[8px]">
         <Button
           label="재촬영"
-          href={clothesRegistrationRoutes.clothesPreview}
+          onPress={handleRetakePhoto}
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
@@ -54,7 +97,16 @@ export function ClothesAnalysisFailureScreen() {
 
         <Button
           label="사용자 입력"
-          href={clothesRegistrationRoutes.clothesAdditionalInfo}
+          href={{
+            pathname: "/clothes/register/additional-info",
+            params: {
+              imageUri: imageUri ?? "",
+              imageUrl: imageUrl ?? "",
+              photoId: photoId ?? "",
+              predictedColor,
+              predictedCategory,
+            },
+          }}
           variant="secondary"
           fullWidth
           className="h-[58px] border-[0.5px] border-text-subdued"

@@ -1,12 +1,47 @@
-import { Text, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import HeaderLogo from "../../../../assets/headerLogo.svg";
 import { Button } from "@/components/common/Button";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { launchClothesCamera } from "@/features/clothes-registration/utils/launchClothesCamera";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { showToast } from "@/lib/ui/showToast";
 
 export function ClothesPhotoPreviewScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { imageUri: imageUriParam } = useLocalSearchParams<{ imageUri?: string }>();
+  const imageUri = getParamString(imageUriParam);
+
+  const handleUsePhoto = () => {
+    if (!imageUri) {
+      showToast("사진을 먼저 촬영해주세요.");
+      return;
+    }
+
+    router.push({
+      pathname: "/clothes/register/analyzing",
+      params: { imageUri },
+    });
+  };
+
+  const handleRetakePhoto = async () => {
+    try {
+      const nextImageUri = await launchClothesCamera();
+
+      if (!nextImageUri) {
+        return;
+      }
+
+      router.replace({
+        pathname: "/clothes/register/preview",
+        params: { imageUri: nextImageUri },
+      });
+    } catch {
+      showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+    }
+  };
 
   return (
     <View
@@ -22,16 +57,20 @@ export function ClothesPhotoPreviewScreen() {
         옷이 촬영됐습니다.
       </Text>
 
-      <View className="mt-[32px] h-[422px] items-center justify-center bg-white">
-        <Text className="font-pretendard-semibold text-[20px] leading-[28px] text-disabled">
-          이미지
-        </Text>
+      <View className="mt-[32px] h-[422px] items-center justify-center overflow-hidden bg-white">
+        {imageUri ? (
+          <Image className="h-full w-full" resizeMode="cover" source={{ uri: imageUri }} />
+        ) : (
+          <Text className="font-pretendard-semibold text-[20px] leading-[28px] text-disabled">
+            이미지
+          </Text>
+        )}
       </View>
 
       <View className="mt-auto gap-[10px]">
         <Button
           label="사용하기"
-          href={clothesRegistrationRoutes.clothesAnalyzing}
+          onPress={handleUsePhoto}
           variant="primary"
           fullWidth
           className="h-[58px]"
@@ -40,7 +79,7 @@ export function ClothesPhotoPreviewScreen() {
 
         <Button
           label="재촬영하기"
-          href={clothesRegistrationRoutes.clothesPreview}
+          onPress={handleRetakePhoto}
           variant="secondary"
           fullWidth
           className="h-[58px] border-[0.5px] border-text-subdued"

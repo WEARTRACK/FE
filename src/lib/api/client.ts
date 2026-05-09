@@ -27,6 +27,8 @@ function resolveRequestPathname(url: string | undefined, baseURL: string | undef
 
 function isAuthRequiredPath(pathname: string) {
   return (
+    pathname === "/api/home" ||
+    pathname.startsWith("/api/clothes") ||
     pathname === "/api/members/nickname/check" ||
     pathname === "/api/members/me/nickname" ||
     pathname.startsWith("/api/members/me/")
@@ -36,6 +38,11 @@ function isAuthRequiredPath(pathname: string) {
 apiClient.interceptors.request.use(async (config) => {
   const pathname = resolveRequestPathname(config.url, config.baseURL);
   const requiresAuth = isAuthRequiredPath(pathname);
+  const headers = AxiosHeaders.from(config.headers);
+
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    headers.delete("Content-Type");
+  }
 
   if (requiresAuth && !useSessionStore.persist.hasHydrated()) {
     await useSessionStore.persist.rehydrate();
@@ -52,15 +59,14 @@ apiClient.interceptors.request.use(async (config) => {
   }
 
   if (requiresAuth && accessToken) {
-    const headers = AxiosHeaders.from(config.headers);
     const existingAuthorization = headers.get("Authorization");
 
     if (!existingAuthorization) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
-
-    config.headers = headers;
   }
+
+  config.headers = headers;
 
   return config;
 });
