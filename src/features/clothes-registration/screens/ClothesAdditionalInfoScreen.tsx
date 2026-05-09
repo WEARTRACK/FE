@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,14 +6,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HeaderLogo from "../../../../assets/headerLogo.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import {
+  createClothes,
+  toClothesCategoryValue,
+  toClothesColorValue,
+} from "@/features/clothes-registration/api/createClothes";
 import {
   getParamString,
   normalizeCategoryName,
   normalizeColorName,
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { showToast } from "@/lib/ui/showToast";
 
-const closetOptions = ["왼쪽 서랍 1칸", "오른쪽 서랍 1칸", "왼쪽 행거", "오른쪽 행거"];
+const closetOptions = [
+  { id: 1, label: "왼쪽 서랍 1칸" },
+  { id: 2, label: "오른쪽 서랍 1칸" },
+  { id: 3, label: "왼쪽 행거" },
+  { id: 4, label: "오른쪽 행거" },
+];
 
 function formatPrice(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -95,9 +105,14 @@ function LabeledInput({
   );
 }
 
-function ClosetSelect() {
+function ClosetSelect({
+  selectedOption,
+  onSelect,
+}: {
+  selectedOption: (typeof closetOptions)[number];
+  onSelect: (option: (typeof closetOptions)[number]) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("왼쪽 서랍 1칸");
 
   return (
     <View className="mt-[28px]">
@@ -116,24 +131,24 @@ function ClosetSelect() {
           onPress={() => setOpen((current) => !current)}
         >
           <Text className="font-pretendard text-[12px] leading-[20px] text-text">
-            {selectedOption}
+            {selectedOption.label}
           </Text>
           <Text className="font-pretendard text-[18px] leading-[20px] text-disabled">⌄</Text>
         </Pressable>
 
         {open ? (
           <View className="px-[20px]">
-            {closetOptions.map((option, index) => (
+            {closetOptions.map((option) => (
               <Pressable
-                key={`${option}-${index}`}
+                key={option.id}
                 className="h-[41px] justify-center border-t-[0.5px] border-disabled"
                 onPress={() => {
-                  setSelectedOption(option);
+                  onSelect(option);
                   setOpen(false);
                 }}
               >
                 <Text className="font-pretendard text-[12px] leading-[20px] text-disabled">
-                  {option}
+                  {option.label}
                 </Text>
               </Pressable>
             ))}
@@ -145,24 +160,74 @@ function ClosetSelect() {
 }
 
 export function ClothesAdditionalInfoScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
     imageUri: imageUriParam,
     imageUrl: imageUrlParam,
+    photoId: photoIdParam,
     predictedColor: predictedColorParam,
     predictedCategory: predictedCategoryParam,
+    selectedColor: selectedColorParam,
+    selectedCategory: selectedCategoryParam,
   } = useLocalSearchParams<{
     imageUri?: string;
     imageUrl?: string;
     photoId?: string;
     predictedColor?: string;
     predictedCategory?: string;
+    selectedColor?: string;
+    selectedCategory?: string;
   }>();
   const imageUri = getParamString(imageUriParam);
   const imageUrl = getParamString(imageUrlParam);
+  const photoId = Number(getParamString(photoIdParam));
   const predictedColor = normalizeColorName(getParamString(predictedColorParam));
   const predictedCategory = normalizeCategoryName(getParamString(predictedCategoryParam));
+  const selectedColor = normalizeColorName(getParamString(selectedColorParam) ?? predictedColor);
+  const selectedCategory = normalizeCategoryName(
+    getParamString(selectedCategoryParam) ?? predictedCategory,
+  );
   const [price, setPrice] = useState("");
+  const [selectedClosetOption, setSelectedClosetOption] = useState(closetOptions[0]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (isSaving) {
+      return;
+    }
+
+    const priceValue = Number(price);
+
+    if (!Number.isFinite(photoId) || photoId <= 0 || !imageUrl) {
+      showToast("사진 업로드 정보를 확인할 수 없어요. 다시 시도해주세요.");
+      return;
+    }
+
+    if (!Number.isFinite(priceValue) || priceValue <= 0) {
+      showToast("가격을 입력해주세요.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await createClothes({
+        photoId,
+        imageUrl,
+        color: toClothesColorValue(selectedColor),
+        category: toClothesCategoryValue(selectedCategory),
+        price: priceValue,
+        sectionId: selectedClosetOption.id,
+      });
+
+      router.replace("/clothes/register/complete");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <View
@@ -179,8 +244,8 @@ export function ClothesAdditionalInfoScreen() {
       </Text>
 
       <AnalysisResultHeader
-        category={predictedCategory}
-        color={predictedColor}
+        category={selectedCategory}
+        color={selectedColor}
         imageSource={imageUrl ?? imageUri}
       />
 
@@ -193,13 +258,14 @@ export function ClothesAdditionalInfoScreen() {
           value={formatPrice(price)}
         />
 
-        <ClosetSelect />
+        <ClosetSelect selectedOption={selectedClosetOption} onSelect={setSelectedClosetOption} />
       </View>
 
       <View className="mt-auto">
         <Button
-          label="저장하기"
-          href={clothesRegistrationRoutes.clothesComplete}
+          label={isSaving ? "저장 중..." : "저장하기"}
+          onPress={handleSave}
+          disabled={isSaving}
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[20px]"

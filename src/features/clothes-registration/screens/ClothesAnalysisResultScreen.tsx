@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -71,12 +72,16 @@ export function ClothesAnalysisResultScreen() {
   const photoId = getParamString(photoIdParam);
   const predictedColor = normalizeColorName(getParamString(predictedColorParam));
   const predictedCategory = normalizeCategoryName(getParamString(predictedCategoryParam));
+  const [selectedColor, setSelectedColor] = useState(predictedColor);
+  const [selectedCategory, setSelectedCategory] = useState(predictedCategory);
   const nextParams = {
     imageUri: imageUri ?? "",
     imageUrl: imageUrl ?? "",
     photoId: photoId ?? "",
     predictedColor,
     predictedCategory,
+    selectedColor,
+    selectedCategory,
   };
 
   return (
@@ -99,7 +104,12 @@ export function ClothesAnalysisResultScreen() {
           imageSource={imageUrl ?? imageUri}
         />
 
-        <ClothesStyleSelector selectedCategory={predictedCategory} selectedColor={predictedColor} />
+        <ClothesStyleSelector
+          selectedCategory={predictedCategory}
+          selectedColor={predictedColor}
+          onChangeCategory={setSelectedCategory}
+          onChangeColor={setSelectedColor}
+        />
       </ScrollView>
 
       <View className="px-6">

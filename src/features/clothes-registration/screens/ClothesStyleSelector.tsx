@@ -9,6 +9,8 @@ import {
 type ClothesStyleSelectorProps = {
   selectedColor?: string;
   selectedCategory?: string;
+  onChangeCategory?: (category: string) => void;
+  onChangeColor?: (color: string) => void;
 };
 
 type ColorChipProps = {
@@ -80,6 +82,8 @@ function CategoryChip({
 export function ClothesStyleSelector({
   selectedColor = "Black",
   selectedCategory = "T-shirt",
+  onChangeCategory,
+  onChangeColor,
 }: ClothesStyleSelectorProps) {
   const [currentColor, setCurrentColor] = useState(selectedColor);
   const [currentCategory, setCurrentCategory] = useState(selectedCategory);
@@ -94,7 +98,10 @@ export function ClothesStyleSelector({
           <ColorChip
             key={color.name}
             color={color}
-            onPress={() => setCurrentColor(color.name)}
+            onPress={() => {
+              setCurrentColor(color.name);
+              onChangeColor?.(color.name);
+            }}
             selected={color.name === currentColor}
           />
         ))}
@@ -110,7 +117,10 @@ export function ClothesStyleSelector({
               <CategoryChip
                 key={category}
                 label={category}
-                onPress={() => setCurrentCategory(category)}
+                onPress={() => {
+                  setCurrentCategory(category);
+                  onChangeCategory?.(category);
+                }}
                 selected={category === currentCategory}
               />
             ))}
