@@ -98,7 +98,7 @@ export function ClothesAnalysisFailureScreen() {
         <Button
           label="사용자 입력"
           href={{
-            pathname: "/clothes/register/additional-info",
+            pathname: "/clothes/register/style",
             params: {
               imageUri: imageUri ?? "",
               imageUrl: imageUrl ?? "",

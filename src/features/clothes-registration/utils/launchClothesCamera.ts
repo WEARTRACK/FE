@@ -29,8 +29,10 @@ export async function launchClothesImageLibrary() {
 
   const result = await ImagePicker.launchImageLibraryAsync({
     allowsEditing: false,
+    allowsMultipleSelection: true,
     mediaTypes: ["images"],
     quality: 0.9,
+    selectionLimit: 1,
   });
 
   if (result.canceled || !result.assets[0]?.uri) {

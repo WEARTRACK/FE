@@ -11,6 +11,7 @@ import {
   toClothesCategoryValue,
   toClothesColorValue,
 } from "@/features/clothes-registration/api/createClothes";
+import { uploadClothesPhoto } from "@/features/clothes-registration/api/uploadClothesPhoto";
 import {
   getParamString,
   normalizeCategoryName,
@@ -33,10 +34,12 @@ function AnalysisResultHeader({
   imageSource,
   color,
   category,
+  showAnalysis = true,
 }: {
   imageSource?: string;
   color: string;
   category: string;
+  showAnalysis?: boolean;
 }) {
   return (
     <View className="mt-[24px] flex-row items-start">
@@ -50,21 +53,25 @@ function AnalysisResultHeader({
         )}
       </View>
 
-      <View className="ml-[18px]">
-        <Text className="font-pretendard text-[12px] leading-[20px] text-bg-dark">
-          AI 분석 결과
-        </Text>
-        <View className="mt-[8px] flex-row gap-[6px]">
-          <View className="h-[32px] min-w-[70px] items-center justify-center rounded-full bg-bg-dark px-[18px]">
-            <Text className="font-pretendard text-[12px] leading-[16px] text-white">{color}</Text>
-          </View>
-          <View className="h-[32px] min-w-[78px] items-center justify-center rounded-full bg-primary px-[18px]">
-            <Text className="font-pretendard text-[12px] leading-[16px] text-accent">
-              {category}
-            </Text>
+      {showAnalysis ? (
+        <View className="ml-[18px]">
+          <Text className="font-pretendard text-[12px] leading-[20px] text-bg-dark">
+            AI 분석 결과
+          </Text>
+          <View className="mt-[8px] flex-row gap-[6px]">
+            <View className="h-[32px] min-w-[70px] items-center justify-center rounded-full bg-bg-dark px-[18px]">
+              <Text className="font-pretendard text-[12px] leading-[16px] text-white">
+                {color}
+              </Text>
+            </View>
+            <View className="h-[32px] min-w-[78px] items-center justify-center rounded-full bg-primary px-[18px]">
+              <Text className="font-pretendard text-[12px] leading-[16px] text-accent">
+                {category}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }
@@ -170,6 +177,7 @@ export function ClothesAdditionalInfoScreen() {
     predictedCategory: predictedCategoryParam,
     selectedColor: selectedColorParam,
     selectedCategory: selectedCategoryParam,
+    entryMode: entryModeParam,
   } = useLocalSearchParams<{
     imageUri?: string;
     imageUrl?: string;
@@ -178,6 +186,7 @@ export function ClothesAdditionalInfoScreen() {
     predictedCategory?: string;
     selectedColor?: string;
     selectedCategory?: string;
+    entryMode?: string;
   }>();
   const imageUri = getParamString(imageUriParam);
   const imageUrl = getParamString(imageUrlParam);
@@ -188,6 +197,7 @@ export function ClothesAdditionalInfoScreen() {
   const selectedCategory = normalizeCategoryName(
     getParamString(selectedCategoryParam) ?? predictedCategory,
   );
+  const isManualEntry = getParamString(entryModeParam) === "manual";
   const [price, setPrice] = useState("");
   const [selectedClosetOption, setSelectedClosetOption] = useState(closetOptions[0]);
   const [isSaving, setIsSaving] = useState(false);
@@ -199,7 +209,7 @@ export function ClothesAdditionalInfoScreen() {
 
     const priceValue = Number(price);
 
-    if (!Number.isFinite(photoId) || photoId <= 0 || !imageUrl) {
+    if ((!Number.isFinite(photoId) || photoId <= 0 || !imageUrl) && !imageUri) {
       showToast("사진 업로드 정보를 확인할 수 없어요. 다시 시도해주세요.");
       return;
     }
@@ -212,9 +222,14 @@ export function ClothesAdditionalInfoScreen() {
     setIsSaving(true);
 
     try {
+      const uploadedPhoto =
+        Number.isFinite(photoId) && photoId > 0 && imageUrl
+          ? { photoId, imageUrl }
+          : await uploadClothesPhoto(imageUri ?? "");
+
       await createClothes({
-        photoId,
-        imageUrl,
+        photoId: uploadedPhoto.photoId,
+        imageUrl: uploadedPhoto.imageUrl,
         color: toClothesColorValue(selectedColor),
         category: toClothesCategoryValue(selectedCategory),
         price: priceValue,
@@ -246,7 +261,8 @@ export function ClothesAdditionalInfoScreen() {
       <AnalysisResultHeader
         category={selectedCategory}
         color={selectedColor}
-        imageSource={imageUrl ?? imageUri}
+        imageSource={imageUrl || imageUri}
+        showAnalysis={!isManualEntry}
       />
 
       <View className="mt-[34px]">
