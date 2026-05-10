@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import HeaderLogo from "../../../../assets/headerLogo.svg";
@@ -129,14 +129,18 @@ export function ClothesAdditionalInfoScreen() {
   const [price, setPrice] = useState("");
 
   return (
-    <View
-      className="flex-1 bg-bg-light px-6"
-      style={{
-        paddingTop: insets.top + 24,
-        paddingBottom: insets.bottom + 20,
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1"
     >
-      <HeaderLogo width={118} height={15} />
+      <View
+        className="flex-1 bg-bg-light px-6"
+        style={{
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 20,
+        }}
+      >
+        <HeaderLogo width={118} height={15} />
 
       <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
         추가정보를 입력해주세요.
@@ -156,15 +160,16 @@ export function ClothesAdditionalInfoScreen() {
         <ClosetSelect />
       </View>
 
-      <View className="mt-auto">
-        <Button
-          label="저장하기"
-          href={clothesRegistrationRoutes.clothesComplete}
-          fullWidth
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
-        />
+        <View className="mt-auto">
+          <Button
+            label="저장하기"
+            href={clothesRegistrationRoutes.clothesComplete}
+            fullWidth
+            className="h-[58px]"
+            textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
+          />
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

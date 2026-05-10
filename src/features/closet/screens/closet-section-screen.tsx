@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
-import { useMemo, useState } from "react";
-import { Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SvgProps } from "react-native-svg";
 import Svg, { Rect } from "react-native-svg";
@@ -42,13 +42,15 @@ import YellowTagIcon from "../../../../assets/color/yellow-active.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import {
-  useClosetItem,
   useClosetItemsBySection,
   useClosetTemplate,
 } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
 import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
+import { ApiError } from "@/lib/api/errors";
+import { showToast } from "@/lib/ui/showToast";
 
 type ViewMode = "grid" | "list";
 
@@ -93,6 +95,7 @@ const categoryIconMap: Record<ClosetCategory, React.ComponentType<SvgProps>> = {
 };
 
 export function ClosetSectionScreen() {
+  const repository = useMemo(() => getClosetRepository(), []);
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
@@ -102,10 +105,20 @@ export function ClosetSectionScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [page, setPage] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemDetailPrice, setSelectedItemDetailPrice] = useState<number | null>(null);
+  const [selectedItemDetailSectionName, setSelectedItemDetailSectionName] = useState<string | null>(null);
+  const [deletedItemIds, setDeletedItemIds] = useState<string[]>([]);
 
   const { template } = useClosetTemplate();
   const { items: sectionItems } = useClosetItemsBySection(currentSectionId);
-  const { item: selectedItem } = useClosetItem(currentSectionId, selectedItemId);
+  const visibleSectionItems = useMemo(
+    () => sectionItems.filter((item) => !deletedItemIds.includes(item.id)),
+    [deletedItemIds, sectionItems],
+  );
+  const selectedItem = useMemo(
+    () => visibleSectionItems.find((item) => item.id === selectedItemId) ?? null,
+    [selectedItemId, visibleSectionItems],
+  );
   const sectionNameById = useMemo(
     () => new Map(template.sections.map((section) => [section.id, section.sectionName])),
     [template.sections],
@@ -120,12 +133,12 @@ export function ClosetSectionScreen() {
   const gridItemSize = (contentWidth - GRID_GAP_X * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
 
   const pageSize = viewMode === "grid" ? GRID_PAGE_SIZE : LIST_PAGE_SIZE;
-  const totalPages = Math.ceil(sectionItems.length / pageSize);
+  const totalPages = Math.ceil(visibleSectionItems.length / pageSize);
   const currentPage = totalPages === 0 ? 0 : Math.min(page, totalPages - 1);
   const pageItems =
     totalPages === 0
       ? []
-      : sectionItems.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+      : visibleSectionItems.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
 
   const backButtonTop = insets.top + 14;
   const titleTop = backButtonTop + BACK_BUTTON_SIZE + 29;
@@ -158,14 +171,97 @@ export function ClosetSectionScreen() {
 
   const handleCloseDetailModal = () => {
     setSelectedItemId(null);
+    setSelectedItemDetailPrice(null);
+    setSelectedItemDetailSectionName(null);
   };
 
-  const handleEditItem = () => {
+  const resolveClothesId = (itemId: string) => {
+    const match = itemId.match(/(\d+)$/);
+    return match ? Number(match[1]) : null;
+  };
+
+  const getActionErrorMessage = (error: unknown, fallback: string) => {
+    if (!(error instanceof ApiError)) {
+      return fallback;
+    }
+
+    if (error.code === "NETWORK_ERROR") {
+      return "네트워크 연결을 확인해주세요.";
+    }
+
+    if (error.status === 404) {
+      return "대상 옷을 찾을 수 없습니다.";
+    }
+
+    return fallback;
+  };
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchDetail() {
+      if (!selectedItem) {
+        setSelectedItemDetailPrice(null);
+        setSelectedItemDetailSectionName(null);
+        return;
+      }
+
+      const clothesId = resolveClothesId(selectedItem.id);
+      if (!clothesId) {
+        setSelectedItemDetailPrice(null);
+        setSelectedItemDetailSectionName(null);
+        return;
+      }
+
+      try {
+        const detail = await repository.getClothesDetail(clothesId);
+        if (!isActive) {
+          return;
+        }
+        setSelectedItemDetailPrice(detail.price);
+        setSelectedItemDetailSectionName(detail.sectionName);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+        setSelectedItemDetailPrice(null);
+        setSelectedItemDetailSectionName(null);
+        showToast(getActionErrorMessage(error, "상세 정보를 불러오지 못했어요."));
+      }
+    }
+
+    fetchDetail();
+
+    return () => {
+      isActive = false;
+    };
+  }, [repository, selectedItem]);
+
+  const handleEditItem = async () => {
     if (!selectedItem) {
       return;
     }
 
-    console.warn("TODO: edit item", selectedItem.id);
+    const clothesId = resolveClothesId(selectedItem.id);
+    if (!clothesId) {
+      showToast("옷 ID를 확인할 수 없어 수정할 수 없습니다.");
+      return;
+    }
+
+    try {
+      const detail = await repository.getClothesDetail(clothesId);
+      const updated = await repository.updateClothes(clothesId, {
+        color: detail.color,
+        category: detail.category,
+        price: detail.price,
+        sectionId: detail.sectionId,
+      });
+      setSelectedItemDetailPrice(updated.price);
+      setSelectedItemDetailSectionName(updated.sectionName);
+      showToast("수정이 완료됐어요.");
+    } catch (error) {
+      showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
+    }
   };
 
   const handleDeleteItem = () => {
@@ -173,7 +269,30 @@ export function ClosetSectionScreen() {
       return;
     }
 
-    console.warn("TODO: delete item", selectedItem.id);
+    const clothesId = resolveClothesId(selectedItem.id);
+    if (!clothesId) {
+      showToast("옷 ID를 확인할 수 없어 삭제할 수 없습니다.");
+      return;
+    }
+
+    Alert.alert("옷 삭제", "정말 삭제하시겠습니까? 삭제된 정보는 복구할 수 없습니다.", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          setDeletedItemIds((current) => [...current, selectedItem.id]);
+          handleCloseDetailModal();
+          try {
+            await repository.deleteClothes(clothesId);
+            showToast("옷 삭제에 성공하였습니다.");
+          } catch (error) {
+            setDeletedItemIds((current) => current.filter((itemId) => itemId !== selectedItem.id));
+            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -189,10 +308,10 @@ export function ClosetSectionScreen() {
         {sectionName}
       </Text>
 
-      {sectionItems.length > 0 ? (
+      {visibleSectionItems.length > 0 ? (
         <>
           <Text className="absolute left-6 font-pretendard text-body text-bg-dark" style={{ top: countTop }}>
-            총 {sectionItems.length}벌
+            총 {visibleSectionItems.length}벌
           </Text>
 
           <View className="absolute right-6 flex-row items-center gap-[7px]" style={{ top: viewToggleTop }}>
@@ -226,7 +345,7 @@ export function ClosetSectionScreen() {
         </>
       ) : null}
 
-      {sectionItems.length === 0 ? (
+      {visibleSectionItems.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20">
           <ClothesIcon width={157} height={145} />
           <Text className="mt-8 font-pretendard-semibold text-headline text-bg-dark">등록된 옷이 없습니다.</Text>
@@ -291,7 +410,7 @@ export function ClosetSectionScreen() {
         </View>
       )}
 
-      {sectionItems.length > 0 ? (
+      {visibleSectionItems.length > 0 ? (
         <View
           className="absolute left-0 right-0 flex-row items-center justify-center gap-[14px]"
           style={{ top: paginationTop }}
@@ -320,7 +439,7 @@ export function ClosetSectionScreen() {
         </View>
       ) : null}
 
-      {sectionItems.length === 0 ? (
+      {visibleSectionItems.length === 0 ? (
         <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
           <Button fullWidth label="옷 등록하기" onPress={() => {}} size="lg" variant="primary" />
         </View>
@@ -393,13 +512,13 @@ export function ClosetSectionScreen() {
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
                   <Text className="font-pretendard text-body text-text-subdued">
-                    {sectionNameById.get(selectedItem.sectionId) ?? sectionName}
+                    {selectedItemDetailSectionName ?? sectionNameById.get(selectedItem.sectionId) ?? sectionName}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">가격</Text>
                   <Text className="font-pretendard text-body text-text-subdued">
-                    {selectedItem.price.toLocaleString("ko-KR")}원
+                    {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}원
                   </Text>
                 </View>
               </View>

@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
@@ -134,59 +134,64 @@ export function SetNicknameScreen() {
   };
 
   return (
-    <View
-      className="flex-1 bg-bg-light px-6 pt-[131px]"
-      style={{ paddingBottom: insets.bottom + 20 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1"
     >
-      <View>
-        <Text className="text-center font-pretendard-semibold text-headline text-text">
-          사용하실 닉네임을 입력해주세요.
-        </Text>
-        <Text className="mt-3 text-center font-pretendard text-subhead text-text-subdued">
-          닉네임은 회원가입 이후에도 수정할 수 있습니다.
-        </Text>
-      </View>
+      <View
+        className="flex-1 bg-bg-light px-6 pt-[131px]"
+        style={{ paddingBottom: insets.bottom + 20 }}
+      >
+        <View>
+          <Text className="text-center font-pretendard-semibold text-headline text-text">
+            사용하실 닉네임을 입력해주세요.
+          </Text>
+          <Text className="mt-3 text-center font-pretendard text-subhead text-text-subdued">
+            닉네임은 회원가입 이후에도 수정할 수 있습니다.
+          </Text>
+        </View>
 
-      <View className="mt-[79px]">
-        <SignupInput
-          label="닉네임"
-          placeholder="한글, 영문, 숫자 조합만 가능"
-          maxLength={5}
-          value={nickname}
-          onChangeText={(value) => {
-            setNickname(value);
-            if (!hasInteracted) {
-              setHasInteracted(true);
-            }
-          }}
-          onBlur={() => {
-            if (!hasInteracted) {
-              setHasInteracted(true);
-            }
-          }}
-          error={errorMessage}
-          isSuccess={Boolean(successMessage)}
-          successMessage={successMessage}
-          autoCapitalize="none"
-          autoCorrect={false}
-          labelClassName="mb-1 text-[12px] font-pretendard-semibold"
-          inputClassName="h-[46px] px-[12px] py-0 text-[12px]"
-          messageTextClassName="text-[10px]"
-          counterClassName="text-[10px]"
-          successMessageClassName="text-text-subdued"
-        />
-      </View>
+        <View className="mt-[79px]">
+          <SignupInput
+            label="닉네임"
+            placeholder="한글, 영문, 숫자 조합만 가능"
+            maxLength={5}
+            value={nickname}
+            onChangeText={(value) => {
+              setNickname(value);
+              if (!hasInteracted) {
+                setHasInteracted(true);
+              }
+            }}
+            onBlur={() => {
+              if (!hasInteracted) {
+                setHasInteracted(true);
+              }
+            }}
+            error={errorMessage}
+            isSuccess={Boolean(successMessage)}
+            successMessage={successMessage}
+            autoCapitalize="none"
+            autoCorrect={false}
+            labelClassName="mb-1 text-[12px] font-pretendard-semibold"
+            inputClassName="h-[46px] px-[12px] py-0 text-[12px]"
+            messageTextClassName="text-[10px]"
+            counterClassName="text-[10px]"
+            successMessageClassName="text-text-subdued"
+          />
+        </View>
 
-      <View className="mt-auto">
-        <Button
-          label="옷장 관리 시작하기"
-          variant="primary"
-          size="lg"
-          onPress={handleComplete}
-          fullWidth
-          disabled={!canSubmit || isSavingNickname}
-        />
+        <View className="mt-auto">
+          <Button
+            label="옷장 관리 시작하기"
+            variant="primary"
+            size="lg"
+            onPress={handleComplete}
+            fullWidth
+            disabled={!canSubmit || isSavingNickname}
+          />
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

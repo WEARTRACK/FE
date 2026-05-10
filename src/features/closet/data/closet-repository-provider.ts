@@ -1,9 +1,9 @@
 import {
-  mockClosetRepository,
+  apiClosetRepository,
   type ClosetDataRepository,
 } from "@/features/closet/data/closet-repository";
 
-let activeClosetRepository: ClosetDataRepository = mockClosetRepository;
+let activeClosetRepository: ClosetDataRepository = apiClosetRepository;
 
 export function getClosetRepository(): ClosetDataRepository {
   return activeClosetRepository;

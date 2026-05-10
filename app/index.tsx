@@ -3,5 +3,5 @@ import { Redirect } from "expo-router";
 
 export default function RootIndexRoute() {
   // return <SplashScreen />;
-  return <Redirect href="/closet" />;
+  return <Redirect href="/auth/sign-in" />;
 }

@@ -1,6 +1,16 @@
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Image, Modal, Pressable, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SvgProps } from "react-native-svg";
 import Svg, { Rect } from "react-native-svg";
@@ -38,12 +48,14 @@ import YellowTagIcon from "../../../../assets/color/yellow-active.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import type { ClosetDetailResult } from "@/features/closet/api/closet-api-types";
+import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import { useClosetSearchResults } from "@/features/closet/hooks/use-closet-search-results";
 import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
 import { parseClosetSearchParams } from "@/features/closet/types/closet-search";
-
-const LIST_PAGE_SIZE = 4;
+import { ApiError } from "@/lib/api/errors";
+import { showToast } from "@/lib/ui/showToast";
 
 const colorIconMap: Record<ClosetColor, React.ComponentType<SvgProps>> = {
   red: RedTagIcon,
@@ -78,49 +90,238 @@ const categoryIconMap: Record<ClosetCategory, React.ComponentType<SvgProps>> = {
 };
 
 export function ClosetSearchResultsScreen() {
+  const repository = useMemo(() => getClosetRepository(), []);
+  const { template } = useClosetTemplate();
   const insets = useSafeAreaInsets();
-  const [page, setPage] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemDetail, setSelectedItemDetail] = useState<ClosetDetailResult | null>(null);
+  const [selectedItemDetailPrice, setSelectedItemDetailPrice] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSectionDropdownOpen, setIsSectionDropdownOpen] = useState(false);
+  const [draftPriceInput, setDraftPriceInput] = useState("");
+  const [draftSectionId, setDraftSectionId] = useState<number | null>(null);
+  const [draftSectionName, setDraftSectionName] = useState<string | null>(null);
+  const lastToastMessageRef = useRef<string | null>(null);
 
   const localSearchParams = useLocalSearchParams<{ mode?: string | string[]; value?: string | string[] }>();
   const parsedParams = parseClosetSearchParams(localSearchParams);
-  const { items, isLoading, error, queryLabel } = useClosetSearchResults(parsedParams);
-  const { template } = useClosetTemplate();
-
-  const sectionNameById = useMemo(
-    () => new Map(template.sections.map((section) => [section.id, section.sectionName])),
-    [template.sections],
-  );
-
-  const totalPages = Math.ceil(items.length / LIST_PAGE_SIZE);
-  const currentPage = totalPages === 0 ? 0 : Math.min(page, totalPages - 1);
-  const pageItems =
-    totalPages === 0 ? [] : items.slice(currentPage * LIST_PAGE_SIZE, currentPage * LIST_PAGE_SIZE + LIST_PAGE_SIZE);
+  const searchMode = parsedParams?.mode ?? "color";
+  const {
+    items,
+    isLoading,
+    error,
+    paramError,
+    queryLabel,
+    totalCount,
+    totalPages,
+    currentPage,
+    setPage,
+    applyDetailToList,
+    removeItemOptimistic,
+    refetch,
+  } = useClosetSearchResults(parsedParams);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.id === selectedItemId) ?? null,
     [items, selectedItemId],
   );
+  const selectedItemClothesId = selectedItem?.clothesId ?? null;
+  const sectionOptions = useMemo(() => {
+    const templateOptions = template.sections
+      .map((section) => {
+        const match = section.id.match(/section-(\d+)/);
+        if (!match) {
+          return null;
+        }
+
+        return {
+          id: Number(match[1]),
+          name: section.sectionName ?? `칸 ${match[1]}`,
+        };
+      })
+      .filter((option): option is { id: number; name: string } => option !== null);
+
+    if (
+      selectedItemDetail &&
+      !templateOptions.some((option) => option.id === selectedItemDetail.sectionId)
+    ) {
+      templateOptions.unshift({
+        id: selectedItemDetail.sectionId,
+        name: selectedItemDetail.sectionName,
+      });
+    }
+
+    return templateOptions;
+  }, [selectedItemDetail, template.sections]);
 
   useEffect(() => {
-    setPage(0);
     setSelectedItemId(null);
+    setSelectedItemDetail(null);
+    setSelectedItemDetailPrice(null);
+    setIsEditing(false);
+    setIsSectionDropdownOpen(false);
+    setDraftPriceInput("");
+    setDraftSectionId(null);
+    setDraftSectionName(null);
   }, [parsedParams?.mode, parsedParams?.value]);
+
+  function getActionErrorMessage(error: unknown, fallback: string) {
+    if (!(error instanceof ApiError)) {
+      return fallback;
+    }
+
+    if (error.code === "NETWORK_ERROR") {
+      return "네트워크 연결을 확인해주세요.";
+    }
+
+    if (error.status === 404) {
+      return "대상 옷을 찾을 수 없습니다.";
+    }
+
+    if (error.code === "INVALID_ENUM_MAPPING" || error.code === "INVALID_RESPONSE") {
+      return "서버 응답 형식이 올바르지 않습니다.";
+    }
+
+    return fallback;
+  }
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function fetchDetail() {
+      if (!selectedItemClothesId) {
+        setSelectedItemDetail(null);
+        setSelectedItemDetailPrice(null);
+        return;
+      }
+
+      try {
+        const detail = await repository.getClothesDetail(selectedItemClothesId);
+        if (!isActive) {
+          return;
+        }
+        setSelectedItemDetail(detail);
+        setSelectedItemDetailPrice(detail.price);
+        setDraftPriceInput(String(detail.price));
+        setDraftSectionId(detail.sectionId);
+        setDraftSectionName(detail.sectionName);
+        applyDetailToList(detail);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+        setSelectedItemDetail(null);
+        setSelectedItemDetailPrice(null);
+        showToast(getActionErrorMessage(error, "상세 정보를 불러오지 못했어요."));
+      }
+    }
+
+    fetchDetail();
+
+    return () => {
+      isActive = false;
+    };
+  }, [applyDetailToList, repository, selectedItemClothesId]);
+
+  useEffect(() => {
+    let nextMessage: string | null = null;
+
+    if (paramError) {
+      nextMessage = searchMode === "color" ? "색상을 선택해주세요." : "카테고리를 선택해주세요.";
+    } else {
+      lastToastMessageRef.current = null;
+    }
+
+    if (!nextMessage) {
+      return;
+    }
+
+    if (lastToastMessageRef.current === nextMessage) {
+      return;
+    }
+
+    lastToastMessageRef.current = nextMessage;
+    showToast(nextMessage);
+  }, [paramError, searchMode]);
 
   const handleCloseDetailModal = () => {
     setSelectedItemId(null);
+    setSelectedItemDetail(null);
+    setSelectedItemDetailPrice(null);
+    setIsEditing(false);
+    setIsSectionDropdownOpen(false);
+    setDraftPriceInput("");
+    setDraftSectionId(null);
+    setDraftSectionName(null);
   };
-  const handleEditItem = () => {
+  const onUpdate = async () => {
     if (!selectedItem) {
       return;
     }
-    console.warn("TODO: edit item", selectedItem.id);
+
+    const detail = selectedItemDetail;
+    if (!detail) {
+      showToast("상세 정보가 준비되면 다시 시도해주세요.");
+      return;
+    }
+
+    const nextPrice = Number(draftPriceInput.replace(/[^0-9]/g, ""));
+    const nextSectionId = draftSectionId ?? detail.sectionId;
+    const hasPriceChanged = Number.isFinite(nextPrice) && nextPrice !== detail.price;
+    const hasSectionChanged = nextSectionId !== detail.sectionId;
+
+    if (!hasPriceChanged && !hasSectionChanged) {
+      showToast("변경된 내용이 없습니다.");
+      setIsEditing(false);
+      setIsSectionDropdownOpen(false);
+      return;
+    }
+
+    try {
+      const updated = await repository.updateClothes(detail.clothesId, {
+        color: detail.color,
+        category: detail.category,
+        price: Number.isFinite(nextPrice) ? nextPrice : detail.price,
+        sectionId: nextSectionId,
+      });
+      setSelectedItemDetail(updated);
+      applyDetailToList(updated);
+      setSelectedItemDetailPrice(updated.price);
+      setDraftPriceInput(String(updated.price));
+      setDraftSectionId(updated.sectionId);
+      setDraftSectionName(updated.sectionName);
+      setIsEditing(false);
+      setIsSectionDropdownOpen(false);
+      showToast("수정이 완료됐어요.");
+    } catch (error) {
+      showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
+    }
   };
   const handleDeleteItem = () => {
     if (!selectedItem) {
       return;
     }
-    console.warn("TODO: delete item", selectedItem.id);
+
+    Alert.alert("옷 삭제", "정말 삭제하시겠습니까? 삭제된 정보는 복구할 수 없습니다.", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          removeItemOptimistic(selectedItem.clothesId);
+          handleCloseDetailModal();
+
+          try {
+            await repository.deleteClothes(selectedItem.clothesId);
+            await refetch();
+            showToast("옷 삭제에 성공하였습니다.");
+          } catch (error) {
+            await refetch();
+            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+          }
+        },
+      },
+    ]);
   };
   const renderStatusScreen = (message: string) => (
     <View className="flex-1 bg-bg-light px-6">
@@ -136,16 +337,16 @@ export function ClosetSearchResultsScreen() {
     </View>
   );
 
-  if (!parsedParams) {
-    return renderStatusScreen("유효하지 않은 검색 파라미터입니다.");
+  if (paramError) {
+    return renderStatusScreen("검색 조건을 확인해주세요.");
   }
 
   if (isLoading) {
-    return renderStatusScreen("검색 데이터를 불러오는 중입니다.");
+    return renderStatusScreen("검색 결과를 불러오는 중입니다.");
   }
 
   if (error) {
-    return renderStatusScreen("검색 데이터를 불러오지 못했습니다.");
+    return renderStatusScreen("검색에 실패했어요. 다시 시도해주세요.");
   }
 
   return (
@@ -163,15 +364,14 @@ export function ClosetSearchResultsScreen() {
           <View className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[21px]" style={{ marginTop: insets.top + 67 }}>
             <View className="absolute bottom-[34px] left-[21px] right-[21px] top-5 justify-between">
               <Text className="font-pretendard text-subhead text-text-subdued">검색 결과</Text>
-              <Text className="font-pretendard-semibold text-headline text-text">{items.length}벌을 찾았습니다.</Text>
+              <Text className="font-pretendard-semibold text-headline text-text">{totalCount}벌을 찾았습니다.</Text>
               <Text className="font-pretendard-light text-caption text-text-subdued">
-                {queryLabel}에 해당되는 유사한 옷 {items.length}벌이 발견되었습니다.
+                {queryLabel}에 해당되는 유사한 옷 {totalCount}벌이 발견됐습니다.
               </Text>
             </View>
           </View>
-
           <View className="mt-[38px] gap-2">
-            {pageItems.map((item) => {
+            {items.map((item) => {
               const ColorIcon = colorIconMap[item.color];
               const CategoryIcon = categoryIconMap[item.category];
 
@@ -191,7 +391,7 @@ export function ClosetSearchResultsScreen() {
 
                   <View className="ml-3 flex-1">
                     <View className="flex-row items-center gap-[6px]">
-                      {parsedParams.mode === "color" ? (
+                      {searchMode === "color" ? (
                         <>
                           <ColorIcon width={72} height={32} />
                           <CategoryIcon width={72} height={32} />
@@ -204,7 +404,7 @@ export function ClosetSearchResultsScreen() {
                       )}
                     </View>
                     <Text className="ml-[5px] mt-[13px] font-pretendard text-body text-bg-dark">
-                      {sectionNameById.get(item.sectionId) ?? "알 수 없는 보관 칸"}
+                      {item.sectionName}
                     </Text>
                   </View>
                 </Pressable>
@@ -232,10 +432,16 @@ export function ClosetSearchResultsScreen() {
         </>
       ) : (
         <View className="flex-1">
-          <View className="flex-1 items-center justify-center pb-[172px]">
+          <View
+            className="absolute left-0 right-0 items-center justify-center"
+            style={{
+              top: insets.top + 67,
+              bottom: insets.bottom + 66,
+            }}
+          >
             <QuestionIcon width={225} height={225} />
             <Text className="mt-3 font-pretendard-semibold text-headline text-bg-dark">
-              {parsedParams.mode === "color" ? "해당 색상 옷이 없습니다." : "해당 카테고리 옷이 없습니다."}
+              {searchMode === "color" ? "해당 색상 옷이 없습니다." : "해당 카테고리 옷이 없습니다."}
             </Text>
             <Text className="mt-3 font-pretendard text-body text-text-subdued">옷을 등록하러 가볼까요?</Text>
           </View>
@@ -255,6 +461,10 @@ export function ClosetSearchResultsScreen() {
           />
 
           {selectedItem ? (
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              className="h-[604px] w-[344px]"
+            >
             <View accessibilityViewIsModal className="h-[604px] w-[344px] rounded-2xl bg-white p-5">
               <View className="flex-row items-center justify-between">
                 <Text className="font-pretendard-semibold text-headline text-bg-dark">상세보기</Text>
@@ -301,30 +511,91 @@ export function ClosetSearchResultsScreen() {
                 })()}
               </View>
 
-              <View className="mt-6 gap-4">
+              <View className="relative mt-6 gap-4">
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
-                  <Text className="font-pretendard text-body text-text-subdued">
-                    {sectionNameById.get(selectedItem.sectionId) ?? "알 수 없는 보관 칸"}
-                  </Text>
+                  {isEditing ? (
+                    <View className="items-end">
+                      <Pressable
+                        accessibilityRole="button"
+                        className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
+                        onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
+                      >
+                        <Text className="font-pretendard text-body text-text-subdued">
+                          {draftSectionName ?? selectedItem.sectionName}
+                        </Text>
+                      </Pressable>
+                      {isSectionDropdownOpen ? (
+                        <View
+                          className="absolute right-0 top-9 w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
+                          style={{ position: "absolute", zIndex: 999 }}
+                        >
+                          {sectionOptions.map((option) => (
+                            <Pressable
+                              key={option.id}
+                              className="px-3 py-2"
+                              onPress={() => {
+                                setDraftSectionId(option.id);
+                                setDraftSectionName(option.name);
+                                setIsSectionDropdownOpen(false);
+                              }}
+                            >
+                              <Text className="font-pretendard text-body text-text-subdued">{option.name}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Text className="font-pretendard text-body text-text-subdued">
+                      {selectedItem.sectionName}
+                    </Text>
+                  )}
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">가격</Text>
-                  <Text className="font-pretendard text-body text-text-subdued">
-                    {selectedItem.price.toLocaleString("ko-KR")}원
-                  </Text>
+                  {isEditing ? (
+                    <TextInput
+                      className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
+                      keyboardType="numeric"
+                      onChangeText={(value) => setDraftPriceInput(value.replace(/[^0-9]/g, ""))}
+                      value={draftPriceInput}
+                    />
+                  ) : (
+                    <Text className="font-pretendard text-body text-text-subdued">
+                      {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}원
+                    </Text>
+                  )}
                 </View>
               </View>
 
                 <View className="mt-7 flex-row items-center gap-1">
                 <View className="flex-1">
-                  <Button label="수정하기" onPress={handleEditItem} size="sm" variant="primary" fullWidth />
+                  <Button
+                    label={isEditing ? "저장하기" : "수정하기"}
+                    onPress={() => {
+                      if (isEditing) {
+                        void onUpdate();
+                        return;
+                      }
+
+                      setIsEditing(true);
+                      setIsSectionDropdownOpen(false);
+                      setDraftPriceInput(String(selectedItemDetailPrice ?? selectedItem.price));
+                      setDraftSectionId(selectedItemDetail?.sectionId ?? null);
+                      setDraftSectionName(selectedItemDetail?.sectionName ?? selectedItem.sectionName);
+                    }}
+                    size="sm"
+                    variant="primary"
+                    fullWidth
+                  />
                 </View>
                 <View className="flex-1">
                   <Button label="삭제하기" onPress={handleDeleteItem} size="sm" variant="secondary" fullWidth />
                 </View>
               </View>
             </View>
+            </KeyboardAvoidingView>
           ) : null}
 	        </View>
 	      </Modal>
