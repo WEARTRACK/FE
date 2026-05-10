@@ -60,7 +60,7 @@ export function ClosetRegistrationCompleteScreen() {
 
         <Button
           label="옷 등록하러 가기"
-          href="/clothes/register"
+          href="/home"
           variant="secondary"
           fullWidth
           className="h-[58px] border-[0.5px] border-text-subdued"

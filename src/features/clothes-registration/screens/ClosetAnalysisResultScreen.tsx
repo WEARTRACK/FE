@@ -1,11 +1,10 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
 import { CommonHeader } from "@/components/common/CommonHeader";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
-
-const mockSections = ["칸 1", "칸 2", "칸 3", "칸 4"];
+import { getClosetTemplateSections } from "@/features/clothes-registration/screens/closet-template-data";
 
 function AnalysisSummaryCard({ sectionCount }: { sectionCount: number }) {
   return (
@@ -32,14 +31,19 @@ function DetectedSectionRow({ label, index }: { label: string; index: number }) 
 }
 
 export function ClosetAnalysisResultScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
+  const detectedSections = getClosetTemplateSections(templateId);
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingBottom: insets.bottom + 20 }}>
-      <CommonHeader />
+      <View className="pb-[8px]">
+        <CommonHeader />
+      </View>
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-6 pb-[24px] pt-[20px]"
+        contentContainerClassName="px-6 pb-[24px] pt-[12px]"
         showsVerticalScrollIndicator={false}
       >
         <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
@@ -47,7 +51,7 @@ export function ClosetAnalysisResultScreen() {
         </Text>
 
         <View className="mt-[29px]">
-          <AnalysisSummaryCard sectionCount={mockSections.length} />
+          <AnalysisSummaryCard sectionCount={detectedSections.length} />
         </View>
 
         <Text className="mt-[51px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
@@ -55,8 +59,8 @@ export function ClosetAnalysisResultScreen() {
         </Text>
 
         <View className="mt-[30px] gap-[12px]">
-          {mockSections.map((section, index) => (
-            <DetectedSectionRow key={section} label={section} index={index} />
+          {detectedSections.map((section, index) => (
+            <DetectedSectionRow key={section.id} label={section.label} index={index} />
           ))}
         </View>
       </ScrollView>
@@ -64,10 +68,15 @@ export function ClosetAnalysisResultScreen() {
       <View className="px-6">
         <Button
           label="칸 이름 입력하기"
-          href={clothesRegistrationRoutes.labels}
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
+          onPress={() =>
+            router.push({
+              pathname: "/closet/register/labels",
+              params: templateId ? { templateId } : undefined,
+            })
+          }
         />
       </View>
     </View>
