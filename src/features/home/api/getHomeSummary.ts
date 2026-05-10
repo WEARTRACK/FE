@@ -3,6 +3,8 @@ import { ApiError } from "@/lib/api/errors";
 
 export type HomeSummary = {
   totalClothesCount: number;
+  closetCount: number;
+  storageCount: number;
   weeklyExpenseAmount: number;
   weeklyClosetUsageRate: number;
 };
@@ -32,6 +34,8 @@ function isHomeSummary(value: unknown): value is HomeSummary {
 
   return (
     typeof candidate.totalClothesCount === "number" &&
+    typeof candidate.closetCount === "number" &&
+    typeof candidate.storageCount === "number" &&
     typeof candidate.weeklyExpenseAmount === "number" &&
     typeof candidate.weeklyClosetUsageRate === "number"
   );

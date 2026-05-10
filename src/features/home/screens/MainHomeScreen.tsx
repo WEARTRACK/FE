@@ -22,14 +22,14 @@ type WeeklyFashionStats = {
 };
 
 const defaultClosetSummary: ClosetSummary = {
-  totalClothes: 48,
-  closetCount: 1,
-  storageCount: 5,
+  totalClothes: 0,
+  closetCount: 0,
+  storageCount: 0,
 };
 
 const defaultWeeklyFashionStats: WeeklyFashionStats = {
-  totalSpending: 100000,
-  closetUsageRate: 73,
+  totalSpending: 0,
+  closetUsageRate: 0,
 };
 
 function formatWon(value: number) {
@@ -232,8 +232,9 @@ export function MainHomeScreen() {
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
   const closetSummary: ClosetSummary = {
-    ...defaultClosetSummary,
     totalClothes: homeSummary?.totalClothesCount ?? defaultClosetSummary.totalClothes,
+    closetCount: homeSummary?.closetCount ?? defaultClosetSummary.closetCount,
+    storageCount: homeSummary?.storageCount ?? defaultClosetSummary.storageCount,
   };
 
   const weeklyFashionStats: WeeklyFashionStats = {
