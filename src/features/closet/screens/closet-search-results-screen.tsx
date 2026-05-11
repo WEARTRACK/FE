@@ -54,6 +54,7 @@ import { useClosetSearchResults } from "@/features/closet/hooks/use-closet-searc
 import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
 import { parseClosetSearchParams } from "@/features/closet/types/closet-search";
+import { toClosetSectionOptions } from "@/features/closet/utils/closet-section-options";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 
@@ -127,19 +128,10 @@ export function ClosetSearchResultsScreen() {
   );
   const selectedItemClothesId = selectedItem?.clothesId ?? null;
   const sectionOptions = useMemo(() => {
-    const templateOptions = template.sections
-      .map((section) => {
-        const match = section.id.match(/section-(\d+)/);
-        if (!match) {
-          return null;
-        }
-
-        return {
-          id: Number(match[1]),
-          name: section.sectionName ?? `칸 ${match[1]}`,
-        };
-      })
-      .filter((option): option is { id: number; name: string } => option !== null);
+    const templateOptions = toClosetSectionOptions(template).map((option) => ({
+      id: option.requestSectionId,
+      name: option.label,
+    }));
 
     if (
       selectedItemDetail &&

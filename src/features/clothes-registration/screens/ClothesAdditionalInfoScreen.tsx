@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
@@ -19,6 +20,7 @@ import {
   toClothesCategoryValue,
   toClothesColorValue,
 } from "@/features/clothes-registration/api/createClothes";
+import { useClothesStorageSections } from "@/features/clothes-registration/hooks/use-clothes-storage-sections";
 import { uploadClothesPhoto } from "@/features/clothes-registration/api/uploadClothesPhoto";
 import {
   getParamString,
@@ -26,13 +28,7 @@ import {
   normalizeColorName,
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 import { showToast } from "@/lib/ui/showToast";
-
-const closetOptions = [
-  { id: 1, label: "왼쪽 서랍 1칸" },
-  { id: 2, label: "오른쪽 서랍 1칸" },
-  { id: 3, label: "왼쪽 행거" },
-  { id: 4, label: "오른쪽 행거" },
-];
+import type { ClosetSectionOption } from "@/features/closet/utils/closet-section-options";
 
 function formatPrice(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -119,11 +115,13 @@ function LabeledInput({
 }
 
 function ClosetSelect({
+  options,
   selectedOption,
   onSelect,
 }: {
-  selectedOption: (typeof closetOptions)[number];
-  onSelect: (option: (typeof closetOptions)[number]) => void;
+  options: ClosetSectionOption[];
+  selectedOption: ClosetSectionOption | null;
+  onSelect: (option: ClosetSectionOption) => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -141,19 +139,20 @@ function ClosetSelect({
       >
         <Pressable
           className="h-[44px] flex-row items-center justify-between px-[20px]"
+          disabled={options.length === 0}
           onPress={() => setOpen((current) => !current)}
         >
           <Text className="font-pretendard text-[12px] leading-[20px] text-text">
-            {selectedOption.label}
+            {selectedOption?.label ?? "보관 칸을 불러오는 중"}
           </Text>
           <Text className="font-pretendard text-[18px] leading-[20px] text-disabled">⌄</Text>
         </Pressable>
 
-        {open ? (
-          <View className="px-[20px]">
-            {closetOptions.map((option) => (
+        {open && options.length > 0 ? (
+          <ScrollView className="max-h-[220px]" contentContainerClassName="px-[20px]">
+            {options.map((option) => (
               <Pressable
-                key={option.id}
+                key={option.templateSectionId}
                 className="h-[41px] justify-center border-t-[0.5px] border-disabled"
                 onPress={() => {
                   onSelect(option);
@@ -165,7 +164,7 @@ function ClosetSelect({
                 </Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
         ) : null}
       </View>
     </View>
@@ -203,10 +202,30 @@ export function ClothesAdditionalInfoScreen() {
   const selectedCategory = normalizeCategoryName(
     getParamString(selectedCategoryParam) ?? predictedCategory,
   );
+  const {
+    options: closetSectionOptions,
+    isLoading: isClosetSectionsLoading,
+    error: closetSectionsError,
+  } = useClothesStorageSections();
   const isManualEntry = getParamString(entryModeParam) === "manual";
   const [price, setPrice] = useState("");
-  const [selectedClosetOption, setSelectedClosetOption] = useState(closetOptions[0]);
+  const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const selectedClosetOption = useMemo(
+    () =>
+      closetSectionOptions.find((option) => option.requestSectionId === selectedClosetSectionId) ??
+      closetSectionOptions[0] ??
+      null,
+    [closetSectionOptions, selectedClosetSectionId],
+  );
+
+  useEffect(() => {
+    if (selectedClosetSectionId !== null || closetSectionOptions.length === 0) {
+      return;
+    }
+
+    setSelectedClosetSectionId(closetSectionOptions[0].requestSectionId);
+  }, [closetSectionOptions, selectedClosetSectionId]);
 
   const handleSave = async () => {
     if (isSaving) {
@@ -225,6 +244,11 @@ export function ClothesAdditionalInfoScreen() {
       return;
     }
 
+    if (!selectedClosetOption) {
+      showToast(closetSectionsError ? "옷장 보관 칸 정보를 불러오지 못했어요." : "보관 칸을 선택해주세요.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -239,7 +263,7 @@ export function ClothesAdditionalInfoScreen() {
         color: toClothesColorValue(selectedColor),
         category: toClothesCategoryValue(selectedCategory),
         price: priceValue,
-        sectionId: selectedClosetOption.id,
+        sectionId: selectedClosetOption.requestSectionId,
       });
 
       router.replace("/clothes/register/complete");
@@ -284,7 +308,21 @@ export function ClothesAdditionalInfoScreen() {
             value={formatPrice(price)}
           />
 
-          <ClosetSelect selectedOption={selectedClosetOption} onSelect={setSelectedClosetOption} />
+          <ClosetSelect
+            options={closetSectionOptions}
+            selectedOption={selectedClosetOption}
+            onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
+          />
+          {isClosetSectionsLoading ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
+              옷장 보관 칸 정보를 불러오는 중입니다.
+            </Text>
+          ) : null}
+          {closetSectionsError ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+              옷장 보관 칸 정보를 불러오지 못했어요. 임시 데이터 또는 API 연결 상태를 확인해주세요.
+            </Text>
+          ) : null}
         </View>
 
         <View className="mt-auto">
