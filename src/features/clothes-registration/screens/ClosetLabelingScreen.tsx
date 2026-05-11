@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -124,74 +124,74 @@ export function ClosetLabelingScreen() {
           paddingBottom: insets.bottom + 20,
         }}
       >
-      <View className="h-[32px] flex-row items-center justify-between">
-        <Pressable
-          accessibilityLabel="뒤로가기"
-          hitSlop={12}
-          onPress={() => router.back()}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.65 : 1,
-          })}
-        >
-          <ArrowBackIcon width={24} height={24} />
-        </Pressable>
-        <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
-          옷장등록
+        <View className="h-[32px] flex-row items-center justify-between">
+          <Pressable
+            accessibilityLabel="뒤로가기"
+            hitSlop={12}
+            onPress={() => router.back()}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.65 : 1,
+            })}
+          >
+            <ArrowBackIcon width={24} height={24} />
+          </Pressable>
+          <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
+            옷장등록
+          </Text>
+          <View className="w-[32px]" />
+        </View>
+
+        <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+          {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}
         </Text>
-        <View className="w-[32px]" />
-      </View>
 
-      <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}
-      </Text>
+        <View className="mt-[26px] gap-[8px]">
+          {detectedClosetSections.map((section, index) => {
+            const value = sectionNames[index] ?? "";
+            const completed = value.trim().length > 0;
+            const isTouched = touchedSectionIds.includes(section.id);
+            const showInputError = !completed && (shouldShowError || isTouched);
 
-      <View className="mt-[26px] gap-[8px]">
-        {detectedClosetSections.map((section, index) => {
-          const value = sectionNames[index] ?? "";
-          const completed = value.trim().length > 0;
-          const isTouched = touchedSectionIds.includes(section.id);
-          const showInputError = !completed && (shouldShowError || isTouched);
+            return (
+              <View key={section.id} className="h-[44px] flex-row items-center">
+                <SectionNumberBadge completed={completed} index={index} />
 
-          return (
-            <View key={section.id} className="h-[44px] flex-row items-center">
-              <SectionNumberBadge completed={completed} index={index} />
+                <View className="ml-[16px]">
+                  <SectionNameInput
+                    index={index}
+                    isLast={index === detectedClosetSections.length - 1}
+                    onBlur={() => markSectionTouched(section.id)}
+                    onChangeText={(nextValue) => updateSectionName(index, nextValue)}
+                    showError={showInputError}
+                    value={value}
+                  />
+                </View>
 
-              <View className="ml-[16px]">
-                <SectionNameInput
-                  index={index}
-                  isLast={index === detectedClosetSections.length - 1}
-                  onBlur={() => markSectionTouched(section.id)}
-                  onChangeText={(nextValue) => updateSectionName(index, nextValue)}
-                  showError={showInputError}
-                  value={value}
-                />
+                <View className={completed ? "ml-[16px] w-[28px] items-center" : "w-0"}>
+                  {completed ? <CheckActiveIcon width={28} height={28} /> : null}
+                </View>
               </View>
-
-              <View className={completed ? "ml-[16px] w-[28px] items-center" : "w-0"}>
-                {completed ? <CheckActiveIcon width={28} height={28} /> : null}
-              </View>
-            </View>
-          );
-        })}
-      </View>
+            );
+          })}
+        </View>
 
         <View className="mt-auto">
-        {shouldShowError ? (
-          <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
-            모든 칸 이름이 입력돼야 합니다.
-          </Text>
-        ) : null}
+          {shouldShowError ? (
+            <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
+              모든 칸 이름이 입력돼야 합니다.
+            </Text>
+          ) : null}
 
-        <Button
-          disabled={!isComplete}
-          fullWidth
-          href={isComplete ? clothesRegistrationRoutes.complete : undefined}
-          label={
-            isComplete ? "저장하기" : `저장하기(${completedSectionCount}/${detectedSectionCount})`
-          }
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
-        />
+          <Button
+            disabled={!isComplete}
+            fullWidth
+            href={isComplete ? clothesRegistrationRoutes.complete : undefined}
+            label={
+              isComplete ? "저장하기" : `저장하기(${completedSectionCount}/${detectedSectionCount})`
+            }
+            className="h-[58px]"
+            textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
+          />
         </View>
       </View>
     </KeyboardAvoidingView>
