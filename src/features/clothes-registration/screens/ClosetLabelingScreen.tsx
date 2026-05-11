@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,13 +8,7 @@ import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
-
-const detectedClosetSections = [
-  { id: "section-1", initialName: "왼쪽 서랍 한 칸" },
-  { id: "section-2", initialName: "오른쪽 행거" },
-  { id: "section-3", initialName: "" },
-  { id: "section-4", initialName: "" },
-];
+import { getClosetTemplateSections } from "@/features/clothes-registration/screens/closet-template-data";
 
 const maxNameLength = 10;
 
@@ -44,12 +38,14 @@ function SectionNameInput({
   showError,
   onChangeText,
   onBlur,
+  isLast,
 }: {
   value: string;
   index: number;
   showError: boolean;
   onChangeText: (value: string) => void;
   onBlur: () => void;
+  isLast: boolean;
 }) {
   const completed = value.trim().length > 0;
 
@@ -71,7 +67,7 @@ function SectionNameInput({
       onChangeText={onChangeText}
       placeholder={`칸 이름을 입력해주세요 (0/${maxNameLength})`}
       placeholderTextColor={colors.disabled}
-      returnKeyType={index === detectedClosetSections.length - 1 ? "done" : "next"}
+      returnKeyType={isLast ? "done" : "next"}
       style={{ includeFontPadding: false, lineHeight: 16, paddingBottom: 2, paddingTop: 0 }}
       textAlignVertical="center"
       value={value}
@@ -82,10 +78,17 @@ function SectionNameInput({
 export function ClosetLabelingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
+  const detectedClosetSections = useMemo(() => getClosetTemplateSections(templateId), [templateId]);
   const [sectionNames, setSectionNames] = useState(() =>
     detectedClosetSections.map((section) => section.initialName),
   );
   const [touchedSectionIds, setTouchedSectionIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSectionNames(detectedClosetSections.map((section) => section.initialName));
+    setTouchedSectionIds([]);
+  }, [detectedClosetSections]);
 
   const detectedSectionCount = detectedClosetSections.length;
   const completedSectionCount = useMemo(
@@ -152,6 +155,7 @@ export function ClosetLabelingScreen() {
               <View className="ml-[16px]">
                 <SectionNameInput
                   index={index}
+                  isLast={index === detectedClosetSections.length - 1}
                   onBlur={() => markSectionTouched(section.id)}
                   onChangeText={(nextValue) => updateSectionName(index, nextValue)}
                   showError={showInputError}
