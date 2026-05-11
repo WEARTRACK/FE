@@ -1,6 +1,6 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ArrowBackIcon from "../../../../assets/arrow_back.svg";
@@ -113,13 +113,17 @@ export function ClosetLabelingScreen() {
   };
 
   return (
-    <View
-      className="flex-1 bg-bg-light px-6"
-      style={{
-        paddingTop: insets.top + 24,
-        paddingBottom: insets.bottom + 20,
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1"
     >
+      <View
+        className="flex-1 bg-bg-light px-6"
+        style={{
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 20,
+        }}
+      >
       <View className="h-[32px] flex-row items-center justify-between">
         <Pressable
           accessibilityLabel="뒤로가기"
@@ -171,7 +175,7 @@ export function ClosetLabelingScreen() {
         })}
       </View>
 
-      <View className="mt-auto">
+        <View className="mt-auto">
         {shouldShowError ? (
           <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
             모든 칸 이름이 입력돼야 합니다.
@@ -188,7 +192,8 @@ export function ClosetLabelingScreen() {
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
         />
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

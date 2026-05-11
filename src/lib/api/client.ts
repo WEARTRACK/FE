@@ -30,7 +30,8 @@ function isAuthRequiredPath(pathname: string) {
     pathname === "/api/home" ||
     pathname === "/api/members/nickname/check" ||
     pathname === "/api/members/me/nickname" ||
-    pathname.startsWith("/api/members/me/")
+    pathname.startsWith("/api/members/me/") ||
+    pathname.startsWith("/api/clothes/")
   );
 }
 
@@ -68,13 +69,28 @@ apiClient.interceptors.request.use(async (config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  (error: AxiosError | ApiError) => {
+    if (error instanceof ApiError) {
+      return Promise.reject(error);
+    }
+
     if (!error.response) {
+      const requestConfig = error.config;
+      const networkDetails = {
+        axiosCode: error.code ?? null,
+        originalMessage: error.message,
+        url: requestConfig?.url ?? null,
+        method: requestConfig?.method ?? null,
+        timeout: requestConfig?.timeout ?? null,
+        hasRequest: Boolean(error.request),
+      };
+
       return Promise.reject(
         new ApiError({
           code: "NETWORK_ERROR",
           message: "Network error. Please check your connection and try again.",
           status: null,
+          details: networkDetails,
         }),
       );
     }
