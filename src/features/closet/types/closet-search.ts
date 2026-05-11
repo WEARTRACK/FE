@@ -22,6 +22,27 @@ export type ClosetSearchParams =
       value: ClosetCategory;
     };
 
+export type ClosetSearchResultItem = {
+  id: string;
+  clothesId: number;
+  imageUri: string;
+  color: ClosetColor;
+  category: ClosetCategory;
+  sectionName: string;
+  price: number;
+  colorLabel: string;
+  categoryLabel: string;
+  similarCount?: number;
+};
+
+export type ClosetSearchPage = {
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  items: ClosetSearchResultItem[];
+};
+
 export function isClosetSearchMode(value: string): value is ClosetSearchMode {
   return value === "color" || value === "category";
 }

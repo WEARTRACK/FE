@@ -1,6 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+  Image,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import HeaderLogo from "../../../../assets/headerLogo.svg";
@@ -60,9 +68,7 @@ function AnalysisResultHeader({
           </Text>
           <View className="mt-[8px] flex-row gap-[6px]">
             <View className="h-[32px] min-w-[70px] items-center justify-center rounded-full bg-bg-dark px-[18px]">
-              <Text className="font-pretendard text-[12px] leading-[16px] text-white">
-                {color}
-              </Text>
+              <Text className="font-pretendard text-[12px] leading-[16px] text-white">{color}</Text>
             </View>
             <View className="h-[32px] min-w-[78px] items-center justify-center rounded-full bg-primary px-[18px]">
               <Text className="font-pretendard text-[12px] leading-[16px] text-accent">
@@ -245,48 +251,53 @@ export function ClothesAdditionalInfoScreen() {
   };
 
   return (
-    <View
-      className="flex-1 bg-bg-light px-6"
-      style={{
-        paddingTop: insets.top + 24,
-        paddingBottom: insets.bottom + 20,
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1"
     >
-      <HeaderLogo width={118} height={15} />
+      <View
+        className="flex-1 bg-bg-light px-6"
+        style={{
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 20,
+        }}
+      >
+        <HeaderLogo width={118} height={15} />
 
-      <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        추가정보를 입력해주세요.
-      </Text>
+        <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+          추가정보를 입력해주세요.
+        </Text>
 
-      <AnalysisResultHeader
-        category={selectedCategory}
-        color={selectedColor}
-        imageSource={imageUrl || imageUri}
-        showAnalysis={!isManualEntry}
-      />
-
-      <View className="mt-[34px]">
-        <LabeledInput
-          label="가격"
-          onChangeText={setPrice}
-          placeholder="숫자만 입력 가능"
-          unit="원"
-          value={formatPrice(price)}
+        <AnalysisResultHeader
+          category={selectedCategory}
+          color={selectedColor}
+          imageSource={imageUrl || imageUri}
+          showAnalysis={!isManualEntry}
         />
 
-        <ClosetSelect selectedOption={selectedClosetOption} onSelect={setSelectedClosetOption} />
-      </View>
+        <View className="mt-[34px]">
+          <LabeledInput
+            label="가격"
+            onChangeText={setPrice}
+            placeholder="숫자만 입력 가능"
+            unit="원"
+            value={formatPrice(price)}
+          />
 
-      <View className="mt-auto">
-        <Button
-          label={isSaving ? "저장 중..." : "저장하기"}
-          onPress={handleSave}
-          disabled={isSaving}
-          fullWidth
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
-        />
+          <ClosetSelect selectedOption={selectedClosetOption} onSelect={setSelectedClosetOption} />
+        </View>
+
+        <View className="mt-auto">
+          <Button
+            label={isSaving ? "저장 중..." : "저장하기"}
+            disabled={isSaving}
+            fullWidth
+            className="h-[58px]"
+            onPress={handleSave}
+            textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
+          />
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
