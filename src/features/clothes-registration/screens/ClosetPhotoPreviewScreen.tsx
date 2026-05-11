@@ -31,7 +31,8 @@ export function ClosetPhotoPreviewScreen() {
       <View className="mt-auto gap-[10px]">
         <Button
           label="사용하기"
-          href={clothesRegistrationRoutes.analyzing}
+          // Temporary template-selection flow until closet AI analysis is restored.
+          href={clothesRegistrationRoutes.select}
           variant="primary"
           fullWidth
           className="h-[58px]"
@@ -40,7 +41,7 @@ export function ClosetPhotoPreviewScreen() {
 
         <Button
           label="재촬영하기"
-          href={clothesRegistrationRoutes.guide}
+          href="/home"
           variant="secondary"
           fullWidth
           className="h-[58px] border-[0.5px] border-text-subdued"

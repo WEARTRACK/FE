@@ -8,6 +8,7 @@ import ClosetExample from "../../../../assets/closetExample.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import HangerIcon from "../../../../assets/hanger-icon.svg";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
 
 type ClosetSummary = {
   totalClothes: number;
@@ -20,15 +21,15 @@ type WeeklyFashionStats = {
   closetUsageRate: number;
 };
 
-const closetSummary: ClosetSummary = {
-  totalClothes: 48,
-  closetCount: 1,
-  storageCount: 5,
+const defaultClosetSummary: ClosetSummary = {
+  totalClothes: 0,
+  closetCount: 0,
+  storageCount: 0,
 };
 
-const weeklyFashionStats: WeeklyFashionStats = {
-  totalSpending: 100000,
-  closetUsageRate: 73,
+const defaultWeeklyFashionStats: WeeklyFashionStats = {
+  totalSpending: 0,
+  closetUsageRate: 0,
 };
 
 function formatWon(value: number) {
@@ -226,8 +227,21 @@ function ClothesRegistrationGuideModal({
 
 export function MainHomeScreen() {
   const router = useRouter();
+  const { data: homeSummary } = useHomeSummary();
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
+
+  const closetSummary: ClosetSummary = {
+    totalClothes: homeSummary?.totalClothesCount ?? defaultClosetSummary.totalClothes,
+    closetCount: homeSummary?.closetCount ?? defaultClosetSummary.closetCount,
+    storageCount: homeSummary?.storageCount ?? defaultClosetSummary.storageCount,
+  };
+
+  const weeklyFashionStats: WeeklyFashionStats = {
+    totalSpending: homeSummary?.weeklyExpenseAmount ?? defaultWeeklyFashionStats.totalSpending,
+    closetUsageRate:
+      homeSummary?.weeklyClosetUsageRate ?? defaultWeeklyFashionStats.closetUsageRate,
+  };
 
   const handlePressCapture = () => {
     setIsClosetGuideVisible(false);
