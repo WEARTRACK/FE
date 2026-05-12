@@ -229,7 +229,7 @@ function ClothesRegistrationGuideModal({
           </Text>
 
           <Pressable
-            className="mt-[31px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
