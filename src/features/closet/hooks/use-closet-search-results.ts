@@ -5,7 +5,6 @@ import {
 } from "@/features/closet/data/closet-repository-provider";
 import type { ClosetDataRepository } from "@/features/closet/data/closet-repository";
 import type { ClosetDetailResult } from "@/features/closet/api/closet-api-types";
-import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
 import type {
   ClosetSearchPage,
   ClosetSearchParams,
@@ -42,10 +41,10 @@ export function useClosetSearchResults(
     }
 
     if (searchMode === "color") {
-      return { mode: "color", value: searchValue as ClosetColor };
+      return { mode: "color", value: searchValue };
     }
 
-    return { mode: "category", value: searchValue as ClosetCategory };
+    return { mode: "category", value: searchValue };
   }, [searchMode, searchValue]);
 
   const refetch = useCallback(() => {
@@ -138,20 +137,19 @@ export function useClosetSearchResults(
 
         let nextPageData = data;
 
-        if (needsFallbackSimilarCount) {
+        if (needsFallbackSimilarCount && normalizedSearchParams.mode === "category") {
           const allItems = await repository.getAllItems();
-          const similarCountByKey = new Map<string, number>();
+          const similarCountByCategory = new Map<string, number>();
 
           allItems.forEach((item) => {
-            const key = `${item.color}:${item.category}`;
-            similarCountByKey.set(key, (similarCountByKey.get(key) ?? 0) + 1);
+            similarCountByCategory.set(item.category, (similarCountByCategory.get(item.category) ?? 0) + 1);
           });
 
           nextPageData = {
             ...data,
             items: data.items.map((item) => ({
               ...item,
-              similarCount: item.similarCount ?? similarCountByKey.get(`${item.color}:${item.category}`) ?? 0,
+              similarCount: item.similarCount ?? similarCountByCategory.get(item.category) ?? 0,
             })),
           };
         }

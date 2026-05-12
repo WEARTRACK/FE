@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { isValidClosetId } from "@/features/closet/utils/closet-id";
 import { ApiError } from "@/lib/api/errors";
 
 export type SocialAuthProvider = "GOOGLE" | "KAKAO" | "NAVER";
@@ -16,6 +17,7 @@ export type SocialLoginResult = {
   profileCompleted: boolean;
   accessToken: string;
   refreshToken: string;
+  closetId?: number | null;
 };
 
 type SocialLoginResponse = {
@@ -46,7 +48,8 @@ function isSocialLoginResult(value: unknown): value is SocialLoginResult {
     (typeof candidate.nickname === "string" || candidate.nickname === null) &&
     typeof candidate.profileCompleted === "boolean" &&
     typeof candidate.accessToken === "string" &&
-    typeof candidate.refreshToken === "string"
+    typeof candidate.refreshToken === "string" &&
+    (candidate.closetId === undefined || candidate.closetId === null || isValidClosetId(candidate.closetId))
   );
 }
 

@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -7,90 +7,34 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { SvgProps } from "react-native-svg";
 import Svg, { Rect } from "react-native-svg";
 
 import CloseIcon from "../../../../assets/close.svg";
 import PageActiveIcon from "../../../../assets/page-active.svg";
 import PageInactiveIcon from "../../../../assets/page-inactive.svg";
 import QuestionIcon from "../../../../assets/question-icon.svg";
-import CardiganTagIcon from "../../../../assets/category/cardigan-active.svg";
-import CoatTagIcon from "../../../../assets/category/coat-active.svg";
-import DressTagIcon from "../../../../assets/category/dress-active.svg";
-import HoodieTagIcon from "../../../../assets/category/hoodie-active.svg";
-import JacketTagIcon from "../../../../assets/category/jacket-active.svg";
-import KnitTagIcon from "../../../../assets/category/knit-active.svg";
-import PaddingTagIcon from "../../../../assets/category/padding-active.svg";
-import PantsTagIcon from "../../../../assets/category/pants-active.svg";
-import ShirtTagIcon from "../../../../assets/category/shirt-active.svg";
-import ShortsTagIcon from "../../../../assets/category/shorts-active.svg";
-import SkirtTagIcon from "../../../../assets/category/skirt-active.svg";
-import TshirtTagIcon from "../../../../assets/category/tshirt-active.svg";
-import VestTagIcon from "../../../../assets/category/vest-active.svg";
-import BeigeTagIcon from "../../../../assets/color/beige-active.svg";
-import BlackTagIcon from "../../../../assets/color/black-active.svg";
-import BlueTagIcon from "../../../../assets/color/blue-active.svg";
-import BrownTagIcon from "../../../../assets/color/brown-active.svg";
-import GrayTagIcon from "../../../../assets/color/gray-active.svg";
-import GreenTagIcon from "../../../../assets/color/green-active.svg";
-import NavyTagIcon from "../../../../assets/color/navy-active.svg";
-import OrangeTagIcon from "../../../../assets/color/orange-active.svg";
-import PinkTagIcon from "../../../../assets/color/pink-active.svg";
-import PurpleTagIcon from "../../../../assets/color/purple-active.svg";
-import RedTagIcon from "../../../../assets/color/red-active.svg";
-import WhiteTagIcon from "../../../../assets/color/white-active.svg";
-import YellowTagIcon from "../../../../assets/color/yellow-active.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import type { ClosetDetailResult } from "@/features/closet/api/closet-api-types";
 import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import { useClosetSearchResults } from "@/features/closet/hooks/use-closet-search-results";
 import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
-import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
+import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
 import { parseClosetSearchParams } from "@/features/closet/types/closet-search";
-import { toClosetSectionOptions } from "@/features/closet/utils/closet-section-options";
+import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-tag-icons";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 
-const colorIconMap: Record<ClosetColor, React.ComponentType<SvgProps>> = {
-  red: RedTagIcon,
-  orange: OrangeTagIcon,
-  yellow: YellowTagIcon,
-  green: GreenTagIcon,
-  navy: NavyTagIcon,
-  purple: PurpleTagIcon,
-  white: WhiteTagIcon,
-  blue: BlueTagIcon,
-  pink: PinkTagIcon,
-  brown: BrownTagIcon,
-  gray: GrayTagIcon,
-  black: BlackTagIcon,
-  beige: BeigeTagIcon,
-};
-
-const categoryIconMap: Record<ClosetCategory, React.ComponentType<SvgProps>> = {
-  tshirt: TshirtTagIcon,
-  knit: KnitTagIcon,
-  hoodie: HoodieTagIcon,
-  vest: VestTagIcon,
-  cardigan: CardiganTagIcon,
-  pants: PantsTagIcon,
-  dress: DressTagIcon,
-  shirt: ShirtTagIcon,
-  shorts: ShortsTagIcon,
-  jacket: JacketTagIcon,
-  coat: CoatTagIcon,
-  skirt: SkirtTagIcon,
-  padding: PaddingTagIcon,
-};
-
 export function ClosetSearchResultsScreen() {
+  const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
   const { template } = useClosetTemplate();
   const insets = useSafeAreaInsets();
@@ -100,7 +44,7 @@ export function ClosetSearchResultsScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSectionDropdownOpen, setIsSectionDropdownOpen] = useState(false);
   const [draftPriceInput, setDraftPriceInput] = useState("");
-  const [draftSectionId, setDraftSectionId] = useState<number | null>(null);
+  const [draftSectionId, setDraftSectionId] = useState<ClosetSectionId | null>(null);
   const [draftSectionName, setDraftSectionName] = useState<string | null>(null);
   const lastToastMessageRef = useRef<string | null>(null);
 
@@ -128,9 +72,9 @@ export function ClosetSearchResultsScreen() {
   );
   const selectedItemClothesId = selectedItem?.clothesId ?? null;
   const sectionOptions = useMemo(() => {
-    const templateOptions = toClosetSectionOptions(template).map((option) => ({
-      id: option.requestSectionId,
-      name: option.label,
+    const templateOptions = template.sections.map((section) => ({
+      id: section.id,
+      name: section.sectionName ?? section.id,
     }));
 
     if (
@@ -364,8 +308,8 @@ export function ClosetSearchResultsScreen() {
           </View>
           <View className="mt-[38px] gap-2">
             {items.map((item) => {
-              const ColorIcon = colorIconMap[item.color];
-              const CategoryIcon = categoryIconMap[item.category];
+              const ColorIcon = getColorIcon(item.color);
+              const CategoryIcon = getCategoryIcon(item.category);
 
               return (
                 <Pressable
@@ -438,7 +382,13 @@ export function ClosetSearchResultsScreen() {
             <Text className="mt-3 font-pretendard text-body text-text-subdued">옷을 등록하러 가볼까요?</Text>
           </View>
           <View className="absolute left-0 right-0" style={{ bottom: 8 }}>
-            <Button fullWidth label="옷 등록하기" onPress={() => {}} size="lg" variant="primary" />
+            <Button
+              fullWidth
+              label="옷 등록하기"
+              onPress={() => router.push(clothesRegistrationRoutes.clothesGuide)}
+              size="lg"
+              variant="primary"
+            />
           </View>
         </View>
       )}
@@ -494,11 +444,11 @@ export function ClosetSearchResultsScreen() {
 
               <View className="mt-7 flex-row items-center gap-[6px]">
                 {(() => {
-                  const ColorIcon = colorIconMap[selectedItem.color];
+                  const ColorIcon = getColorIcon(selectedItem.color);
                   return <ColorIcon width={72} height={32} />;
                 })()}
                 {(() => {
-                  const CategoryIcon = categoryIconMap[selectedItem.category];
+                  const CategoryIcon = getCategoryIcon(selectedItem.category);
                   return <CategoryIcon width={72} height={32} />;
                 })()}
               </View>
@@ -519,22 +469,24 @@ export function ClosetSearchResultsScreen() {
                       </Pressable>
                       {isSectionDropdownOpen ? (
                         <View
-                          className="absolute right-0 top-9 w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
+                          className="absolute right-0 top-9 w-[140px] max-h-[180px] rounded-md border-[0.5px] border-disabled bg-white"
                           style={{ position: "absolute", zIndex: 999 }}
                         >
-                          {sectionOptions.map((option) => (
-                            <Pressable
-                              key={option.id}
-                              className="px-3 py-2"
-                              onPress={() => {
-                                setDraftSectionId(option.id);
-                                setDraftSectionName(option.name);
-                                setIsSectionDropdownOpen(false);
-                              }}
-                            >
-                              <Text className="font-pretendard text-body text-text-subdued">{option.name}</Text>
-                            </Pressable>
-                          ))}
+                          <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                            {sectionOptions.map((option) => (
+                              <Pressable
+                                key={option.id}
+                                className="px-3 py-2"
+                                onPress={() => {
+                                  setDraftSectionId(option.id);
+                                  setDraftSectionName(option.name);
+                                  setIsSectionDropdownOpen(false);
+                                }}
+                              >
+                                <Text className="font-pretendard text-body text-text-subdued">{option.name}</Text>
+                              </Pressable>
+                            ))}
+                          </ScrollView>
                         </View>
                       ) : null}
                     </View>
