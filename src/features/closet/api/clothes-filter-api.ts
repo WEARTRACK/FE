@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
 
 import {
+  assertApiEnvelopeSuccess,
   assertExclusiveFilterQuery,
   type ApiEnvelope,
   type ClosetFilterItemApi,
@@ -14,6 +14,7 @@ import {
 import {
   mapServerCategoryToClosetCategory,
   mapServerColorToClosetColor,
+  resolveClosetImageUrl,
   resolveSectionName,
 } from "./closet-api-mappers";
 
@@ -64,25 +65,18 @@ export async function fetchClothesByFilter(
     throw createInvalidResponseError("옷 필터 조회 응답 형식이 올바르지 않아요.", response.data);
   }
 
-  if (!response.data.isSuccess) {
-    throw new ApiError({
-      code: response.data.code,
-      message: response.data.message,
-      status: response.status,
-      details: response.data.result,
-    });
-  }
+  const result = assertApiEnvelopeSuccess(response.data, response.status);
 
-  if (!isClosetFilterResultApi(response.data.result)) {
+  if (!isClosetFilterResultApi(result)) {
     throw createInvalidResponseError("옷 필터 조회 result 형식이 올바르지 않아요.", response.data);
   }
 
   return {
-    totalCount: response.data.result.totalCount,
-    currentPage: response.data.result.currentPage,
-    totalPages: response.data.result.totalPages,
-    hasNext: response.data.result.hasNext,
-    clothes: response.data.result.clothes.map((item) => {
+    totalCount: result.totalCount,
+    currentPage: result.currentPage,
+    totalPages: result.totalPages,
+    hasNext: result.hasNext,
+    clothes: result.clothes.map((item) => {
       const sectionName = resolveSectionName(item);
 
       if (!sectionName) {
@@ -91,7 +85,7 @@ export async function fetchClothesByFilter(
 
       return {
         clothesId: item.clothesId,
-        imageUrl: item.imageUrl,
+        imageUrl: resolveClosetImageUrl(item.imageUrl),
         color: mapServerColorToClosetColor(item.color),
         category: mapServerCategoryToClosetCategory(item.category),
         sectionName,

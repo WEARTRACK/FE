@@ -1,12 +1,12 @@
-import type { ClosetItem } from "@/features/closet/types/closet-item";
 import type {
   ClosetCategoryStatistic,
   ClosetStatisticsSummary,
 } from "@/features/closet/types/closet-statistics";
+import type { ClosetItem } from "@/features/closet/types/closet-item";
 
 const MAX_RANKED_CATEGORIES = 4;
 const OTHERS_RANK = 5;
-const CATEGORY_LABEL_BY_KEY: Record<ClosetItem["category"], string> = {
+const CATEGORY_LABEL_BY_KEY: Record<string, string> = {
   tshirt: "T-Shirt",
   shirt: "Shirt",
   knit: "Knit",
@@ -23,10 +23,22 @@ const CATEGORY_LABEL_BY_KEY: Record<ClosetItem["category"], string> = {
 };
 
 type CategoryCount = {
-  category: ClosetItem["category"];
+  category: string;
   label: string;
   count: number;
 };
+
+function normalizeCategoryKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function toDisplayLabel(value: string) {
+  if (value === "tshirt") {
+    return "T-Shirt";
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export function buildClosetStatistics(items: ClosetItem[]): ClosetStatisticsSummary {
   const totalCount = items.length;
@@ -35,18 +47,19 @@ export function buildClosetStatistics(items: ClosetItem[]): ClosetStatisticsSumm
     return { totalCount, rankedCategories: [] };
   }
 
-  const categoryCountMap = new Map<ClosetItem["category"], CategoryCount>();
+  const categoryCountMap = new Map<string, CategoryCount>();
 
   items.forEach((item) => {
-    const target = categoryCountMap.get(item.category);
+    const normalizedCategory = normalizeCategoryKey(item.category);
+    const target = categoryCountMap.get(normalizedCategory);
     if (target) {
       target.count += 1;
       return;
     }
 
-    categoryCountMap.set(item.category, {
-      category: item.category,
-      label: CATEGORY_LABEL_BY_KEY[item.category],
+    categoryCountMap.set(normalizedCategory, {
+      category: normalizedCategory,
+      label: CATEGORY_LABEL_BY_KEY[normalizedCategory] ?? toDisplayLabel(normalizedCategory),
       count: 1,
     });
   });

@@ -1,7 +1,5 @@
-import type { ClosetCategory } from "@/features/closet/types/closet-item";
-
 export type ClosetCategoryStatistic = {
-  category: ClosetCategory | "others";
+  category: string | "others";
   label: string;
   count: number;
   ratio: number;
