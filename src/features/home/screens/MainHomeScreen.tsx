@@ -7,7 +7,11 @@ import ClosetIcon from "../../../../assets/closet-icon.svg";
 import ClosetExample from "../../../../assets/closetExample.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import HangerIcon from "../../../../assets/hanger-icon.svg";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import {
+  launchClothesCamera,
+  launchClothesImageLibrary,
+} from "@/features/clothes-registration/utils/launchClothesCamera";
+import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
 
 type ClosetSummary = {
@@ -139,10 +143,12 @@ function ClosetRegistrationGuideModal({
   visible,
   onClose,
   onPressCapture,
+  onPressSelectImage,
 }: {
   visible: boolean;
   onClose: () => void;
   onPressCapture: () => void;
+  onPressSelectImage: () => void;
 }) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -174,6 +180,18 @@ function ClosetRegistrationGuideModal({
               촬영하기
             </Text>
           </Pressable>
+
+          <Pressable
+            className="mt-[8px] h-[48px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
+            onPress={onPressSelectImage}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+              앨범에서 선택
+            </Text>
+          </Pressable>
         </Pressable>
       </Pressable>
     </Modal>
@@ -184,10 +202,12 @@ function ClothesRegistrationGuideModal({
   visible,
   onClose,
   onPressCapture,
+  onPressSelectImage,
 }: {
   visible: boolean;
   onClose: () => void;
   onPressCapture: () => void;
+  onPressSelectImage: () => void;
 }) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -209,7 +229,7 @@ function ClothesRegistrationGuideModal({
           </Text>
 
           <Pressable
-            className="mt-[31px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
@@ -217,6 +237,18 @@ function ClothesRegistrationGuideModal({
           >
             <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
               촬영하기
+            </Text>
+          </Pressable>
+
+          <Pressable
+            className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
+            onPress={onPressSelectImage}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+              앨범에서 선택
             </Text>
           </Pressable>
         </Pressable>
@@ -244,13 +276,85 @@ export function MainHomeScreen() {
   };
 
   const handlePressCapture = () => {
-    setIsClosetGuideVisible(false);
-    router.push(clothesRegistrationRoutes.preview);
+    void (async () => {
+      setIsClosetGuideVisible(false);
+
+      try {
+        const imageUri = await launchClothesCamera();
+
+        if (!imageUri) {
+          showToast("카메라 권한이 필요하거나 촬영이 취소됐어요.");
+          return;
+        }
+
+        router.push({
+          pathname: "/closet/register/preview",
+          params: { imageUri },
+        });
+      } catch {
+        showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+      }
+    })();
   };
 
-  const handlePressClothesCapture = () => {
+  const handlePressClosetImageSelect = async () => {
+    setIsClosetGuideVisible(false);
+
+    try {
+      const imageUri = await launchClothesImageLibrary();
+
+      if (!imageUri) {
+        showToast("사진 접근 권한이 필요하거나 선택이 취소됐어요.");
+        return;
+      }
+
+      router.push({
+        pathname: "/closet/register/preview",
+        params: { imageUri },
+      });
+    } catch {
+      showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
+    }
+  };
+
+  const handlePressClothesCapture = async () => {
     setIsClothesGuideVisible(false);
-    router.push(clothesRegistrationRoutes.clothesPreview);
+
+    try {
+      const imageUri = await launchClothesCamera();
+
+      if (!imageUri) {
+        showToast("카메라 권한이 필요하거나 촬영이 취소됐어요.");
+        return;
+      }
+
+      router.push({
+        pathname: "/clothes/register/preview",
+        params: { imageUri },
+      });
+    } catch {
+      showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+    }
+  };
+
+  const handlePressClothesImageSelect = async () => {
+    setIsClothesGuideVisible(false);
+
+    try {
+      const imageUri = await launchClothesImageLibrary();
+
+      if (!imageUri) {
+        showToast("사진 접근 권한이 필요하거나 선택이 취소됐어요.");
+        return;
+      }
+
+      router.push({
+        pathname: "/clothes/register/preview",
+        params: { imageUri },
+      });
+    } catch {
+      showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
+    }
   };
 
   const openClosetSearch = (mode: "color" | "category") => {
@@ -314,11 +418,13 @@ export function MainHomeScreen() {
         visible={isClosetGuideVisible}
         onClose={() => setIsClosetGuideVisible(false)}
         onPressCapture={handlePressCapture}
+        onPressSelectImage={handlePressClosetImageSelect}
       />
       <ClothesRegistrationGuideModal
         visible={isClothesGuideVisible}
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
+        onPressSelectImage={handlePressClothesImageSelect}
       />
     </>
   );

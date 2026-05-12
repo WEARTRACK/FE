@@ -5,6 +5,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/common/Button";
 import { CommonHeader } from "@/components/common/CommonHeader";
 import { getClosetTemplateSections } from "@/features/clothes-registration/screens/closet-template-data";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import {
+  parseNumericParam,
+  parsePredictedSections,
+  serializePredictedSections,
+} from "@/features/clothes-registration/utils/closetRegistrationParams";
+import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 
 function AnalysisSummaryCard({ sectionCount }: { sectionCount: number }) {
   return (
@@ -33,8 +40,34 @@ function DetectedSectionRow({ label, index }: { label: string; index: number }) 
 export function ClosetAnalysisResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
-  const detectedSections = getClosetTemplateSections(templateId);
+  const {
+    imageUri: imageUriParam,
+    imageUrl: imageUrlParam,
+    templateId: templateIdParam,
+    predictedSections: predictedSectionsParam,
+    predictedSectionCount: predictedSectionCountParam,
+  } = useLocalSearchParams<{
+    imageUri?: string;
+    imageUrl?: string;
+    templateId?: string;
+    predictedSections?: string;
+    predictedSectionCount?: string;
+  }>();
+  const imageUri = getParamString(imageUriParam);
+  const imageUrl = getParamString(imageUrlParam);
+  const rawTemplateId = getParamString(templateIdParam);
+  const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
+  const templateId = parseNumericParam(templateIdParam);
+  const predictedSections = parsePredictedSections(predictedSectionsParam);
+  const detectedSections =
+    predictedSections.length > 0
+      ? predictedSections
+      : getClosetTemplateSections(rawTemplateId).map((section, index) => ({
+          sectionOrder: index + 1,
+          sectionName: section.label,
+        }));
+  const predictedSectionCount =
+    parseNumericParam(predictedSectionCountParam) ?? detectedSections.length;
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingBottom: insets.bottom + 20 }}>
@@ -51,7 +84,7 @@ export function ClosetAnalysisResultScreen() {
         </Text>
 
         <View className="mt-[29px]">
-          <AnalysisSummaryCard sectionCount={detectedSections.length} />
+          <AnalysisSummaryCard sectionCount={predictedSectionCount} />
         </View>
 
         <Text className="mt-[51px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
@@ -60,7 +93,11 @@ export function ClosetAnalysisResultScreen() {
 
         <View className="mt-[30px] gap-[12px]">
           {detectedSections.map((section, index) => (
-            <DetectedSectionRow key={section.id} label={section.label} index={index} />
+            <DetectedSectionRow
+              key={`${section.sectionOrder}-${section.sectionName}`}
+              label={section.sectionName}
+              index={index}
+            />
           ))}
         </View>
       </ScrollView>
@@ -71,12 +108,24 @@ export function ClosetAnalysisResultScreen() {
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
-          onPress={() =>
+          onPress={() => {
+            setClosetDraft({
+              imageUri: imageUri ?? null,
+              imageUrl: imageUrl ?? null,
+              templateId: rawTemplateId ?? (templateId === null ? null : String(templateId)),
+              predictedSections: detectedSections,
+            });
+
             router.push({
               pathname: "/closet/register/labels",
-              params: templateId ? { templateId } : undefined,
-            })
-          }
+              params: {
+                imageUri: imageUri ?? "",
+                imageUrl: imageUrl ?? "",
+                templateId: rawTemplateId ?? (templateId === null ? "" : String(templateId)),
+                predictedSections: serializePredictedSections(detectedSections),
+              },
+            });
+          }}
         />
       </View>
     </View>

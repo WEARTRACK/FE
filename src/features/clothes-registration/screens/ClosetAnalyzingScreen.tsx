@@ -1,24 +1,68 @@
-import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClosetIcon from "../../../../assets/closet-icon.svg";
+import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { serializePredictedSections } from "@/features/clothes-registration/utils/closetRegistrationParams";
 
 export function ClosetAnalyzingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { imageUri: imageUriParam } = useLocalSearchParams<{ imageUri?: string }>();
+  const imageUri = getParamString(imageUriParam);
+  const hasUploadedRef = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace(clothesRegistrationRoutes.result);
-    }, 3000);
+    if (hasUploadedRef.current) {
+      return;
+    }
 
-    return () => {
-      clearTimeout(timer);
+    hasUploadedRef.current = true;
+
+    if (!imageUri) {
+      router.replace(clothesRegistrationRoutes.failure);
+      return;
+    }
+
+    const upload = async () => {
+      try {
+        const result = await uploadClosetPhoto(imageUri);
+
+        const params = {
+          imageUri,
+          imageUrl: result.imageUrl,
+          templateId: String(result.templateId),
+          predictedSectionCount:
+            result.predictedSectionCount === null ? "" : String(result.predictedSectionCount),
+          predictedSections: serializePredictedSections(result.predictedSections),
+        };
+
+        if (result.analysisStatus === "SUCCESS") {
+          router.replace({
+            pathname: "/closet/register/result",
+            params,
+          });
+          return;
+        }
+
+        router.replace({
+          pathname: "/closet/register/failure",
+          params,
+        });
+      } catch {
+        router.replace({
+          pathname: "/closet/register/failure",
+          params: { imageUri },
+        });
+      }
     };
-  }, [router]);
+
+    void upload();
+  }, [imageUri, router]);
 
   return (
     <View

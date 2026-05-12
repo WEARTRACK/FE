@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   FlatList,
@@ -17,6 +17,8 @@ import {
   closetTemplates,
   type ClosetTemplate,
 } from "@/features/clothes-registration/screens/closet-template-data";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 
 const carouselGap = 24;
 const cardFrameAspectRatio = 241 / 352;
@@ -81,6 +83,9 @@ export function ClosetTemplateSelectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
+  const { imageUri: imageUriParam } = useLocalSearchParams<{ imageUri?: string }>();
+  const imageUri = getParamString(imageUriParam);
+  const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const cardWidth = useMemo(() => cardFrameHeight * cardFrameAspectRatio, []);
@@ -163,12 +168,19 @@ export function ClosetTemplateSelectScreen() {
           fullWidth
           className="h-[58px] rounded-[12px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[24px]"
-          onPress={() =>
+          onPress={() => {
+            setClosetDraft({
+              imageUri: imageUri ?? null,
+              templateId: selectedTemplate.id,
+            });
+
             router.push({
               pathname: "/closet/register/result",
-              params: { templateId: selectedTemplate.id },
-            })
-          }
+              params: imageUri
+                ? { templateId: selectedTemplate.id, imageUri }
+                : { templateId: selectedTemplate.id },
+            });
+          }}
         />
       </View>
     </View>
