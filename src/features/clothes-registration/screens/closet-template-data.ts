@@ -28,18 +28,28 @@ export const closetTemplates: ClosetTemplate[] = [
   {
     id: "template2",
     image: ClosetTemplate2,
-    sectionCount: 10,
+    sectionCount: 4,
     imageWidth: 222,
     imageHeight: 352,
     fillFrame: true,
   },
   { id: "template3", image: ClosetTemplate3, sectionCount: 4, imageWidth: 241, imageHeight: 352 },
   { id: "template4", image: ClosetTemplate4, sectionCount: 8, imageWidth: 244, imageHeight: 352 },
-  { id: "template5", image: ClosetTemplate5, sectionCount: 4, imageWidth: 241, imageHeight: 352 },
+  { id: "template5", image: ClosetTemplate5, sectionCount: 10, imageWidth: 241, imageHeight: 352 },
 ];
 
 export function getClosetTemplate(templateId?: string) {
   return closetTemplates.find((template) => template.id === templateId) ?? closetTemplates[0];
+}
+
+export function getClosetTemplateRequestId(templateId?: string) {
+  const matched = templateId?.match(/^template(\d+)$/);
+  if (!matched) {
+    return null;
+  }
+
+  const parsed = Number(matched[1]);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 export function getClosetTemplateSections(templateId?: string) {
