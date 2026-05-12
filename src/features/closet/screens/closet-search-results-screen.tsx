@@ -48,7 +48,10 @@ export function ClosetSearchResultsScreen() {
   const [draftSectionName, setDraftSectionName] = useState<string | null>(null);
   const lastToastMessageRef = useRef<string | null>(null);
 
-  const localSearchParams = useLocalSearchParams<{ mode?: string | string[]; value?: string | string[] }>();
+  const localSearchParams = useLocalSearchParams<{
+    mode?: string | string[];
+    value?: string | string[];
+  }>();
   const parsedParams = parseClosetSearchParams(localSearchParams);
   const searchMode = parsedParams?.mode ?? "color";
   const {
@@ -265,7 +268,9 @@ export function ClosetSearchResultsScreen() {
         <BackButton accessibilityLabel="이전 화면으로 돌아가기" />
       </View>
       <View className="absolute left-0 right-0" style={{ top: insets.top + 15 }}>
-        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">검색 결과</Text>
+        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">
+          검색 결과
+        </Text>
       </View>
       <View className="flex-1 items-center justify-center">
         <Text className="font-pretendard text-body text-text-subdued">{message}</Text>
@@ -292,15 +297,22 @@ export function ClosetSearchResultsScreen() {
       </View>
 
       <View className="absolute left-0 right-0" style={{ top: insets.top + 15 }}>
-        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">검색 결과</Text>
+        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">
+          검색 결과
+        </Text>
       </View>
 
       {items.length > 0 ? (
         <>
-          <View className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[21px]" style={{ marginTop: insets.top + 67 }}>
+          <View
+            className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[21px]"
+            style={{ marginTop: insets.top + 67 }}
+          >
             <View className="absolute bottom-[34px] left-[21px] right-[21px] top-5 justify-between">
               <Text className="font-pretendard text-subhead text-text-subdued">검색 결과</Text>
-              <Text className="font-pretendard-semibold text-headline text-text">{totalCount}벌을 찾았습니다.</Text>
+              <Text className="font-pretendard-semibold text-headline text-text">
+                {totalCount}벌을 찾았습니다.
+              </Text>
               <Text className="font-pretendard-light text-caption text-text-subdued">
                 {queryLabel}에 해당되는 유사한 옷 {totalCount}벌이 발견됐습니다.
               </Text>
@@ -361,7 +373,11 @@ export function ClosetSearchResultsScreen() {
                 onPress={() => setPage(index)}
                 style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                {index === currentPage ? <PageActiveIcon width={8} height={8} /> : <PageInactiveIcon width={8} height={8} />}
+                {index === currentPage ? (
+                  <PageActiveIcon width={8} height={8} />
+                ) : (
+                  <PageInactiveIcon width={8} height={8} />
+                )}
               </Pressable>
             ))}
           </View>
@@ -379,7 +395,9 @@ export function ClosetSearchResultsScreen() {
             <Text className="mt-3 font-pretendard-semibold text-headline text-bg-dark">
               {searchMode === "color" ? "해당 색상 옷이 없습니다." : "해당 카테고리 옷이 없습니다."}
             </Text>
-            <Text className="mt-3 font-pretendard text-body text-text-subdued">옷을 등록하러 가볼까요?</Text>
+            <Text className="mt-3 font-pretendard text-body text-text-subdued">
+              옷을 등록하러 가볼까요?
+            </Text>
           </View>
           <View className="absolute left-0 right-0" style={{ bottom: 8 }}>
             <Button
@@ -393,7 +411,12 @@ export function ClosetSearchResultsScreen() {
         </View>
       )}
 
-      <Modal animationType="fade" onRequestClose={handleCloseDetailModal} transparent visible={Boolean(selectedItem)}>
+      <Modal
+        animationType="fade"
+        onRequestClose={handleCloseDetailModal}
+        transparent
+        visible={Boolean(selectedItem)}
+      >
         <View className="flex-1 items-center justify-center px-6">
           <Pressable
             accessibilityLabel="상세 모달 닫기"
@@ -407,142 +430,161 @@ export function ClosetSearchResultsScreen() {
               behavior={Platform.OS === "ios" ? "padding" : undefined}
               className="h-[604px] w-[344px]"
             >
-            <View accessibilityViewIsModal className="h-[604px] w-[344px] rounded-2xl bg-white p-5">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-pretendard-semibold text-headline text-bg-dark">상세보기</Text>
-                <Pressable
-                  accessibilityLabel="상세 모달 닫기"
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={handleCloseDetailModal}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                >
-                  <CloseIcon width={24} height={24} />
-                </Pressable>
-              </View>
+              <View
+                accessibilityViewIsModal
+                className="h-[604px] w-[344px] rounded-2xl bg-white p-5"
+              >
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-pretendard-semibold text-headline text-bg-dark">
+                    상세보기
+                  </Text>
+                  <Pressable
+                    accessibilityLabel="상세 모달 닫기"
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    onPress={handleCloseDetailModal}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  >
+                    <CloseIcon width={24} height={24} />
+                  </Pressable>
+                </View>
 
-              <View className="mt-6 items-center">
-                <View className="h-[302px] w-[306px] overflow-hidden rounded-xl">
-                  <Image className="h-[302px] w-[306px]" resizeMode="cover" source={{ uri: selectedItem.imageUri }} />
-                  <View className="absolute inset-0">
-                    <Svg height="302" width="306">
-                      <Rect
-                        x="0.5"
-                        y="0.5"
-                        width="305"
-                        height="301"
-                        rx="12"
-                        fill="none"
-                        stroke={colors.disabled}
-                        strokeDasharray="2 2"
-                        strokeWidth="1"
+                <View className="mt-6 items-center">
+                  <View className="h-[302px] w-[306px] overflow-hidden rounded-xl">
+                    <Image
+                      className="h-[302px] w-[306px]"
+                      resizeMode="cover"
+                      source={{ uri: selectedItem.imageUri }}
+                    />
+                    <View className="absolute inset-0">
+                      <Svg height="302" width="306">
+                        <Rect
+                          x="0.5"
+                          y="0.5"
+                          width="305"
+                          height="301"
+                          rx="12"
+                          fill="none"
+                          stroke={colors.disabled}
+                          strokeDasharray="2 2"
+                          strokeWidth="1"
+                        />
+                      </Svg>
+                    </View>
+                  </View>
+                </View>
+
+                <View className="mt-7 flex-row items-center gap-[6px]">
+                  {(() => {
+                    const ColorIcon = getColorIcon(selectedItem.color);
+                    return <ColorIcon width={72} height={32} />;
+                  })()}
+                  {(() => {
+                    const CategoryIcon = getCategoryIcon(selectedItem.category);
+                    return <CategoryIcon width={72} height={32} />;
+                  })()}
+                </View>
+
+                <View className="relative mt-6 gap-4">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
+                    {isEditing ? (
+                      <View className="items-end">
+                        <Pressable
+                          accessibilityRole="button"
+                          className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
+                          onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
+                        >
+                          <Text className="font-pretendard text-body text-text-subdued">
+                            {draftSectionName ?? selectedItem.sectionName}
+                          </Text>
+                        </Pressable>
+                        {isSectionDropdownOpen ? (
+                          <View
+                            className="absolute right-0 top-9 max-h-[180px] w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
+                            style={{ position: "absolute", zIndex: 999 }}
+                          >
+                            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                              {sectionOptions.map((option) => (
+                                <Pressable
+                                  key={option.id}
+                                  className="px-3 py-2"
+                                  onPress={() => {
+                                    setDraftSectionId(option.id);
+                                    setDraftSectionName(option.name);
+                                    setIsSectionDropdownOpen(false);
+                                  }}
+                                >
+                                  <Text className="font-pretendard text-body text-text-subdued">
+                                    {option.name}
+                                  </Text>
+                                </Pressable>
+                              ))}
+                            </ScrollView>
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : (
+                      <Text className="font-pretendard text-body text-text-subdued">
+                        {selectedItem.sectionName}
+                      </Text>
+                    )}
+                  </View>
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-pretendard text-body text-text-subdued">가격</Text>
+                    {isEditing ? (
+                      <TextInput
+                        className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
+                        keyboardType="numeric"
+                        onChangeText={(value) => setDraftPriceInput(value.replace(/[^0-9]/g, ""))}
+                        value={draftPriceInput}
                       />
-                    </Svg>
+                    ) : (
+                      <Text className="font-pretendard text-body text-text-subdued">
+                        {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}원
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                <View className="mt-7 flex-row items-center gap-1">
+                  <View className="flex-1">
+                    <Button
+                      label={isEditing ? "저장하기" : "수정하기"}
+                      onPress={() => {
+                        if (isEditing) {
+                          void onUpdate();
+                          return;
+                        }
+
+                        setIsEditing(true);
+                        setIsSectionDropdownOpen(false);
+                        setDraftPriceInput(String(selectedItemDetailPrice ?? selectedItem.price));
+                        setDraftSectionId(selectedItemDetail?.sectionId ?? null);
+                        setDraftSectionName(
+                          selectedItemDetail?.sectionName ?? selectedItem.sectionName,
+                        );
+                      }}
+                      size="sm"
+                      variant="primary"
+                      fullWidth
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Button
+                      label="삭제하기"
+                      onPress={handleDeleteItem}
+                      size="sm"
+                      variant="secondary"
+                      fullWidth
+                    />
                   </View>
                 </View>
               </View>
-
-              <View className="mt-7 flex-row items-center gap-[6px]">
-                {(() => {
-                  const ColorIcon = getColorIcon(selectedItem.color);
-                  return <ColorIcon width={72} height={32} />;
-                })()}
-                {(() => {
-                  const CategoryIcon = getCategoryIcon(selectedItem.category);
-                  return <CategoryIcon width={72} height={32} />;
-                })()}
-              </View>
-
-              <View className="relative mt-6 gap-4">
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
-                  {isEditing ? (
-                    <View className="items-end">
-                      <Pressable
-                        accessibilityRole="button"
-                        className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
-                        onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
-                      >
-                        <Text className="font-pretendard text-body text-text-subdued">
-                          {draftSectionName ?? selectedItem.sectionName}
-                        </Text>
-                      </Pressable>
-                      {isSectionDropdownOpen ? (
-                        <View
-                          className="absolute right-0 top-9 w-[140px] max-h-[180px] rounded-md border-[0.5px] border-disabled bg-white"
-                          style={{ position: "absolute", zIndex: 999 }}
-                        >
-                          <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
-                            {sectionOptions.map((option) => (
-                              <Pressable
-                                key={option.id}
-                                className="px-3 py-2"
-                                onPress={() => {
-                                  setDraftSectionId(option.id);
-                                  setDraftSectionName(option.name);
-                                  setIsSectionDropdownOpen(false);
-                                }}
-                              >
-                                <Text className="font-pretendard text-body text-text-subdued">{option.name}</Text>
-                              </Pressable>
-                            ))}
-                          </ScrollView>
-                        </View>
-                      ) : null}
-                    </View>
-                  ) : (
-                    <Text className="font-pretendard text-body text-text-subdued">
-                      {selectedItem.sectionName}
-                    </Text>
-                  )}
-                </View>
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-pretendard text-body text-text-subdued">가격</Text>
-                  {isEditing ? (
-                    <TextInput
-                      className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
-                      keyboardType="numeric"
-                      onChangeText={(value) => setDraftPriceInput(value.replace(/[^0-9]/g, ""))}
-                      value={draftPriceInput}
-                    />
-                  ) : (
-                    <Text className="font-pretendard text-body text-text-subdued">
-                      {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}원
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-                <View className="mt-7 flex-row items-center gap-1">
-                <View className="flex-1">
-                  <Button
-                    label={isEditing ? "저장하기" : "수정하기"}
-                    onPress={() => {
-                      if (isEditing) {
-                        void onUpdate();
-                        return;
-                      }
-
-                      setIsEditing(true);
-                      setIsSectionDropdownOpen(false);
-                      setDraftPriceInput(String(selectedItemDetailPrice ?? selectedItem.price));
-                      setDraftSectionId(selectedItemDetail?.sectionId ?? null);
-                      setDraftSectionName(selectedItemDetail?.sectionName ?? selectedItem.sectionName);
-                    }}
-                    size="sm"
-                    variant="primary"
-                    fullWidth
-                  />
-                </View>
-                <View className="flex-1">
-                  <Button label="삭제하기" onPress={handleDeleteItem} size="sm" variant="secondary" fullWidth />
-                </View>
-              </View>
-            </View>
             </KeyboardAvoidingView>
           ) : null}
-	        </View>
-	      </Modal>
-	    </View>
-	  );
-	}
+        </View>
+      </Modal>
+    </View>
+  );
+}
