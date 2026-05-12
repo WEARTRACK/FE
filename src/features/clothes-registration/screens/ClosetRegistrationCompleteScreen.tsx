@@ -1,4 +1,5 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -6,10 +7,25 @@ import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { Button } from "@/components/common/Button";
+import { parseClosetId } from "@/features/closet/utils/closet-id";
+import { useClosetStore } from "@/stores/useClosetStore";
 
 export function ClosetRegistrationCompleteScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { closetId } = useLocalSearchParams<{ closetId?: string }>();
+  const setClosetId = useClosetStore((state) => state.setClosetId);
+
+  useEffect(() => {
+    if (!closetId) {
+      return;
+    }
+
+    const parsedClosetId = parseClosetId(closetId);
+    if (parsedClosetId) {
+      setClosetId(parsedClosetId);
+    }
+  }, [closetId, setClosetId]);
 
   return (
     <View

@@ -1,9 +1,12 @@
+import { env } from "@/config/env";
 import {
   CLOSET_CATEGORIES,
   CLOSET_COLORS,
   type ClosetCategory,
   type ClosetColor,
 } from "@/features/closet/types/closet-item";
+import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
+import type { ClosetTemplateId } from "@/features/closet/types/closet-layout";
 import { ApiError } from "@/lib/api/errors";
 
 const CATEGORY_ALIASES: Record<string, ClosetCategory> = {
@@ -46,37 +49,122 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
-function createEnumMappingError(enumType: "color" | "category", rawValue: unknown) {
-  return new ApiError({
-    code: "INVALID_ENUM_MAPPING",
-    message: `서버 ${enumType} 값을 앱 enum으로 변환할 수 없습니다.`,
-    status: 500,
-    details: { enumType, rawValue },
-  });
-}
-
-export function mapServerColorToClosetColor(rawColor: string): ClosetColor {
+export function mapServerColorToClosetColor(rawColor: string): string {
   const normalized = normalize(rawColor);
   const mapped = COLOR_ALIASES[normalized];
 
-  if (!mapped || !CLOSET_COLORS.includes(mapped)) {
-    throw createEnumMappingError("color", rawColor);
+  if (mapped && CLOSET_COLORS.includes(mapped)) {
+    return mapped;
   }
 
-  return mapped;
+  return rawColor;
 }
 
-export function mapServerCategoryToClosetCategory(rawCategory: string): ClosetCategory {
+export function mapServerCategoryToClosetCategory(rawCategory: string): string {
   const normalized = normalize(rawCategory);
   const mapped = CATEGORY_ALIASES[normalized];
 
-  if (!mapped || !CLOSET_CATEGORIES.includes(mapped)) {
-    throw createEnumMappingError("category", rawCategory);
+  if (mapped && CLOSET_CATEGORIES.includes(mapped)) {
+    return mapped;
   }
 
-  return mapped;
+  return rawCategory;
 }
 
 export function resolveSectionName(input: { sectionName?: string; storageSectionName?: string }) {
   return input.sectionName ?? input.storageSectionName ?? null;
+}
+
+export function resolveClosetImageUrl(rawImageUrl: string) {
+  const imageUrl = rawImageUrl.trim();
+  const baseUrl = new URL(env.apiBaseUrl);
+
+  if (!imageUrl) {
+    throw new ApiError({
+      code: "INVALID_IMAGE_URL",
+      message: "imageUrl 값이 비어 있습니다.",
+      status: 500,
+      details: { rawImageUrl },
+    });
+  }
+
+  if (/^(data:|blob:)/i.test(imageUrl)) {
+    return imageUrl;
+  }
+
+  if (/^(https?:\/\/|\/\/)/i.test(imageUrl)) {
+    const resolved = new URL(imageUrl, baseUrl);
+
+    if (resolved.host !== baseUrl.host) {
+      throw new ApiError({
+        code: "INVALID_IMAGE_URL_DOMAIN",
+        message: "imageUrl 도메인이 API 도메인과 일치하지 않습니다.",
+        status: 500,
+        details: { rawImageUrl, baseHost: baseUrl.host, imageHost: resolved.host },
+      });
+    }
+
+    return resolved.toString();
+  }
+
+  const normalizedBase = env.apiBaseUrl.replace(/\/$/, "");
+  const normalizedPath = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+export function normalizeServerEnumLikeValue(rawValue: string) {
+  return normalize(rawValue);
+}
+
+export function mapApiSectionIdToClosetSectionId(rawSectionId: number): ClosetSectionId {
+  const mapped = `section-${rawSectionId}`;
+
+  if (!isClosetSectionId(mapped)) {
+    throw new ApiError({
+      code: "INVALID_SECTION_ID",
+      message: "서버 sectionId 값을 앱 sectionId로 변환할 수 없습니다.",
+      status: 500,
+      details: { rawSectionId },
+    });
+  }
+
+  return mapped;
+}
+
+export function mapClosetSectionIdToApiSectionId(sectionId: ClosetSectionId): number {
+  const parsed = Number(sectionId.replace("section-", ""));
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ApiError({
+      code: "INVALID_SECTION_ID",
+      message: "앱 sectionId 값을 서버 sectionId로 변환할 수 없습니다.",
+      status: 400,
+      details: { sectionId },
+    });
+  }
+
+  return parsed;
+}
+
+export function mapApiTemplateIdToClosetTemplateId(rawTemplateId: number): ClosetTemplateId {
+  switch (rawTemplateId) {
+    case 1:
+      return "LAYOUT_A";
+    case 2:
+      return "LAYOUT_B";
+    case 3:
+      return "LAYOUT_C";
+    case 4:
+      return "LAYOUT_D";
+    case 5:
+      return "LAYOUT_E";
+    default:
+      throw new ApiError({
+        code: "INVALID_TEMPLATE_ID",
+        message: "서버 templateId 값을 앱 templateId로 변환할 수 없습니다.",
+        status: 500,
+        details: { rawTemplateId },
+      });
+  }
 }

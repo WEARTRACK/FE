@@ -1,8 +1,7 @@
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Alert, Image, Modal, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { SvgProps } from "react-native-svg";
 import Svg, { Rect } from "react-native-svg";
 
 import CloseIcon from "../../../../assets/close.svg";
@@ -13,42 +12,17 @@ import ListActiveIcon from "../../../../assets/list-active.svg";
 import ListInactiveIcon from "../../../../assets/list-inactive.svg";
 import PageActiveIcon from "../../../../assets/page-active.svg";
 import PageInactiveIcon from "../../../../assets/page-inactive.svg";
-import CoatTagIcon from "../../../../assets/category/coat-active.svg";
-import CardiganTagIcon from "../../../../assets/category/cardigan-active.svg";
-import DressTagIcon from "../../../../assets/category/dress-active.svg";
-import HoodieTagIcon from "../../../../assets/category/hoodie-active.svg";
-import JacketTagIcon from "../../../../assets/category/jacket-active.svg";
-import KnitTagIcon from "../../../../assets/category/knit-active.svg";
-import PaddingTagIcon from "../../../../assets/category/padding-active.svg";
-import PantsTagIcon from "../../../../assets/category/pants-active.svg";
-import ShirtTagIcon from "../../../../assets/category/shirt-active.svg";
-import ShortsTagIcon from "../../../../assets/category/shorts-active.svg";
-import SkirtTagIcon from "../../../../assets/category/skirt-active.svg";
-import TshirtTagIcon from "../../../../assets/category/tshirt-active.svg";
-import VestTagIcon from "../../../../assets/category/vest-active.svg";
-import BeigeTagIcon from "../../../../assets/color/beige-active.svg";
-import BlackTagIcon from "../../../../assets/color/black-active.svg";
-import BlueTagIcon from "../../../../assets/color/blue-active.svg";
-import BrownTagIcon from "../../../../assets/color/brown-active.svg";
-import GrayTagIcon from "../../../../assets/color/gray-active.svg";
-import GreenTagIcon from "../../../../assets/color/green-active.svg";
-import NavyTagIcon from "../../../../assets/color/navy-active.svg";
-import OrangeTagIcon from "../../../../assets/color/orange-active.svg";
-import PinkTagIcon from "../../../../assets/color/pink-active.svg";
-import PurpleTagIcon from "../../../../assets/color/purple-active.svg";
-import RedTagIcon from "../../../../assets/color/red-active.svg";
-import WhiteTagIcon from "../../../../assets/color/white-active.svg";
-import YellowTagIcon from "../../../../assets/color/yellow-active.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import {
   useClosetItemsBySection,
   useClosetTemplate,
 } from "@/features/closet/hooks/use-closet-data";
-import type { ClosetCategory, ClosetColor } from "@/features/closet/types/closet-item";
 import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
+import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-tag-icons";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 
@@ -62,39 +36,8 @@ const GRID_COLUMNS = 3;
 const GRID_GAP_X = 6;
 const PAGINATION_DOT_SIZE = 8;
 
-const colorIconMap: Record<ClosetColor, React.ComponentType<SvgProps>> = {
-  red: RedTagIcon,
-  orange: OrangeTagIcon,
-  yellow: YellowTagIcon,
-  green: GreenTagIcon,
-  navy: NavyTagIcon,
-  purple: PurpleTagIcon,
-  white: WhiteTagIcon,
-  blue: BlueTagIcon,
-  pink: PinkTagIcon,
-  brown: BrownTagIcon,
-  gray: GrayTagIcon,
-  black: BlackTagIcon,
-  beige: BeigeTagIcon,
-};
-
-const categoryIconMap: Record<ClosetCategory, React.ComponentType<SvgProps>> = {
-  tshirt: TshirtTagIcon,
-  knit: KnitTagIcon,
-  hoodie: HoodieTagIcon,
-  vest: VestTagIcon,
-  cardigan: CardiganTagIcon,
-  pants: PantsTagIcon,
-  dress: DressTagIcon,
-  shirt: ShirtTagIcon,
-  shorts: ShortsTagIcon,
-  jacket: JacketTagIcon,
-  coat: CoatTagIcon,
-  skirt: SkirtTagIcon,
-  padding: PaddingTagIcon,
-};
-
 export function ClosetSectionScreen() {
+  const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -108,17 +51,41 @@ export function ClosetSectionScreen() {
   const [selectedItemDetailPrice, setSelectedItemDetailPrice] = useState<number | null>(null);
   const [selectedItemDetailSectionName, setSelectedItemDetailSectionName] = useState<string | null>(null);
   const [deletedItemIds, setDeletedItemIds] = useState<string[]>([]);
+  const [updatedItemsById, setUpdatedItemsById] = useState<
+    Record<string, { price: number; sectionId: ClosetSectionId; sectionName: string }>
+  >({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSectionDropdownOpen, setIsSectionDropdownOpen] = useState(false);
+  const [draftPriceInput, setDraftPriceInput] = useState("");
+  const [draftSectionId, setDraftSectionId] = useState<ClosetSectionId | null>(null);
+  const [draftSectionName, setDraftSectionName] = useState<string | null>(null);
+  const lastToastMessageRef = useRef<string | null>(null);
 
   const { template } = useClosetTemplate();
-  const { items: sectionItems } = useClosetItemsBySection(currentSectionId);
-  const visibleSectionItems = useMemo(
-    () => sectionItems.filter((item) => !deletedItemIds.includes(item.id)),
-    [deletedItemIds, sectionItems],
-  );
+  const { items: sectionItems, isLoading, error, refetch } = useClosetItemsBySection(currentSectionId);
+  const visibleSectionItems = useMemo(() => {
+    const patched = sectionItems
+      .map((item) => {
+        const updated = updatedItemsById[item.id];
+        if (!updated) {
+          return item;
+        }
+
+        return {
+          ...item,
+          price: updated.price,
+          sectionId: updated.sectionId,
+        };
+      })
+      .filter((item) => item.sectionId === currentSectionId);
+
+    return patched.filter((item) => !deletedItemIds.includes(item.id));
+  }, [currentSectionId, deletedItemIds, sectionItems, updatedItemsById]);
   const selectedItem = useMemo(
     () => visibleSectionItems.find((item) => item.id === selectedItemId) ?? null,
     [selectedItemId, visibleSectionItems],
   );
+  const selectedItemOverride = selectedItem ? updatedItemsById[selectedItem.id] : null;
   const sectionNameById = useMemo(
     () => new Map(template.sections.map((section) => [section.id, section.sectionName])),
     [template.sections],
@@ -128,6 +95,14 @@ export function ClosetSectionScreen() {
     const found = template.sections.find((section) => section.id === currentSectionId);
     return found?.sectionName ?? "칸 조회";
   }, [currentSectionId, template.sections]);
+  const sectionOptions = useMemo(
+    () =>
+      template.sections.map((section) => ({
+        id: section.id,
+        name: section.sectionName ?? section.id,
+      })),
+    [template.sections],
+  );
 
   const contentWidth = screenWidth - 48;
   const gridItemSize = (contentWidth - GRID_GAP_X * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
@@ -173,6 +148,11 @@ export function ClosetSectionScreen() {
     setSelectedItemId(null);
     setSelectedItemDetailPrice(null);
     setSelectedItemDetailSectionName(null);
+    setIsEditing(false);
+    setIsSectionDropdownOpen(false);
+    setDraftPriceInput("");
+    setDraftSectionId(null);
+    setDraftSectionName(null);
   };
 
   const resolveClothesId = (itemId: string) => {
@@ -195,6 +175,27 @@ export function ClosetSectionScreen() {
 
     return fallback;
   };
+
+  useEffect(() => {
+    setDeletedItemIds([]);
+    setUpdatedItemsById({});
+    setPage(0);
+  }, [currentSectionId]);
+
+  useEffect(() => {
+    if (!error) {
+      lastToastMessageRef.current = null;
+      return;
+    }
+
+    const message = "불러오기에 실패했어요.";
+    if (lastToastMessageRef.current === message) {
+      return;
+    }
+
+    lastToastMessageRef.current = message;
+    showToast(message);
+  }, [error]);
 
   useEffect(() => {
     let isActive = true;
@@ -220,6 +221,9 @@ export function ClosetSectionScreen() {
         }
         setSelectedItemDetailPrice(detail.price);
         setSelectedItemDetailSectionName(detail.sectionName);
+        setDraftPriceInput(String(detail.price));
+        setDraftSectionId(detail.sectionId);
+        setDraftSectionName(detail.sectionName);
       } catch (error) {
         if (!isActive) {
           return;
@@ -235,7 +239,7 @@ export function ClosetSectionScreen() {
     return () => {
       isActive = false;
     };
-  }, [repository, selectedItem]);
+  }, [repository, selectedItemId]);
 
   const handleEditItem = async () => {
     if (!selectedItem) {
@@ -248,16 +252,57 @@ export function ClosetSectionScreen() {
       return;
     }
 
+    if (!isEditing) {
+      setIsEditing(true);
+      setIsSectionDropdownOpen(false);
+      setDraftPriceInput(String(selectedItemDetailPrice ?? selectedItem.price));
+      setDraftSectionId(selectedItem.sectionId);
+      setDraftSectionName(selectedItemDetailSectionName ?? sectionNameById.get(selectedItem.sectionId) ?? sectionName);
+      return;
+    }
+
+    const nextPrice = Number(draftPriceInput.replace(/[^0-9]/g, ""));
+    const nextSectionId = draftSectionId ?? selectedItem.sectionId;
+    const currentPrice = selectedItemDetailPrice ?? selectedItem.price;
+    const hasSectionChanged = nextSectionId !== selectedItem.sectionId;
+
+    if (!Number.isFinite(nextPrice)) {
+      showToast("가격을 입력해주세요.");
+      return;
+    }
+
+    if (nextPrice === currentPrice && !hasSectionChanged) {
+      showToast("변경된 내용이 없습니다.");
+      setIsEditing(false);
+      setIsSectionDropdownOpen(false);
+      return;
+    }
+
     try {
       const detail = await repository.getClothesDetail(clothesId);
       const updated = await repository.updateClothes(clothesId, {
         color: detail.color,
         category: detail.category,
-        price: detail.price,
-        sectionId: detail.sectionId,
+        price: nextPrice,
+        sectionId: nextSectionId,
       });
       setSelectedItemDetailPrice(updated.price);
       setSelectedItemDetailSectionName(updated.sectionName);
+      setDraftSectionId(updated.sectionId);
+      setDraftSectionName(updated.sectionName);
+      setUpdatedItemsById((current) => ({
+        ...current,
+        [selectedItem.id]: {
+          price: updated.price,
+          sectionId: updated.sectionId,
+          sectionName: updated.sectionName,
+        },
+      }));
+      setIsEditing(false);
+      setIsSectionDropdownOpen(false);
+      if (updated.sectionId !== currentSectionId) {
+        handleCloseDetailModal();
+      }
       showToast("수정이 완료됐어요.");
     } catch (error) {
       showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
@@ -308,7 +353,7 @@ export function ClosetSectionScreen() {
         {sectionName}
       </Text>
 
-      {visibleSectionItems.length > 0 ? (
+      {!isLoading && !error && visibleSectionItems.length > 0 ? (
         <>
           <Text className="absolute left-6 font-pretendard text-body text-bg-dark" style={{ top: countTop }}>
             총 {visibleSectionItems.length}벌
@@ -345,13 +390,27 @@ export function ClosetSectionScreen() {
         </>
       ) : null}
 
-      {visibleSectionItems.length === 0 ? (
+      {!isLoading && !error && visibleSectionItems.length === 0 ? (
         <View className="flex-1 items-center justify-center pb-20">
           <ClothesIcon width={157} height={145} />
           <Text className="mt-8 font-pretendard-semibold text-headline text-bg-dark">등록된 옷이 없습니다.</Text>
           <Text className="mt-4 font-pretendard text-body text-text-subdued">옷을 등록하러 가볼까요?</Text>
         </View>
-      ) : (
+      ) : null}
+
+      {isLoading ? (
+        <View className="flex-1 items-center justify-center pb-20">
+          <Text className="font-pretendard text-body text-text-subdued">불러오는 중입니다.</Text>
+        </View>
+      ) : null}
+
+      {!isLoading && error ? (
+        <View className="flex-1 items-center justify-center pb-20">
+          <Text className="font-pretendard text-body text-text-subdued">불러오기에 실패했어요.</Text>
+        </View>
+      ) : null}
+
+      {!isLoading && !error && visibleSectionItems.length > 0 ? (
         <View className="absolute left-6 right-6" style={{ top: contentTop }}>
           {viewMode === "grid" ? (
             <View className="flex-row flex-wrap gap-x-[6px] gap-y-2">
@@ -375,8 +434,8 @@ export function ClosetSectionScreen() {
           ) : (
             <View className="gap-2">
               {pageItems.map((item) => {
-                const ColorIcon = colorIconMap[item.color];
-                const CategoryIcon = categoryIconMap[item.category];
+                const ColorIcon = getColorIcon(item.color);
+                const CategoryIcon = getCategoryIcon(item.category);
 
                 return (
                   <Pressable
@@ -408,9 +467,9 @@ export function ClosetSectionScreen() {
             </View>
           )}
         </View>
-      )}
+      ) : null}
 
-      {visibleSectionItems.length > 0 ? (
+      {!isLoading && !error && visibleSectionItems.length > 0 ? (
         <View
           className="absolute left-0 right-0 flex-row items-center justify-center gap-[14px]"
           style={{ top: paginationTop }}
@@ -439,9 +498,21 @@ export function ClosetSectionScreen() {
         </View>
       ) : null}
 
-      {visibleSectionItems.length === 0 ? (
+      {!isLoading && !error && visibleSectionItems.length === 0 ? (
         <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
-          <Button fullWidth label="옷 등록하기" onPress={() => {}} size="lg" variant="primary" />
+          <Button
+            fullWidth
+            label="옷 등록하기"
+            onPress={() => router.push(clothesRegistrationRoutes.clothesGuide)}
+            size="lg"
+            variant="primary"
+          />
+        </View>
+      ) : null}
+
+      {!isLoading && error ? (
+        <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
+          <Button fullWidth label="다시 시도" onPress={refetch} size="lg" variant="primary" />
         </View>
       ) : null}
 
@@ -499,11 +570,11 @@ export function ClosetSectionScreen() {
 
               <View className="mt-7 flex-row items-center gap-[6px]">
                 {(() => {
-                  const ColorIcon = colorIconMap[selectedItem.color];
+                  const ColorIcon = getColorIcon(selectedItem.color);
                   return <ColorIcon width={72} height={32} />;
                 })()}
                 {(() => {
-                  const CategoryIcon = categoryIconMap[selectedItem.category];
+                  const CategoryIcon = getCategoryIcon(selectedItem.category);
                   return <CategoryIcon width={72} height={32} />;
                 })()}
               </View>
@@ -511,21 +582,80 @@ export function ClosetSectionScreen() {
               <View className="mt-6 gap-4">
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
-                  <Text className="font-pretendard text-body text-text-subdued">
-                    {selectedItemDetailSectionName ?? sectionNameById.get(selectedItem.sectionId) ?? sectionName}
-                  </Text>
+                  {isEditing ? (
+                    <View className="items-end">
+                      <Pressable
+                        accessibilityRole="button"
+                        className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
+                        onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
+                      >
+                        <Text className="font-pretendard text-body text-text-subdued">
+                          {draftSectionName ??
+                            selectedItemOverride?.sectionName ??
+                            sectionNameById.get(selectedItem.sectionId) ??
+                            sectionName}
+                        </Text>
+                      </Pressable>
+                      {isSectionDropdownOpen ? (
+                        <View
+                          className="absolute right-0 top-9 w-[140px] max-h-[180px] rounded-md border-[0.5px] border-disabled bg-white"
+                          style={{ position: "absolute", zIndex: 999 }}
+                        >
+                          <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                            {sectionOptions.map((option) => (
+                              <Pressable
+                                key={option.id}
+                                className="px-3 py-2"
+                                onPress={() => {
+                                  setDraftSectionId(option.id);
+                                  setDraftSectionName(option.name);
+                                  setIsSectionDropdownOpen(false);
+                                }}
+                              >
+                                <Text className="font-pretendard text-body text-text-subdued">{option.name}</Text>
+                              </Pressable>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <Text className="font-pretendard text-body text-text-subdued">
+                      {selectedItemDetailSectionName ??
+                        selectedItemOverride?.sectionName ??
+                        sectionNameById.get(selectedItem.sectionId) ??
+                        sectionName}
+                    </Text>
+                  )}
                 </View>
                 <View className="flex-row items-center justify-between">
                   <Text className="font-pretendard text-body text-text-subdued">가격</Text>
-                  <Text className="font-pretendard text-body text-text-subdued">
-                    {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}원
-                  </Text>
+                  {isEditing ? (
+                    <TextInput
+                      className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
+                      keyboardType="numeric"
+                      onChangeText={(value) => setDraftPriceInput(value.replace(/[^0-9]/g, ""))}
+                      value={draftPriceInput}
+                    />
+                  ) : (
+                    <Text className="font-pretendard text-body text-text-subdued">
+                      {(selectedItemDetailPrice ?? selectedItemOverride?.price ?? selectedItem.price).toLocaleString(
+                        "ko-KR",
+                      )}원
+                    </Text>
+                  )}
                 </View>
               </View>
 
               <View className="mt-7 flex-row items-center gap-1">
                 <View className="flex-1">
-                  <Button label="수정하기" onPress={handleEditItem} size="sm" variant="primary" fullWidth />
+                  <Button
+                    label={isEditing ? "저장하기" : "수정하기"}
+                    onPress={handleEditItem}
+                    size="sm"
+                    variant="primary"
+                    fullWidth
+                  />
                 </View>
                 <View className="flex-1">
                   <Button label="삭제하기" onPress={handleDeleteItem} size="sm" variant="secondary" fullWidth />

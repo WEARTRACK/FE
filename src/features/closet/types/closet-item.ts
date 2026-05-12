@@ -40,8 +40,8 @@ export type ClosetItem = {
   sectionId: ClosetSectionId;
   imageUri: string;
   price: number;
-  color: ClosetColor;
+  color: string;
   colorLabel: string;
-  category: ClosetCategory;
+  category: string;
   categoryLabel: string;
 };

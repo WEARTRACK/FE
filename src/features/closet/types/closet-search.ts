@@ -1,33 +1,26 @@
-import {
-  CLOSET_CATEGORIES,
-  CLOSET_COLORS,
-  type ClosetCategory,
-  type ClosetColor,
-} from "@/features/closet/types/closet-item";
-
 export type ClosetSearchMode = "color" | "category";
 
 export type ClosetSearchValueByMode = {
-  color: ClosetColor;
-  category: ClosetCategory;
+  color: string;
+  category: string;
 };
 
 export type ClosetSearchParams =
   | {
       mode: "color";
-      value: ClosetColor;
+      value: string;
     }
   | {
       mode: "category";
-      value: ClosetCategory;
+      value: string;
     };
 
 export type ClosetSearchResultItem = {
   id: string;
   clothesId: number;
   imageUri: string;
-  color: ClosetColor;
-  category: ClosetCategory;
+  color: string;
+  category: string;
   sectionName: string;
   price: number;
   colorLabel: string;
@@ -45,14 +38,6 @@ export type ClosetSearchPage = {
 
 export function isClosetSearchMode(value: string): value is ClosetSearchMode {
   return value === "color" || value === "category";
-}
-
-export function isClosetColor(value: string): value is ClosetColor {
-  return CLOSET_COLORS.includes(value as (typeof CLOSET_COLORS)[number]);
-}
-
-export function isClosetCategory(value: string): value is ClosetCategory {
-  return CLOSET_CATEGORIES.includes(value as (typeof CLOSET_CATEGORIES)[number]);
 }
 
 type RawSearchParam = string | string[] | undefined;
@@ -74,11 +59,11 @@ export function parseClosetSearchParams(input: {
     return null;
   }
 
-  if (mode === "color" && isClosetColor(value)) {
+  if (mode === "color" && value.trim().length > 0) {
     return { mode: "color", value };
   }
 
-  if (mode === "category" && isClosetCategory(value)) {
+  if (mode === "category" && value.trim().length > 0) {
     return { mode: "category", value };
   }
 

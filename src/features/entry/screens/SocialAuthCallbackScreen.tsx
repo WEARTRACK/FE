@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { isValidClosetId } from "@/features/closet/utils/closet-id";
 import { socialLogin, type SocialAuthProvider } from "@/features/entry/api/socialLogin";
 import {
   clearSocialAuthIntent,
@@ -10,6 +11,7 @@ import {
 } from "@/features/entry/oauth/socialAuthIntentStorage";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
+import { useClosetStore } from "@/stores/useClosetStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 const providers: SocialAuthProvider[] = ["GOOGLE", "KAKAO", "NAVER"];
@@ -37,6 +39,7 @@ export function SocialAuthCallbackScreen() {
   const params = useLocalSearchParams();
   const hasHandledCallbackRef = useRef(false);
   const setSession = useSessionStore((state) => state.setSession);
+  const setClosetId = useClosetStore((state) => state.setClosetId);
 
   useEffect(() => {
     if (hasHandledCallbackRef.current) {
@@ -66,6 +69,9 @@ export function SocialAuthCallbackScreen() {
         });
 
         setSession(result);
+        if (isValidClosetId(result.closetId) || result.closetId === null) {
+          setClosetId(result.closetId);
+        }
         await clearSocialAuthIntent();
 
         const nextHref = intent?.successHref ?? (result.profileCompleted ? "/home" : "/auth/set-nickname");
@@ -78,7 +84,7 @@ export function SocialAuthCallbackScreen() {
     }
 
     void completeSocialLogin();
-  }, [params.handoff, params.provider, router, setSession]);
+  }, [params.handoff, params.provider, router, setClosetId, setSession]);
 
   return (
     <View className="flex-1 items-center justify-center bg-bg-light">
