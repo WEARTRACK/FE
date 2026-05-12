@@ -7,8 +7,20 @@ import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import { createCloset } from "@/features/clothes-registration/api/createCloset";
+import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
-import { getClosetTemplateSections } from "@/features/clothes-registration/screens/closet-template-data";
+import {
+  getClosetTemplateRequestId,
+  getClosetTemplateSections,
+} from "@/features/clothes-registration/screens/closet-template-data";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import {
+  parseNumericParam,
+  parsePredictedSections,
+} from "@/features/clothes-registration/utils/closetRegistrationParams";
+import { showToast } from "@/lib/ui/showToast";
+import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 
 const maxNameLength = 10;
 
@@ -77,12 +89,57 @@ function SectionNameInput({
 export function ClosetLabelingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { templateId } = useLocalSearchParams<{ templateId?: string }>();
-  const detectedClosetSections = useMemo(() => getClosetTemplateSections(templateId), [templateId]);
+  const {
+    imageUri: imageUriParam,
+    imageUrl: imageUrlParam,
+    templateId: templateIdParam,
+    predictedSections: predictedSectionsParam,
+  } = useLocalSearchParams<{
+    imageUri?: string;
+    imageUrl?: string;
+    templateId?: string;
+    predictedSections?: string;
+  }>();
+  const draftImageUri = useClosetRegistrationStore((state) => state.imageUri);
+  const draftImageUrl = useClosetRegistrationStore((state) => state.imageUrl);
+  const draftTemplateId = useClosetRegistrationStore((state) => state.templateId);
+  const draftPredictedSections = useClosetRegistrationStore((state) => state.predictedSections);
+  const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
+  const resetClosetDraft = useClosetRegistrationStore((state) => state.resetDraft);
+  const imageUri = getParamString(imageUriParam) ?? draftImageUri;
+  const imageUrl = getParamString(imageUrlParam) ?? draftImageUrl;
+  const rawTemplateId = getParamString(templateIdParam) ?? draftTemplateId;
+  const templateId =
+    parseNumericParam(templateIdParam) ??
+    getClosetTemplateRequestId(rawTemplateId ?? undefined) ??
+    getClosetTemplateRequestId(draftTemplateId ?? undefined);
+  const predictedSections = useMemo(() => {
+    const parsedSections = parsePredictedSections(predictedSectionsParam);
+    return parsedSections.length > 0 ? parsedSections : draftPredictedSections;
+  }, [draftPredictedSections, predictedSectionsParam]);
+  const detectedClosetSections = useMemo(
+    () => {
+      if (predictedSections.length > 0) {
+        return predictedSections.map((section) => ({
+          id: `closet-section-${section.sectionOrder}`,
+          initialName: "",
+          sectionOrder: section.sectionOrder,
+        }));
+      }
+
+      return getClosetTemplateSections(rawTemplateId ?? undefined).map((section, index) => ({
+        id: section.id,
+        initialName: section.initialName,
+        sectionOrder: index + 1,
+      }));
+    },
+    [predictedSections, rawTemplateId],
+  );
   const [sectionNames, setSectionNames] = useState(() =>
     detectedClosetSections.map((section) => section.initialName),
   );
   const [touchedSectionIds, setTouchedSectionIds] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setSectionNames(detectedClosetSections.map((section) => section.initialName));
@@ -109,6 +166,56 @@ export function ClosetLabelingScreen() {
     setTouchedSectionIds((currentIds) =>
       currentIds.includes(sectionId) ? currentIds : [...currentIds, sectionId],
     );
+  };
+
+  const handleSave = async () => {
+    if (!isComplete || isSaving) {
+      return;
+    }
+
+    if (templateId === null) {
+      showToast("옷장 템플릿 정보를 확인할 수 없어요. 다시 시도해주세요.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      let resolvedImageUrl = imageUrl;
+
+      if (!resolvedImageUrl && imageUri) {
+        const uploadResult = await uploadClosetPhoto(imageUri);
+        resolvedImageUrl = uploadResult.imageUrl;
+        setClosetDraft({
+          imageUrl: uploadResult.imageUrl,
+          predictedSections:
+            uploadResult.predictedSections.length > 0
+              ? uploadResult.predictedSections
+              : draftPredictedSections,
+        });
+      }
+
+      if (!resolvedImageUrl) {
+        showToast("옷장 사진 정보를 확인할 수 없어요. 다시 시도해주세요.");
+        return;
+      }
+
+      await createCloset({
+        templateId,
+        imageUrl: resolvedImageUrl,
+        sections: detectedClosetSections.map((section, index) => ({
+          sectionOrder: section.sectionOrder,
+          sectionName: sectionNames[index]?.trim() ?? "",
+        })),
+      });
+
+      resetClosetDraft();
+      router.replace(clothesRegistrationRoutes.complete);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "옷장 등록에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -182,11 +289,15 @@ export function ClosetLabelingScreen() {
           ) : null}
 
           <Button
-            disabled={!isComplete}
+            disabled={!isComplete || isSaving}
             fullWidth
-            href={isComplete ? clothesRegistrationRoutes.complete : undefined}
+            onPress={handleSave}
             label={
-              isComplete ? "저장하기" : `저장하기(${completedSectionCount}/${detectedSectionCount})`
+              isSaving
+                ? "저장 중..."
+                : isComplete
+                  ? "저장하기"
+                  : `저장하기(${completedSectionCount}/${detectedSectionCount})`
             }
             className="h-[58px]"
             textClassName="font-pretendard-semibold text-[18px] leading-[30px]"

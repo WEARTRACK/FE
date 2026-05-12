@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -6,6 +6,7 @@ import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { Button } from "@/components/common/Button";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 
 function ErrorBadge() {
   return (
@@ -18,6 +19,18 @@ function ErrorBadge() {
 export function ClosetAnalysisFailureScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const {
+    imageUrl: imageUrlParam,
+    templateId: templateIdParam,
+    predictedSections: predictedSectionsParam,
+  } = useLocalSearchParams<{
+    imageUrl?: string;
+    templateId?: string;
+    predictedSections?: string;
+  }>();
+  const imageUrl = getParamString(imageUrlParam);
+  const templateId = getParamString(templateIdParam);
+  const predictedSections = getParamString(predictedSectionsParam);
 
   return (
     <View
@@ -71,7 +84,14 @@ export function ClosetAnalysisFailureScreen() {
 
         <Button
           label="사용자 입력"
-          href={clothesRegistrationRoutes.labels}
+          href={{
+            pathname: "/closet/register/labels",
+            params: {
+              imageUrl: imageUrl ?? "",
+              templateId: templateId ?? "",
+              predictedSections: predictedSections ?? "",
+            },
+          }}
           variant="secondary"
           fullWidth
           className="h-[58px] border-[0.5px] border-text-subdued"
