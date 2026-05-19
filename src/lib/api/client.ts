@@ -29,6 +29,7 @@ function isAuthRequiredPath(pathname: string) {
   return (
     pathname === "/api/home" ||
     pathname.startsWith("/api/clothes") ||
+    pathname === "/api/closets" ||
     pathname === "/api/members/nickname/check" ||
     pathname === "/api/members/me/nickname" ||
     pathname.startsWith("/api/members/me/") ||

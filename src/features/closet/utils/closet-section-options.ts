@@ -7,6 +7,10 @@ export type ClosetSectionOption = {
 };
 
 function parseRequestSectionId(section: ClosetSection) {
+  if (typeof section.apiSectionId === "number") {
+    return section.apiSectionId;
+  }
+
   const match = section.id.match(/^section-(\d+)$/);
   if (!match) {
     return null;

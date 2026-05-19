@@ -6,14 +6,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { getClosetTemplateRequestId } from "@/features/clothes-registration/screens/closet-template-data";
 import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
-import { serializePredictedSections } from "@/features/clothes-registration/utils/closetRegistrationParams";
+import {
+  parseNumericParam,
+  serializePredictedSections,
+} from "@/features/clothes-registration/utils/closetRegistrationParams";
 
 export function ClosetAnalyzingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { imageUri: imageUriParam } = useLocalSearchParams<{ imageUri?: string }>();
+  const { imageUri: imageUriParam, templateId: templateIdParam } = useLocalSearchParams<{
+    imageUri?: string;
+    templateId?: string;
+  }>();
   const imageUri = getParamString(imageUriParam);
+  const rawTemplateId = getParamString(templateIdParam);
+  const templateId =
+    parseNumericParam(templateIdParam) ?? getClosetTemplateRequestId(rawTemplateId ?? undefined);
   const hasUploadedRef = useRef(false);
 
   useEffect(() => {
@@ -23,14 +33,14 @@ export function ClosetAnalyzingScreen() {
 
     hasUploadedRef.current = true;
 
-    if (!imageUri) {
+    if (!imageUri || templateId === null) {
       router.replace(clothesRegistrationRoutes.failure);
       return;
     }
 
     const upload = async () => {
       try {
-        const result = await uploadClosetPhoto(imageUri);
+        const result = await uploadClosetPhoto(imageUri, templateId);
 
         const params = {
           imageUri,
@@ -62,7 +72,7 @@ export function ClosetAnalyzingScreen() {
     };
 
     void upload();
-  }, [imageUri, router]);
+  }, [imageUri, router, templateId]);
 
   return (
     <View

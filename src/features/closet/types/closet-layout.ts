@@ -23,6 +23,7 @@ export type ClosetTemplateLayout = Record<ClosetTemplateId, ClosetSectionSlot[]>
 
 export type ClosetSection = {
   id: ClosetSectionId;
+  apiSectionId?: number;
   sectionName?: string;
 };
 

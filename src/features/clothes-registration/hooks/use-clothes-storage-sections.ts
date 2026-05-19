@@ -12,7 +12,13 @@ export function useClothesStorageSections(): {
   error: Error | null;
 } {
   const { template, isLoading, error } = useClosetTemplate();
-  const options = useMemo(() => toClosetSectionOptions(template), [template]);
+  const options = useMemo(() => {
+    if (error) {
+      return [];
+    }
+
+    return toClosetSectionOptions(template);
+  }, [error, template]);
 
   return {
     options,
