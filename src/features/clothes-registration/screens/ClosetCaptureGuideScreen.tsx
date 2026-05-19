@@ -1,9 +1,30 @@
+import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationRouteScaffold } from "@/features/clothes-registration/screens/ClothesRegistrationRouteScaffold";
+import { launchClothesCamera } from "@/features/clothes-registration/utils/launchClothesCamera";
+import { showToast } from "@/lib/ui/showToast";
 
 export function ClosetCaptureGuideScreen() {
+  const router = useRouter();
+
+  const handleTakePhoto = async () => {
+    try {
+      const imageUri = await launchClothesCamera();
+
+      if (!imageUri) {
+        return;
+      }
+
+      router.push({
+        pathname: "/closet/register/preview",
+        params: { imageUri },
+      });
+    } catch {
+      showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+    }
+  };
+
   return (
     <ClothesRegistrationRouteScaffold
       step="1.1.1-A"
@@ -12,7 +33,7 @@ export function ClosetCaptureGuideScreen() {
       actions={[
         {
           label: "촬영하기",
-          href: clothesRegistrationRoutes.preview,
+          onPress: handleTakePhoto,
         },
       ]}
     >
@@ -27,4 +48,3 @@ export function ClosetCaptureGuideScreen() {
     </ClothesRegistrationRouteScaffold>
   );
 }
-

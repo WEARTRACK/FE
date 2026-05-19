@@ -9,7 +9,6 @@ import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { createCloset } from "@/features/clothes-registration/api/createCloset";
 import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
-import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import {
   getClosetTemplateRequestId,
   getClosetTemplateSections,
@@ -21,6 +20,7 @@ import {
 } from "@/features/clothes-registration/utils/closetRegistrationParams";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
+import { useClosetStore } from "@/stores/useClosetStore";
 
 const maxNameLength = 10;
 
@@ -106,6 +106,7 @@ export function ClosetLabelingScreen() {
   const draftPredictedSections = useClosetRegistrationStore((state) => state.predictedSections);
   const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
   const resetClosetDraft = useClosetRegistrationStore((state) => state.resetDraft);
+  const setClosetId = useClosetStore((state) => state.setClosetId);
   const imageUri = getParamString(imageUriParam) ?? draftImageUri;
   const imageUrl = getParamString(imageUrlParam) ?? draftImageUrl;
   const rawTemplateId = getParamString(templateIdParam) ?? draftTemplateId;
@@ -184,7 +185,7 @@ export function ClosetLabelingScreen() {
       let resolvedImageUrl = imageUrl;
 
       if (!resolvedImageUrl && imageUri) {
-        const uploadResult = await uploadClosetPhoto(imageUri);
+        const uploadResult = await uploadClosetPhoto(imageUri, templateId);
         resolvedImageUrl = uploadResult.imageUrl;
         setClosetDraft({
           imageUrl: uploadResult.imageUrl,
@@ -200,7 +201,7 @@ export function ClosetLabelingScreen() {
         return;
       }
 
-      await createCloset({
+      const createdCloset = await createCloset({
         templateId,
         imageUrl: resolvedImageUrl,
         sections: detectedClosetSections.map((section, index) => ({
@@ -209,8 +210,12 @@ export function ClosetLabelingScreen() {
         })),
       });
 
+      setClosetId(createdCloset.closetId);
       resetClosetDraft();
-      router.replace(clothesRegistrationRoutes.complete);
+      router.replace({
+        pathname: "/closet/register/complete",
+        params: { closetId: String(createdCloset.closetId) },
+      });
     } catch (error) {
       showToast(error instanceof Error ? error.message : "옷장 등록에 실패했어요. 다시 시도해주세요.");
     } finally {

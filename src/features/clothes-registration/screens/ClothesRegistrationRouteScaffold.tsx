@@ -7,7 +7,8 @@ import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 
 type RouteAction = {
   label: string;
-  href: Href;
+  href?: Href;
+  onPress?: () => void;
   variant?: "primary" | "secondary";
 };
 
@@ -61,9 +62,11 @@ export function ClothesRegistrationRouteScaffold({
 
       {actions.length > 0 ? (
         <View className="gap-3">
-          {actions.map((action) => (
-            <Link key={action.label} href={action.href} asChild>
+          {actions.map((action) =>
+            action.onPress ? (
               <Pressable
+                key={action.label}
+                onPress={action.onPress}
                 className={[
                   "h-[55px] items-center justify-center rounded-lg",
                   action.variant === "secondary"
@@ -80,8 +83,28 @@ export function ClothesRegistrationRouteScaffold({
                   {action.label}
                 </Text>
               </Pressable>
-            </Link>
-          ))}
+            ) : action.href ? (
+              <Link key={action.label} href={action.href} asChild>
+                <Pressable
+                  className={[
+                    "h-[55px] items-center justify-center rounded-lg",
+                    action.variant === "secondary"
+                      ? "border border-text-subdued bg-white"
+                      : "bg-bg-dark",
+                  ].join(" ")}
+                >
+                  <Text
+                    className={[
+                      "font-pretendard-semibold text-button-lg",
+                      action.variant === "secondary" ? "text-text" : "text-white",
+                    ].join(" ")}
+                  >
+                    {action.label}
+                  </Text>
+                </Pressable>
+              </Link>
+            ) : null,
+          )}
         </View>
       ) : null}
     </View>

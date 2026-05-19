@@ -175,7 +175,7 @@ export function ClosetTemplateSelectScreen() {
             });
 
             router.push({
-              pathname: "/closet/register/result",
+              pathname: "/closet/register/analyzing",
               params: imageUri
                 ? { templateId: selectedTemplate.id, imageUri }
                 : { templateId: selectedTemplate.id },

@@ -9,8 +9,8 @@ import {
   isClosetSummaryResultApi,
 } from "./closet-api-types";
 import {
-  mapApiSectionIdToClosetSectionId,
   mapApiTemplateIdToClosetTemplateId,
+  mapSectionOrderToClosetSectionId,
 } from "./closet-api-mappers";
 import type { ClosetTemplate } from "@/features/closet/types/closet-layout";
 
@@ -30,7 +30,8 @@ export async function fetchClosetSummary(closetId: number): Promise<ClosetTempla
   const sections = [...result.sections]
     .sort((left, right) => left.sectionOrder - right.sectionOrder)
     .map((section) => ({
-      id: mapApiSectionIdToClosetSectionId(section.sectionId),
+      id: mapSectionOrderToClosetSectionId(section.sectionOrder),
+      apiSectionId: section.sectionId,
       sectionName: section.sectionName,
     }));
 

@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 import { env } from "@/config/env";
 import { ApiError } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
@@ -84,7 +86,34 @@ function getImageFile(uri: string) {
   };
 }
 
-export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetPhotoResult> {
+async function appendImageToFormData(formData: FormData, imageUri: string) {
+  const imageFile = getImageFile(imageUri);
+
+  if (Platform.OS === "web") {
+    const response = await fetch(imageUri);
+
+    if (!response.ok) {
+      throw new ApiError({
+        code: "IMAGE_READ_ERROR",
+        message: "옷장 사진을 불러오지 못했어요. 다시 시도해주세요.",
+        status: null,
+        details: { imageUri, status: response.status },
+      });
+    }
+
+    const blob = await response.blob();
+    const imageBlob = blob.type ? blob : blob.slice(0, blob.size, imageFile.type);
+    formData.append("image", imageBlob, imageFile.name);
+    return;
+  }
+
+  formData.append("image", imageFile as unknown as Blob);
+}
+
+export async function uploadClosetPhoto(
+  imageUri: string,
+  templateId: number,
+): Promise<UploadClosetPhotoResult> {
   if (!useSessionStore.persist.hasHydrated()) {
     await useSessionStore.persist.rehydrate();
   }
@@ -99,10 +128,12 @@ export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetP
   }
 
   const formData = new FormData();
-  formData.append("image", getImageFile(imageUri) as unknown as Blob);
+  formData.append("templateId", String(templateId));
+  await appendImageToFormData(formData, imageUri);
 
   console.log("[uploadClosetPhoto] POST /api/closets/photo", {
     imageUri,
+    templateId,
     hasAccessToken: Boolean(accessToken),
     file: getImageFile(imageUri),
   });

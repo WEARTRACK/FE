@@ -5,8 +5,11 @@ import {
   type ClosetCategory,
   type ClosetColor,
 } from "@/features/closet/types/closet-item";
-import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
-import type { ClosetTemplateId } from "@/features/closet/types/closet-layout";
+import {
+  isClosetSectionId,
+  type ClosetSectionId,
+  type ClosetTemplateId,
+} from "@/features/closet/types/closet-layout";
 import { ApiError } from "@/lib/api/errors";
 
 const CATEGORY_ALIASES: Record<string, ClosetCategory> = {
@@ -126,6 +129,21 @@ export function mapApiSectionIdToClosetSectionId(rawSectionId: number): ClosetSe
       message: "서버 sectionId 값을 앱 sectionId로 변환할 수 없습니다.",
       status: 500,
       details: { rawSectionId },
+    });
+  }
+
+  return mapped;
+}
+
+export function mapSectionOrderToClosetSectionId(sectionOrder: number): ClosetSectionId {
+  const mapped = `section-${sectionOrder}`;
+
+  if (!isClosetSectionId(mapped)) {
+    throw new ApiError({
+      code: "INVALID_SECTION_ORDER",
+      message: "서버 sectionOrder 값을 앱 sectionId로 변환할 수 없습니다.",
+      status: 500,
+      details: { sectionOrder },
     });
   }
 
