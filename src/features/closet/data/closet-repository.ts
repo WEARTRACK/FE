@@ -7,12 +7,9 @@ import { fetchClosetStatistics } from "@/features/closet/api/closet-statistics-a
 import { fetchClosetSummary } from "@/features/closet/api/closet-summary-api";
 import { updateClothes as updateClothesApi } from "@/features/closet/api/clothes-update-api";
 import type { ClosetDeleteResultApi, ClosetDetailResult, ClosetUpdateRequestBody } from "@/features/closet/api/closet-api-types";
-import { MOCK_CLOSET_ITEMS } from "@/features/closet/mock/closet-items";
-import { MOCK_CLOSET_TEMPLATE } from "@/features/closet/mock/closet-template";
 import type { ClosetItem } from "@/features/closet/types/closet-item";
 import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import type { ClosetSearchPage, ClosetSearchParams } from "@/features/closet/types/closet-search";
-import { filterClosetItemsBySearchParams } from "@/features/closet/utils/closet-search";
 import { ApiError } from "@/lib/api/errors";
 import { useClosetStore } from "@/stores/useClosetStore";
 
@@ -41,38 +38,6 @@ function toDisplayLabel(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function toSearchPageFromMock(
-  allItems: ClosetItem[],
-  params: { searchParams: ClosetSearchParams; page: number; size: number },
-): ClosetSearchPage {
-  const filteredItems = filterClosetItemsBySearchParams(allItems, params.searchParams);
-  const startIndex = params.page * params.size;
-  const endIndex = startIndex + params.size;
-  const pageItems = filteredItems.slice(startIndex, endIndex);
-  const totalCount = filteredItems.length;
-  const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / params.size);
-
-  return {
-    totalCount,
-    currentPage: totalPages === 0 ? 0 : Math.min(params.page, totalPages - 1),
-    totalPages,
-    hasNext: params.page + 1 < totalPages,
-    items: pageItems.map((item) => ({
-      id: item.id,
-      clothesId: Number(item.id),
-      imageUri: item.imageUri,
-      color: item.color,
-      category: item.category,
-      sectionName:
-        MOCK_CLOSET_TEMPLATE.sections.find((section) => section.id === item.sectionId)?.sectionName ??
-        "알 수 없는 보관 칸",
-      price: item.price,
-      colorLabel: item.colorLabel,
-      categoryLabel: item.categoryLabel,
-    })),
-  };
-}
-
 export type ClosetDataRepository = {
   getTemplate: () => Promise<ClosetTemplate>;
   getAllItems: () => Promise<ClosetItem[]>;
@@ -86,62 +51,6 @@ export type ClosetDataRepository = {
   getClothesDetail: (clothesId: number) => Promise<ClosetDetailResult>;
   updateClothes: (clothesId: number, payload: ClosetUpdateRequestBody) => Promise<ClosetDetailResult>;
   deleteClothes: (clothesId: number) => Promise<ClosetDeleteResultApi>;
-};
-
-export const mockClosetRepository: ClosetDataRepository = {
-  getTemplate: async () => structuredClone(MOCK_CLOSET_TEMPLATE),
-  getAllItems: async () => structuredClone(MOCK_CLOSET_ITEMS),
-  getItemsBySectionId: async (sectionId) =>
-    structuredClone(MOCK_CLOSET_ITEMS.filter((item) => item.sectionId === sectionId)),
-  getItemById: async (sectionId, itemId) => {
-    const item = MOCK_CLOSET_ITEMS.find((target) => target.sectionId === sectionId && target.id === itemId);
-    return item ? structuredClone(item) : null;
-  },
-  searchClothes: async ({ searchParams, page, size }) =>
-    toSearchPageFromMock(structuredClone(MOCK_CLOSET_ITEMS), { searchParams, page, size }),
-  getClothesDetail: async (clothesId) => {
-    const item = MOCK_CLOSET_ITEMS.find((target) => Number(target.id) === clothesId);
-
-    if (!item) {
-      throw new Error("Item not found");
-    }
-
-    return {
-      clothesId,
-      imageUrl: item.imageUri,
-      color: item.color,
-      category: item.category,
-      price: item.price,
-      sectionId: item.sectionId,
-      sectionName:
-        MOCK_CLOSET_TEMPLATE.sections.find((section) => section.id === item.sectionId)?.sectionName ??
-        "알 수 없는 보관 칸",
-    };
-  },
-  updateClothes: async (clothesId, payload) => {
-    const item = MOCK_CLOSET_ITEMS.find((target) => Number(target.id) === clothesId);
-
-    if (!item) {
-      throw new Error("Item not found");
-    }
-
-    const nextColor = payload.color ?? item.color;
-    const nextCategory = payload.category ?? item.category;
-    const nextSectionId = payload.sectionId ?? item.sectionId;
-
-    return {
-      clothesId,
-      imageUrl: item.imageUri,
-      color: nextColor,
-      category: nextCategory,
-      price: payload.price ?? item.price,
-      sectionId: nextSectionId,
-      sectionName:
-        MOCK_CLOSET_TEMPLATE.sections.find((section) => section.id === nextSectionId)?.sectionName ??
-        "알 수 없는 보관 칸",
-    };
-  },
-  deleteClothes: async () => null,
 };
 
 export const apiClosetRepository: ClosetDataRepository = {
