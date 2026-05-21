@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/errors";
 
 import {
   assertApiEnvelopeSuccess,
@@ -29,13 +30,38 @@ export async function fetchClothesDetail(clothesId: number): Promise<ClosetDetai
     throw createInvalidResponseError("옷 상세 조회 result 형식이 올바르지 않아요.", response.data);
   }
 
+  const safeImageUrl = (() => {
+    try {
+      return resolveClosetImageUrl(result.imageUrl);
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.code === "INVALID_IMAGE_URL_DOMAIN" || error.code === "INVALID_IMAGE_URL")
+      ) {
+        return result.imageUrl;
+      }
+      throw error;
+    }
+  })();
+
+  const safeSectionId = (() => {
+    try {
+      return mapApiSectionIdToClosetSectionId(result.sectionId);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "INVALID_SECTION_ID") {
+        return "section-1";
+      }
+      throw error;
+    }
+  })();
+
   return {
     clothesId: result.clothesId,
-    imageUrl: resolveClosetImageUrl(result.imageUrl),
+    imageUrl: safeImageUrl,
     color: mapServerColorToClosetColor(result.color),
     category: mapServerCategoryToClosetCategory(result.category),
     price: result.price,
-    sectionId: mapApiSectionIdToClosetSectionId(result.sectionId),
+    sectionId: safeSectionId,
     sectionName: result.sectionName,
   };
 }

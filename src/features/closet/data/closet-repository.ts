@@ -1,7 +1,7 @@
 import { deleteClothes } from "@/features/closet/api/clothes-delete-api";
 import { fetchClothesDetail } from "@/features/closet/api/clothes-detail-api";
 import { fetchClothesByFilter } from "@/features/closet/api/clothes-filter-api";
-import { mapClosetSectionIdToApiSectionId, mapServerCategoryToClosetCategory } from "@/features/closet/api/closet-api-mappers";
+import { mapServerCategoryToClosetCategory } from "@/features/closet/api/closet-api-mappers";
 import { fetchClosetSectionItems } from "@/features/closet/api/closet-section-api";
 import { fetchClosetStatistics } from "@/features/closet/api/closet-statistics-api";
 import { fetchClosetSummary } from "@/features/closet/api/closet-summary-api";
@@ -36,6 +36,22 @@ function toDisplayLabel(value: string) {
   }
 
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+async function resolveApiSectionId(params: { closetId: number; uiSectionId: ClosetSectionId }) {
+  const template = await fetchClosetSummary(params.closetId);
+  const section = template.sections.find((target) => target.id === params.uiSectionId);
+
+  if (!section || typeof section.apiSectionId !== "number") {
+    throw new ApiError({
+      code: "INVALID_SECTION_ID",
+      message: "섹션 정보를 찾을 수 없습니다.",
+      status: 400,
+      details: { uiSectionId: params.uiSectionId },
+    });
+  }
+
+  return section.apiSectionId;
 }
 
 export type ClosetDataRepository = {
@@ -82,17 +98,24 @@ export const apiClosetRepository: ClosetDataRepository = {
     return items;
   },
   getItemsBySectionId: async (sectionId) =>
-    fetchClosetSectionItems({
-      closetId: await resolveClosetId(),
-      sectionId: mapClosetSectionIdToApiSectionId(sectionId),
-      uiSectionId: sectionId,
-      page: 0,
-      size: 12,
-    }),
+    {
+      const closetId = await resolveClosetId();
+      const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
+
+      return fetchClosetSectionItems({
+        closetId,
+        sectionId: apiSectionId,
+        uiSectionId: sectionId,
+        page: 0,
+        size: 12,
+      });
+    },
   getItemById: async (sectionId, itemId) => {
+    const closetId = await resolveClosetId();
+    const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
     const items = await fetchClosetSectionItems({
-      closetId: await resolveClosetId(),
-      sectionId: mapClosetSectionIdToApiSectionId(sectionId),
+      closetId,
+      sectionId: apiSectionId,
       uiSectionId: sectionId,
       page: 0,
       size: 12,
@@ -126,6 +149,19 @@ export const apiClosetRepository: ClosetDataRepository = {
     };
   },
   getClothesDetail: fetchClothesDetail,
-  updateClothes: updateClothesApi,
+  updateClothes: async (clothesId, payload) => {
+    const closetId = await resolveClosetId();
+    const nextSectionId =
+      payload.sectionId === null
+        ? null
+        : typeof payload.sectionId === "number"
+          ? payload.sectionId
+          : await resolveApiSectionId({ closetId, uiSectionId: payload.sectionId });
+
+    return updateClothesApi(clothesId, {
+      ...payload,
+      sectionId: nextSectionId,
+    });
+  },
   deleteClothes,
 };

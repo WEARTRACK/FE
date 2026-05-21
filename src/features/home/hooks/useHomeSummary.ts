@@ -11,5 +11,6 @@ export function useHomeSummary() {
     queryFn: getHomeSummary,
     enabled: Boolean(accessToken),
     staleTime: 1000 * 60,
+    refetchOnMount: true,
   });
 }

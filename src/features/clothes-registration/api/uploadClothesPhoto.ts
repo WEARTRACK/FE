@@ -89,9 +89,7 @@ export async function uploadClothesPhoto(imageUri: string): Promise<ClothesPhoto
   formData.append("image", getImageFile(imageUri) as unknown as Blob);
 
   const abortController = new AbortController();
-  const timeoutId = setTimeout(() => {
-    abortController.abort();
-  }, 60000);
+  const timeoutId = setTimeout(() => abortController.abort(), 180000);
 
   let response: Response;
 

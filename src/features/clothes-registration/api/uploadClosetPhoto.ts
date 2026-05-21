@@ -131,13 +131,6 @@ export async function uploadClosetPhoto(
   formData.append("templateId", String(templateId));
   await appendImageToFormData(formData, imageUri);
 
-  console.log("[uploadClosetPhoto] POST /api/closets/photo", {
-    imageUri,
-    templateId,
-    hasAccessToken: Boolean(accessToken),
-    file: getImageFile(imageUri),
-  });
-
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => abortController.abort(), 60000);
 
@@ -163,12 +156,6 @@ export async function uploadClosetPhoto(
   }
 
   const data = (await response.json().catch(() => null)) as unknown;
-
-  console.log("[uploadClosetPhoto] response", {
-    ok: response.ok,
-    status: response.status,
-    data,
-  });
 
   if (!response.ok) {
     const errorResponse = isUploadClosetPhotoResponse(data) ? data : null;
