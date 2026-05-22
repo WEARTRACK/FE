@@ -50,7 +50,7 @@ export function ClothesAnalyzingScreen() {
           pathname: "/clothes/register/failure",
           params,
         });
-      } catch (error) {
+      } catch {
         router.replace({
           pathname: "/clothes/register/failure",
           params: { imageUri },

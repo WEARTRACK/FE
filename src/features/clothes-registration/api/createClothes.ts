@@ -33,6 +33,15 @@ export function toClothesColorValue(color: string) {
 }
 
 export function toClothesCategoryValue(category: string) {
+  const normalized = category
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "tshirt") {
+    return "T_SHIRT";
+  }
+
   return category.trim().toUpperCase().replace(/[\s-]/g, "_");
 }
 

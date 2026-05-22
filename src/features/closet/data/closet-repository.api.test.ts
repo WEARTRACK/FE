@@ -96,6 +96,10 @@ describe("apiClosetRepository smoke", () => {
       },
     ];
 
+    fetchClosetSummaryMock.mockResolvedValueOnce({
+      templateId: "LAYOUT_A",
+      sections: [{ id: "section-2", sectionName: "상의", apiSectionId: 2 }],
+    });
     fetchClosetSectionItemsMock.mockResolvedValueOnce(apiItems);
 
     const { apiClosetRepository } = await import("./closet-repository");

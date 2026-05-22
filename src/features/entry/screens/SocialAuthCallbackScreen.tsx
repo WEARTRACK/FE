@@ -34,6 +34,20 @@ function getSocialLoginErrorMessage(error: unknown) {
   return "로그인에 실패했어요. 다시 시도해주세요.";
 }
 
+function resolveNextHref(params: {
+  intentSuccessHref: Href | null | undefined;
+  profileCompleted: boolean;
+}): Href {
+  const { intentSuccessHref, profileCompleted } = params;
+
+  // Sign-up intent for an already registered user should behave like login flow.
+  if (intentSuccessHref === "/auth/sign-up-success" && profileCompleted) {
+    return "/home";
+  }
+
+  return intentSuccessHref ?? (profileCompleted ? "/home" : "/auth/set-nickname");
+}
+
 export function SocialAuthCallbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -74,8 +88,11 @@ export function SocialAuthCallbackScreen() {
         }
         await clearSocialAuthIntent();
 
-        const nextHref = intent?.successHref ?? (result.profileCompleted ? "/home" : "/auth/set-nickname");
-        router.replace(nextHref as Href);
+        const nextHref = resolveNextHref({
+          intentSuccessHref: intent?.successHref,
+          profileCompleted: result.profileCompleted,
+        });
+        router.replace(nextHref);
       } catch (error) {
         await clearSocialAuthIntent();
         showToast(getSocialLoginErrorMessage(error));

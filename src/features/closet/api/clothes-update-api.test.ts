@@ -11,7 +11,7 @@ vi.mock("@/lib/api/client", () => ({
 }));
 
 describe("updateClothes", () => {
-  it("converts sectionId section-* to number in request payload", async () => {
+  it("converts sectionId and enum values to server payload format", async () => {
     patchMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -34,14 +34,18 @@ describe("updateClothes", () => {
 
     await updateClothes(1, {
       color: "white",
-      category: "knit",
+      category: "tshirt",
       price: 1000,
       sectionId: "section-3",
     });
 
     expect(patchMock).toHaveBeenCalledWith(
       "/api/clothes/1",
-      expect.objectContaining({ sectionId: 3 }),
+      expect.objectContaining({
+        sectionId: 3,
+        color: "WHITE",
+        category: "T_SHIRT",
+      }),
     );
   });
 
@@ -76,7 +80,7 @@ describe("updateClothes", () => {
     expect(result.sectionId).toBe("section-2");
   });
 
-  it("throws when response sectionId is out of range", async () => {
+  it("falls back to section-1 when response sectionId is out of range", async () => {
     patchMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -97,13 +101,13 @@ describe("updateClothes", () => {
 
     const { updateClothes } = await import("./clothes-update-api");
 
-    await expect(
-      updateClothes(3, {
-        color: "black",
-        category: "shirt",
-        price: 3000,
-        sectionId: "section-3",
-      }),
-    ).rejects.toMatchObject({ code: "INVALID_SECTION_ID" });
+    const result = await updateClothes(3, {
+      color: "black",
+      category: "shirt",
+      price: 3000,
+      sectionId: "section-3",
+    });
+
+    expect(result.sectionId).toBe("section-1");
   });
 });

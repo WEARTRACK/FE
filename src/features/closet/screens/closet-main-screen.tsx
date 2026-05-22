@@ -26,7 +26,7 @@ export function ClosetMainScreen() {
   const frameTop = insets.top + 96;
 
   const sectionNameById = new Map(template.sections.map((section) => [section.id, section.sectionName]));
-  const availableSectionIds = new Set(slots.map((slot) => slot.id));
+  const availableSectionIds = new Set(template.sections.map((section) => section.id));
 
   useEffect(() => {
     if (!error) {

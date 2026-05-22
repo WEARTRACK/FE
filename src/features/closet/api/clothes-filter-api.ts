@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/errors";
 
 import {
   assertApiEnvelopeSuccess,
@@ -52,13 +53,37 @@ function isClosetFilterResultApi(value: unknown): value is ClosetFilterResultApi
   );
 }
 
+function toServerCategoryQuery(category: string) {
+  const normalized = category
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "tshirt") {
+    return "T_SHIRT";
+  }
+
+  return category.trim().toUpperCase().replace(/[\s-]/g, "_");
+}
+
 export async function fetchClothesByFilter(
   query: ClosetFilterRequestQuery,
 ): Promise<ClosetFilterResult> {
   assertExclusiveFilterQuery(query);
 
+  const normalizedQuery =
+    typeof query.category === "string"
+      ? {
+          ...query,
+          category: toServerCategoryQuery(query.category),
+        }
+      : {
+          ...query,
+          color: query.color.trim().toUpperCase(),
+        };
+
   const response = await apiClient.get<ApiEnvelope<ClosetFilterResultApi>>("/api/clothes/filter", {
-    params: query,
+    params: normalizedQuery,
   });
 
   if (!isApiEnvelope(response.data)) {
@@ -85,7 +110,16 @@ export async function fetchClothesByFilter(
 
       return {
         clothesId: item.clothesId,
-        imageUrl: resolveClosetImageUrl(item.imageUrl),
+        imageUrl: (() => {
+          try {
+            return resolveClosetImageUrl(item.imageUrl);
+          } catch (error) {
+            if (error instanceof ApiError && error.code === "INVALID_IMAGE_URL_DOMAIN") {
+              return item.imageUrl;
+            }
+            throw error;
+          }
+        })(),
         color: mapServerColorToClosetColor(item.color),
         category: mapServerCategoryToClosetCategory(item.category),
         sectionName,

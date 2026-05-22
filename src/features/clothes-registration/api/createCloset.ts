@@ -16,11 +16,11 @@ export type CreateClosetResult = {
   closetId: number;
   templateId: number;
   imageUrl: string;
-  sections: Array<{
+  sections: {
     sectionId: number;
     sectionOrder: number;
     sectionName: string;
-  }>;
+  }[];
 };
 
 type CreateClosetResponse = {
@@ -31,9 +31,7 @@ type CreateClosetResponse = {
 };
 
 export async function createCloset(payload: CreateClosetPayload) {
-  console.log("[createCloset] POST /api/closets payload", payload);
   const { data } = await apiClient.post<CreateClosetResponse>("/api/closets", payload);
-  console.log("[createCloset] response", data);
 
   if (!data.isSuccess || !data.result) {
     throw new ApiError({

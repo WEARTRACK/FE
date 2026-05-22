@@ -118,24 +118,21 @@ export function ClosetLabelingScreen() {
     const parsedSections = parsePredictedSections(predictedSectionsParam);
     return parsedSections.length > 0 ? parsedSections : draftPredictedSections;
   }, [draftPredictedSections, predictedSectionsParam]);
-  const detectedClosetSections = useMemo(
-    () => {
-      if (predictedSections.length > 0) {
-        return predictedSections.map((section) => ({
-          id: `closet-section-${section.sectionOrder}`,
-          initialName: "",
-          sectionOrder: section.sectionOrder,
-        }));
-      }
-
-      return getClosetTemplateSections(rawTemplateId ?? undefined).map((section, index) => ({
-        id: section.id,
-        initialName: section.initialName,
-        sectionOrder: index + 1,
+  const detectedClosetSections = useMemo(() => {
+    if (predictedSections.length > 0) {
+      return predictedSections.map((section) => ({
+        id: `closet-section-${section.sectionOrder}`,
+        initialName: "",
+        sectionOrder: section.sectionOrder,
       }));
-    },
-    [predictedSections, rawTemplateId],
-  );
+    }
+
+    return getClosetTemplateSections(rawTemplateId ?? undefined).map((section, index) => ({
+      id: section.id,
+      initialName: section.initialName,
+      sectionOrder: index + 1,
+    }));
+  }, [predictedSections, rawTemplateId]);
   const [sectionNames, setSectionNames] = useState(() =>
     detectedClosetSections.map((section) => section.initialName),
   );
@@ -217,7 +214,9 @@ export function ClosetLabelingScreen() {
         params: { closetId: String(createdCloset.closetId) },
       });
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "옷장 등록에 실패했어요. 다시 시도해주세요.");
+      showToast(
+        error instanceof Error ? error.message : "옷장 등록에 실패했어요. 다시 시도해주세요.",
+      );
     } finally {
       setIsSaving(false);
     }

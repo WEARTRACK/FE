@@ -1,5 +1,5 @@
-import { Href, Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { Href, Link, useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 
 import ClotheExample from "../../../../assets/clotheExample.svg";
@@ -259,9 +259,15 @@ function ClothesRegistrationGuideModal({
 
 export function MainHomeScreen() {
   const router = useRouter();
-  const { data: homeSummary } = useHomeSummary();
+  const { data: homeSummary, refetch: refetchHomeSummary } = useHomeSummary();
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetchHomeSummary();
+    }, [refetchHomeSummary]),
+  );
 
   const closetSummary: ClosetSummary = {
     totalClothes: homeSummary?.totalClothesCount ?? defaultClosetSummary.totalClothes,

@@ -81,7 +81,7 @@ export type ClosetUpdateRequestBody = {
   color: string | null;
   category: string | null;
   price: number | null;
-  sectionId: ClosetSectionId | null;
+  sectionId: ClosetSectionId | number | null;
 };
 
 export type ClosetDeleteResultApi =

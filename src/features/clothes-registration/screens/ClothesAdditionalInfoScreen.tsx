@@ -29,6 +29,7 @@ import {
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 import { showToast } from "@/lib/ui/showToast";
 import type { ClosetSectionOption } from "@/features/closet/utils/closet-section-options";
+import { queryClient } from "@/lib/queryClient";
 
 function formatPrice(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -266,6 +267,7 @@ export function ClothesAdditionalInfoScreen() {
         sectionId: selectedClosetOption.requestSectionId,
       });
 
+      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
       router.replace("/clothes/register/complete");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");

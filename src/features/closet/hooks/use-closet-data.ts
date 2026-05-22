@@ -2,15 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { ClosetDataRepository } from "@/features/closet/data/closet-repository";
 import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
-import { MOCK_CLOSET_TEMPLATE } from "@/features/closet/mock/closet-template";
 import type { ClosetStatisticsSummary } from "@/features/closet/types/closet-statistics";
-import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
+import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import { buildClosetStatistics } from "@/features/closet/utils/closet-statistics";
+
+const EMPTY_CLOSET_TEMPLATE: ClosetTemplate = {
+  templateId: "LAYOUT_A",
+  sections: [],
+};
 
 export function useClosetTemplate(repository: ClosetDataRepository = getClosetRepository()) {
   const [revision, setRevision] = useState(0);
   const [template, setTemplate] = useState<Awaited<ReturnType<ClosetDataRepository["getTemplate"]>>>(
-    MOCK_CLOSET_TEMPLATE,
+    EMPTY_CLOSET_TEMPLATE,
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
