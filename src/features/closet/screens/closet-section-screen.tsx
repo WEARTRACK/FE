@@ -534,8 +534,8 @@ export function ClosetSectionScreen() {
 
                       <View className="ml-3 flex-1">
                         <View className="flex-row items-center gap-[6px]">
-                          <ColorIcon width={72} height={32} />
-                          <CategoryIcon width={72} height={32} />
+                          <ColorIcon />
+                          <CategoryIcon />
                         </View>
                         <Text className="ml-[5px] mt-[13px] font-pretendard text-body text-bg-dark">
                           {sectionName}
@@ -658,11 +658,11 @@ export function ClosetSectionScreen() {
                 <View className="mt-7 flex-row items-center gap-[6px]">
                   {(() => {
                     const ColorIcon = getColorIcon(selectedItem.color);
-                    return <ColorIcon width={72} height={32} />;
+                    return <ColorIcon />;
                   })()}
                   {(() => {
                     const CategoryIcon = getCategoryIcon(selectedItem.category);
-                    return <CategoryIcon width={72} height={32} />;
+                    return <CategoryIcon />;
                   })()}
                 </View>
 

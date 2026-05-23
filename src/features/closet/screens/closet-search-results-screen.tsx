@@ -389,13 +389,13 @@ export function ClosetSearchResultsScreen() {
                       <View className="flex-row items-center gap-[6px]">
                         {searchMode === "color" ? (
                           <>
-                            <ColorIcon width={72} height={32} />
-                            <CategoryIcon width={72} height={32} />
+                            <ColorIcon />
+                            <CategoryIcon />
                           </>
                         ) : (
                           <>
-                            <CategoryIcon width={72} height={32} />
-                            <ColorIcon width={72} height={32} />
+                            <CategoryIcon />
+                            <ColorIcon />
                           </>
                         )}
                       </View>
@@ -527,11 +527,11 @@ export function ClosetSearchResultsScreen() {
                   <View className="mt-7 flex-row items-center gap-[6px]">
                     {(() => {
                       const ColorIcon = getColorIcon(selectedItem.color);
-                      return <ColorIcon width={72} height={32} />;
+                      return <ColorIcon />;
                     })()}
                     {(() => {
                       const CategoryIcon = getCategoryIcon(selectedItem.category);
-                      return <CategoryIcon width={72} height={32} />;
+                      return <CategoryIcon />;
                     })()}
                   </View>
 
