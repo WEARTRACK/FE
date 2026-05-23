@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   Text,
@@ -49,13 +50,13 @@ const BACK_BUTTON_SIZE = 24;
 const HEADLINE_LINE_HEIGHT = 20;
 const GRID_COLUMNS = 3;
 const GRID_GAP_X = 6;
-const PAGINATION_DOT_SIZE = 8;
+const PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP = 48;
 
 export function ClosetSectionScreen() {
   const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
   const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
 
   const currentSectionId: ClosetSectionId =
@@ -143,20 +144,34 @@ export function ClosetSectionScreen() {
   const countTop = titleTop + HEADLINE_LINE_HEIGHT + 29;
   const contentTop = countTop + 36;
   const viewToggleTop = titleTop - 8;
-  const tabBarTop = screenHeight - insets.bottom - 56;
-  const contentHeight =
-    viewMode === "list"
-      ? pageItems.length > 0
-        ? pageItems.length * 99 + (pageItems.length - 1) * 8
-        : 0
-      : pageItems.length > 0
-        ? Math.ceil(pageItems.length / GRID_COLUMNS) * gridItemSize +
-          (Math.ceil(pageItems.length / GRID_COLUMNS) - 1) * 8
-        : 0;
-  const contentBottom = contentTop + contentHeight;
-  const spaceBetweenContentAndTabBar = Math.max(tabBarTop - contentBottom, 0);
-  const paginationCenterY = contentBottom + spaceBetweenContentAndTabBar * 0.6;
-  const paginationTop = paginationCenterY - PAGINATION_DOT_SIZE / 2;
+  const paginationBottom = PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP;
+  const swipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponderCapture: (_, gestureState) =>
+          Math.abs(gestureState.dx) > 8 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderRelease: (_, gestureState) => {
+          if (totalPages <= 1) {
+            return;
+          }
+
+          const shouldMoveNext = gestureState.dx < -32 || gestureState.vx < -0.35;
+          const shouldMovePrev = gestureState.dx > 32 || gestureState.vx > 0.35;
+
+          if (shouldMoveNext && currentPage < totalPages - 1) {
+            setPage(currentPage + 1);
+            return;
+          }
+
+          if (shouldMovePrev && currentPage > 0) {
+            setPage(currentPage - 1);
+          }
+        },
+      }),
+    [currentPage, totalPages],
+  );
 
   const handleToggleView = (nextViewMode: ViewMode) => {
     setViewMode(nextViewMode);
@@ -491,7 +506,11 @@ export function ClosetSectionScreen() {
         ) : null}
 
         {!isLoading && !error && visibleSectionItems.length > 0 ? (
-          <View className="absolute left-6 right-6" style={{ top: contentTop }}>
+          <View
+            className="absolute left-6 right-6"
+            style={{ top: contentTop }}
+            {...swipeResponder.panHandlers}
+          >
             {viewMode === "grid" ? (
               <View className="flex-row flex-wrap gap-x-[6px] gap-y-2">
                 {pageItems.map((item) => (
@@ -552,7 +571,7 @@ export function ClosetSectionScreen() {
         {!isLoading && !error && visibleSectionItems.length > 0 ? (
           <View
             className="absolute left-0 right-0 flex-row items-center justify-center gap-[14px]"
-            style={{ top: paginationTop }}
+            style={{ bottom: paginationBottom }}
           >
             {Array.from({ length: totalPages }).map((_, index) => (
               <Pressable

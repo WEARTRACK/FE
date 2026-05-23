@@ -70,9 +70,9 @@ const colorRows: ClosetColor[][] = [
 ];
 
 const categoryRows: ClosetCategory[][] = [
-  ["tshirt", "skirt", "knit"],
+  ["tshirt", "shirt", "knit"],
   ["hoodie", "vest", "cardigan"],
-  ["pants", "shorts", "shirt", "dress"],
+  ["pants", "shorts", "skirt", "dress"],
   ["jacket", "coat", "padding"],
 ];
 
