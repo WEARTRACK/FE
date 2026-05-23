@@ -35,9 +35,11 @@ export function ClothesStyleSelectionScreen() {
   const initialColor = normalizeColorName(getParamString(predictedColorParam));
   const initialCategory = normalizeCategoryName(getParamString(predictedCategoryParam));
   const [selectedImageUri, setSelectedImageUri] = useState(imageUri);
+  const [selectedImageUrl, setSelectedImageUrl] = useState(imageUrl);
+  const [selectedPhotoId, setSelectedPhotoId] = useState(photoId);
   const [selectedColor, setSelectedColor] = useState(initialColor);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const displayImageUri = imageUrl || selectedImageUri;
+  const displayImageUri = selectedImageUrl || selectedImageUri;
 
   const handlePressImage = async () => {
     try {
@@ -48,6 +50,8 @@ export function ClothesStyleSelectionScreen() {
       }
 
       setSelectedImageUri(nextImageUri);
+      setSelectedImageUrl(undefined);
+      setSelectedPhotoId(undefined);
     } catch {
       showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
     }
@@ -98,8 +102,8 @@ export function ClothesStyleSelectionScreen() {
             pathname: "/clothes/register/additional-info",
             params: {
               imageUri: selectedImageUri ?? "",
-              imageUrl: imageUrl ?? "",
-              photoId: photoId ?? "",
+              imageUrl: selectedImageUrl ?? "",
+              photoId: selectedPhotoId ?? "",
               selectedColor,
               selectedCategory,
               entryMode: "manual",

@@ -81,7 +81,7 @@ describe("buildClosetStatistics", () => {
     expect(sumCategoryCounts(result)).toBe(result.totalCount);
   });
 
-  it("does not create Others when there are exactly four categories", () => {
+  it("does not create Others when there are exactly four regular categories", () => {
     const items = [
       createItem(1, "shirt", "Shirt"),
       createItem(2, "jacket", "Jacket"),
@@ -114,6 +114,49 @@ describe("buildClosetStatistics", () => {
     const others = result.rankedCategories.find((target) => target.category === "others");
 
     expect(others?.count).toBe(2);
+    expect(sumCategoryCounts(result)).toBe(result.totalCount);
+  });
+
+  it("keeps Others at the bottom even when it has the highest count", () => {
+    const items = [
+      createItem(1, "others", "Others"),
+      createItem(2, "others", "Others"),
+      createItem(3, "others", "Others"),
+      createItem(4, "others", "Others"),
+      createItem(5, "cardigan", "Cardigan"),
+      createItem(6, "cardigan", "Cardigan"),
+      createItem(7, "padding", "Padding"),
+      createItem(8, "hoodie", "Hoodie"),
+    ];
+
+    const result = buildClosetStatistics(items);
+    const categories = result.rankedCategories.map((target) => target.category);
+    const others = result.rankedCategories[result.rankedCategories.length - 1];
+
+    expect(categories).toEqual(["cardigan", "hoodie", "padding", "others"]);
+    expect(others).toMatchObject({ category: "others", count: 4, label: "Others" });
+    expect(sumCategoryCounts(result)).toBe(result.totalCount);
+  });
+
+  it("combines real others with regular categories outside the top 4", () => {
+    const items = [
+      createItem(1, "others", "Others"),
+      createItem(2, "others", "Others"),
+      createItem(3, "others", "Others"),
+      createItem(4, "cardigan", "Cardigan"),
+      createItem(5, "cardigan", "Cardigan"),
+      createItem(6, "padding", "Padding"),
+      createItem(7, "padding", "Padding"),
+      createItem(8, "hoodie", "Hoodie"),
+      createItem(9, "dress", "Dress"),
+    ];
+
+    const result = buildClosetStatistics(items);
+    const categories = result.rankedCategories.map((target) => target.category);
+    const others = result.rankedCategories[result.rankedCategories.length - 1];
+
+    expect(categories).toEqual(["cardigan", "padding", "dress", "hoodie", "others"]);
+    expect(others).toMatchObject({ category: "others", count: 3, label: "Others", rank: 5 });
     expect(sumCategoryCounts(result)).toBe(result.totalCount);
   });
 });

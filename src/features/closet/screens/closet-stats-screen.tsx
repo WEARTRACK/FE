@@ -168,7 +168,7 @@ export function ClosetStatsScreen() {
               <View className="mt-2 gap-[10px]">
                 {statistics.rankedCategories.map((target) => (
                   <View
-                    key={target.category}
+                    key={`${target.category}-${target.rank}`}
                     accessibilityLabel={`${target.label} ${target.count}벌`}
                     accessibilityRole="text"
                     className="flex-row items-center justify-between"

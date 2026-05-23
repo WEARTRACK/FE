@@ -40,6 +40,25 @@ function toDisplayLabel(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function sortCategoryCounts(left: CategoryCount, right: CategoryCount) {
+  if (left.count !== right.count) {
+    return right.count - left.count;
+  }
+
+  // Tie-breaker is based on internal category key, not label.
+  return left.category.localeCompare(right.category);
+}
+
+function toRankedCategory(target: CategoryCount, index: number, totalCount: number) {
+  return {
+    category: target.category,
+    label: target.label,
+    count: target.count,
+    ratio: target.count / totalCount,
+    rank: index + 1,
+  } satisfies ClosetCategoryStatistic;
+}
+
 export function buildClosetStatistics(items: ClosetItem[]): ClosetStatisticsSummary {
   const totalCount = items.length;
 
@@ -64,28 +83,18 @@ export function buildClosetStatistics(items: ClosetItem[]): ClosetStatisticsSumm
     });
   });
 
-  const sortedCounts = Array.from(categoryCountMap.values()).sort((left, right) => {
-    if (left.count !== right.count) {
-      return right.count - left.count;
-    }
+  const othersCategoryCount = categoryCountMap.get("others")?.count ?? 0;
+  const sortedRegularCounts = Array.from(categoryCountMap.values())
+    .filter((target) => target.category !== "others")
+    .sort(sortCategoryCounts);
 
-    // Tie-breaker is based on internal category key, not label.
-    return left.category.localeCompare(right.category);
-  });
-
-  const rankedTopCategories = sortedCounts
+  const rankedTopCategories = sortedRegularCounts
     .slice(0, MAX_RANKED_CATEGORIES)
-    .map<ClosetCategoryStatistic>((target, index) => ({
-      category: target.category,
-      label: target.label,
-      count: target.count,
-      ratio: target.count / totalCount,
-      rank: index + 1,
-    }));
+    .map((target, index) => toRankedCategory(target, index, totalCount));
 
-  const othersCount = sortedCounts
+  const othersCount = sortedRegularCounts
     .slice(MAX_RANKED_CATEGORIES)
-    .reduce((sum, target) => sum + target.count, 0);
+    .reduce((sum, target) => sum + target.count, othersCategoryCount);
 
   const rankedCategories =
     othersCount > 0

@@ -4,8 +4,40 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
-import { uploadClothesPhoto } from "@/features/clothes-registration/api/uploadClothesPhoto";
+import {
+  fetchClothesPhotoAnalysis,
+  uploadClothesPhoto,
+  type ClothesPhotoAnalysisResult,
+  type ClothesPhotoUploadResult,
+} from "@/features/clothes-registration/api/uploadClothesPhoto";
 import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+
+const ANALYSIS_POLL_INTERVAL_MS = 2000;
+const ANALYSIS_TIMEOUT_MS = 60000;
+
+function delay(durationMs: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+}
+
+function isAnalysisFailed(status: string) {
+  return status === "FAIL" || status === "FAILED";
+}
+
+function createAnalysisParams(
+  imageUri: string,
+  uploadResult: ClothesPhotoUploadResult,
+  analysisResult?: ClothesPhotoAnalysisResult,
+) {
+  return {
+    imageUri,
+    photoId: String(analysisResult?.photoId ?? uploadResult.photoId),
+    imageUrl: analysisResult?.imageUrl ?? uploadResult.imageUrl,
+    predictedColor: analysisResult?.predictedColor ?? uploadResult.predictedColor ?? "",
+    predictedCategory: analysisResult?.predictedCategory ?? uploadResult.predictedCategory ?? "",
+  };
+}
 
 export function ClothesAnalyzingScreen() {
   const router = useRouter();
@@ -26,39 +58,83 @@ export function ClothesAnalyzingScreen() {
       return;
     }
 
+    let isActive = true;
+
     const upload = async () => {
       try {
-        const result = await uploadClothesPhoto(imageUri);
+        const uploadResult = await uploadClothesPhoto(imageUri);
+        const uploadParams = createAnalysisParams(imageUri, uploadResult);
 
-        const params = {
-          imageUri,
-          photoId: String(result.photoId),
-          imageUrl: result.imageUrl,
-          predictedColor: result.predictedColor ?? "",
-          predictedCategory: result.predictedCategory ?? "",
-        };
+        if (!isActive) {
+          return;
+        }
 
-        if (result.analysisStatus === "SUCCESS") {
+        if (uploadResult.analysisStatus === "SUCCESS") {
           router.replace({
             pathname: "/clothes/register/result",
-            params,
+            params: uploadParams,
           });
           return;
         }
 
-        router.replace({
-          pathname: "/clothes/register/failure",
-          params,
-        });
+        if (isAnalysisFailed(uploadResult.analysisStatus)) {
+          router.replace({
+            pathname: "/clothes/register/failure",
+            params: uploadParams,
+          });
+          return;
+        }
+
+        const startedAt = Date.now();
+
+        while (isActive && Date.now() - startedAt < ANALYSIS_TIMEOUT_MS) {
+          await delay(ANALYSIS_POLL_INTERVAL_MS);
+
+          if (!isActive) {
+            return;
+          }
+
+          const analysisResult = await fetchClothesPhotoAnalysis(uploadResult.photoId);
+          const analysisParams = createAnalysisParams(imageUri, uploadResult, analysisResult);
+
+          if (analysisResult.analysisStatus === "SUCCESS") {
+            router.replace({
+              pathname: "/clothes/register/result",
+              params: analysisParams,
+            });
+            return;
+          }
+
+          if (isAnalysisFailed(analysisResult.analysisStatus)) {
+            router.replace({
+              pathname: "/clothes/register/failure",
+              params: analysisParams,
+            });
+            return;
+          }
+        }
+
+        if (isActive) {
+          router.replace({
+            pathname: "/clothes/register/failure",
+            params: uploadParams,
+          });
+        }
       } catch {
-        router.replace({
-          pathname: "/clothes/register/failure",
-          params: { imageUri },
-        });
+        if (isActive) {
+          router.replace({
+            pathname: "/clothes/register/failure",
+            params: { imageUri },
+          });
+        }
       }
     };
 
     void upload();
+
+    return () => {
+      isActive = false;
+    };
   }, [imageUri, router]);
 
   return (
