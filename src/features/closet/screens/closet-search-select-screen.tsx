@@ -70,9 +70,9 @@ const colorRows: ClosetColor[][] = [
 ];
 
 const categoryRows: ClosetCategory[][] = [
-  ["tshirt", "skirt", "knit"],
+  ["tshirt", "shirt", "knit"],
   ["hoodie", "vest", "cardigan"],
-  ["pants", "shorts", "shirt", "dress"],
+  ["pants", "shorts", "skirt", "dress"],
   ["jacket", "coat", "padding"],
 ];
 
@@ -205,7 +205,7 @@ export function ClosetSearchSelectScreen() {
           <View
             key={`row-${rowIndex}`}
             className="flex-row self-start justify-start"
-            style={{ marginBottom: rowIndex === rows.length - 1 ? 0 : 5 }}
+            style={{ marginBottom: rowIndex === rows.length - 1 ? 0 : 6 }}
           >
             {row.map((item, itemIndex) => {
               const chipSpacingStyle = { marginRight: itemIndex === row.length - 1 ? 0 : 6 };

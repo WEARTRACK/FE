@@ -23,6 +23,10 @@ import {
 import { useClothesStorageSections } from "@/features/clothes-registration/hooks/use-clothes-storage-sections";
 import { uploadClothesPhoto } from "@/features/clothes-registration/api/uploadClothesPhoto";
 import {
+  getCategoryChipIcon,
+  getColorChipIcon,
+} from "@/features/clothes-registration/screens/clothes-style-chip-icons";
+import {
   getParamString,
   normalizeCategoryName,
   normalizeColorName,
@@ -46,6 +50,9 @@ function AnalysisResultHeader({
   category: string;
   showAnalysis?: boolean;
 }) {
+  const ColorIcon = getColorChipIcon(color, true);
+  const CategoryIcon = getCategoryChipIcon(category, true);
+
   return (
     <View className="mt-[24px] flex-row items-start">
       <View className="h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-white">
@@ -64,14 +71,8 @@ function AnalysisResultHeader({
             AI 분석 결과
           </Text>
           <View className="mt-[8px] flex-row gap-[6px]">
-            <View className="h-[32px] min-w-[70px] items-center justify-center rounded-full bg-bg-dark px-[18px]">
-              <Text className="font-pretendard text-[12px] leading-[16px] text-white">{color}</Text>
-            </View>
-            <View className="h-[32px] min-w-[78px] items-center justify-center rounded-full bg-primary px-[18px]">
-              <Text className="font-pretendard text-[12px] leading-[16px] text-accent">
-                {category}
-              </Text>
-            </View>
+            <ColorIcon />
+            <CategoryIcon />
           </View>
         </View>
       ) : null}

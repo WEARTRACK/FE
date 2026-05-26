@@ -5,6 +5,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -37,6 +38,8 @@ import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-ta
 import { ApiError } from "@/lib/api/errors";
 import { queryClient } from "@/lib/queryClient";
 import { showToast } from "@/lib/ui/showToast";
+
+const PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP = 13;
 
 export function ClosetSearchResultsScreen() {
   const router = useRouter();
@@ -80,6 +83,36 @@ export function ClosetSearchResultsScreen() {
     [items, selectedItemId],
   );
   const selectedItemClothesId = selectedItem?.clothesId ?? null;
+  const summaryTop = insets.top + 67;
+  const paginationBottom = PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP;
+  const swipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponderCapture: (_, gestureState) =>
+          Math.abs(gestureState.dx) > 8 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderRelease: (_, gestureState) => {
+          if (totalPages <= 1) {
+            return;
+          }
+
+          const shouldMoveNext = gestureState.dx < -32 || gestureState.vx < -0.35;
+          const shouldMovePrev = gestureState.dx > 32 || gestureState.vx > 0.35;
+
+          if (shouldMoveNext && currentPage < totalPages - 1) {
+            setPage(currentPage + 1);
+            return;
+          }
+
+          if (shouldMovePrev && currentPage > 0) {
+            setPage(currentPage - 1);
+          }
+        },
+      }),
+    [currentPage, setPage, totalPages],
+  );
+
   const sectionOptions = useMemo(() => {
     const templateOptions = template.sections.map((section) => ({
       id: section.id,
@@ -354,7 +387,7 @@ export function ClosetSearchResultsScreen() {
           <>
             <View
               className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[21px]"
-              style={{ marginTop: insets.top + 67 }}
+              style={{ marginTop: summaryTop }}
             >
               <View className="absolute bottom-[34px] left-[21px] right-[21px] top-5 justify-between">
                 <Text className="font-pretendard text-subhead text-text-subdued">검색 결과</Text>
@@ -366,7 +399,7 @@ export function ClosetSearchResultsScreen() {
                 </Text>
               </View>
             </View>
-            <View className="mt-[38px] gap-2">
+            <View className="mt-[38px] gap-2" {...swipeResponder.panHandlers}>
               {items.map((item) => {
                 const ColorIcon = getColorIcon(item.color);
                 const CategoryIcon = getCategoryIcon(item.category);
@@ -389,13 +422,13 @@ export function ClosetSearchResultsScreen() {
                       <View className="flex-row items-center gap-[6px]">
                         {searchMode === "color" ? (
                           <>
-                            <ColorIcon width={72} height={32} />
-                            <CategoryIcon width={72} height={32} />
+                            <ColorIcon />
+                            <CategoryIcon />
                           </>
                         ) : (
                           <>
-                            <CategoryIcon width={72} height={32} />
-                            <ColorIcon width={72} height={32} />
+                            <CategoryIcon />
+                            <ColorIcon />
                           </>
                         )}
                       </View>
@@ -410,7 +443,7 @@ export function ClosetSearchResultsScreen() {
 
             <View
               className="absolute left-0 right-0 flex-row items-center justify-center gap-[14px]"
-              style={{ bottom: insets.bottom + 48 }}
+              style={{ bottom: paginationBottom }}
             >
               {Array.from({ length: totalPages }).map((_, index) => (
                 <Pressable
@@ -527,11 +560,11 @@ export function ClosetSearchResultsScreen() {
                   <View className="mt-7 flex-row items-center gap-[6px]">
                     {(() => {
                       const ColorIcon = getColorIcon(selectedItem.color);
-                      return <ColorIcon width={72} height={32} />;
+                      return <ColorIcon />;
                     })()}
                     {(() => {
                       const CategoryIcon = getCategoryIcon(selectedItem.category);
-                      return <CategoryIcon width={72} height={32} />;
+                      return <CategoryIcon />;
                     })()}
                   </View>
 
