@@ -168,15 +168,23 @@ export function mapClosetSectionIdToApiSectionId(sectionId: ClosetSectionId): nu
 export function mapApiTemplateIdToClosetTemplateId(rawTemplateId: number): ClosetTemplateId {
   switch (rawTemplateId) {
     case 1:
-      return "LAYOUT_A";
+      return "LAYOUT_1";
     case 2:
-      return "LAYOUT_B";
+      return "LAYOUT_2";
     case 3:
-      return "LAYOUT_C";
+      return "LAYOUT_3";
     case 4:
-      return "LAYOUT_D";
+      return "LAYOUT_4";
     case 5:
-      return "LAYOUT_E";
+      return "LAYOUT_5";
+    case 6:
+      return "LAYOUT_6";
+    case 7:
+      return "LAYOUT_7";
+    case 8:
+      return "LAYOUT_8";
+    case 9:
+      return "LAYOUT_9";
     default:
       throw new ApiError({
         code: "INVALID_TEMPLATE_ID",

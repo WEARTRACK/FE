@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import { Button } from "@/components/common/Button";
+import { colors } from "@/constants/colors";
+import { CLOSET_LAYOUTS } from "@/features/closet/constants/closet-layouts";
 import {
   closetTemplates,
   type ClosetTemplate,
@@ -61,8 +63,7 @@ function TemplateCard({
   width: number;
   frameHeight: number;
 }) {
-  const TemplateImage = item.image;
-  const imageWidth = item.fillFrame ? width : (frameHeight * item.imageWidth) / item.imageHeight;
+  const slots = CLOSET_LAYOUTS[item.id];
 
   return (
     <View style={{ width }} className="items-center justify-center">
@@ -73,7 +74,33 @@ function TemplateCard({
           isActive ? "border-2 border-accent" : "border border-blue-2",
         ].join(" ")}
       >
-        <TemplateImage width={imageWidth} height={frameHeight} />
+        <View
+          style={{
+            width: "82%",
+            height: "88%",
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: colors.blue[3],
+            backgroundColor: colors.blue[1],
+          }}
+        >
+          {slots.map((slot) => (
+            <View
+              key={slot.id}
+              style={{
+                position: "absolute",
+                left: `${slot.left}%`,
+                top: `${slot.top}%`,
+                width: `${slot.width}%`,
+                height: `${slot.height}%`,
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: colors.blue[3],
+                backgroundColor: colors.white,
+              }}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -128,7 +155,7 @@ export function ClosetTemplateSelectScreen() {
           옷장을 선택해주세요.
         </Text>
         <Text className="mt-[16px] font-pretendard text-[13px] leading-[20px] text-text-subdued">
-          5가지 옷장 중 어울리는 본인의 옷장을 선택해주세요.
+          옷장 구조와 가장 비슷한 프리셋을 선택해주세요.
         </Text>
       </View>
 

@@ -7,7 +7,7 @@ import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/cl
 import { buildClosetStatistics } from "@/features/closet/utils/closet-statistics";
 
 const EMPTY_CLOSET_TEMPLATE: ClosetTemplate = {
-  templateId: "LAYOUT_A",
+  templateId: "LAYOUT_1",
   sections: [],
 };
 

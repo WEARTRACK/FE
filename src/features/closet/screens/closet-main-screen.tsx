@@ -11,7 +11,7 @@ import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
 import { showToast } from "@/lib/ui/showToast";
 
-const LABEL_CENTER_THRESHOLD_PX = 89;
+const LABEL_CENTER_THRESHOLD_PX = 71;
 
 export function ClosetMainScreen() {
   const router = useRouter();
@@ -96,8 +96,7 @@ export function ClosetMainScreen() {
             <View className="absolute inset-0">
               {slots.map((slot) => {
                 const sectionName = sectionNameById.get(slot.id);
-                const slotHeightPx = (frameHeight * slot.height) / 100;
-                const isCompactHeight = slotHeightPx < LABEL_CENTER_THRESHOLD_PX;
+                const isCompactHeight = slot.heightPx < LABEL_CENTER_THRESHOLD_PX;
 
                 return (
                   <TouchableOpacity
@@ -117,7 +116,7 @@ export function ClosetMainScreen() {
                       borderColor: colors.blue[3],
                       backgroundColor: colors.white,
                       paddingLeft: 20,
-                      paddingTop: isCompactHeight ? 0 : 15,
+                      paddingTop: isCompactHeight ? 0 : 20,
                       justifyContent: isCompactHeight ? "center" : "flex-start",
                     }}
                   >
