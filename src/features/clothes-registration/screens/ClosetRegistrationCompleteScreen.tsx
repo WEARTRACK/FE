@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { Button } from "@/components/common/Button";
 import { parseClosetId } from "@/features/closet/utils/closet-id";
+import { ClosetRegistrationHeader } from "@/features/clothes-registration/screens/ClosetRegistrationHeader";
 import { useClosetStore } from "@/stores/useClosetStore";
 
 export function ClosetRegistrationCompleteScreen() {
@@ -35,22 +35,7 @@ export function ClosetRegistrationCompleteScreen() {
         paddingBottom: insets.bottom + 20,
       }}
     >
-      <View className="h-[32px] flex-row items-center justify-between">
-        <Pressable
-          accessibilityLabel="뒤로가기"
-          hitSlop={12}
-          onPress={() => router.replace("/home")}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.65 : 1,
-          })}
-        >
-          <ArrowBackIcon width={24} height={24} />
-        </Pressable>
-        <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
-          옷장등록
-        </Text>
-        <View className="w-[32px]" />
-      </View>
+      <ClosetRegistrationHeader onPressBack={() => router.replace("/home")} />
 
       <View className="flex-1 items-center justify-center pb-[112px]">
         <View>

@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import HeaderLogo from "../../../../assets/headerLogo.svg";
 import { Button } from "@/components/common/Button";
+import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import { ClothesStyleSelector } from "@/features/clothes-registration/screens/ClothesStyleSelector";
 import {
   getCategoryChipIcon,
@@ -93,7 +93,7 @@ export function ClothesAnalysisResultScreen() {
         contentContainerClassName="px-6 pb-[24px]"
         showsVerticalScrollIndicator={false}
       >
-        <HeaderLogo width={118} height={15} />
+        <ClothesRegistrationHeader />
 
         <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
           분석이 완료됐습니다.
