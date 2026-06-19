@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ClosetFrame from "../../../../assets/closet-frame.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
+import type { ClosetDataRepository } from "@/features/closet/data/closet-repository";
+import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import { CLOSET_LAYOUTS } from "@/features/closet/constants/closet-layouts";
 import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
@@ -13,12 +15,51 @@ import { showToast } from "@/lib/ui/showToast";
 
 const LABEL_CENTER_THRESHOLD_PX = 71;
 
+const previewClosetRepository = {
+  getTemplate: async () => ({
+    templateId: "LAYOUT_9",
+    sections: [
+      { id: "section-1", sectionName: "칸1" },
+      { id: "section-2", sectionName: "칸2" },
+      { id: "section-3", sectionName: "칸3" },
+      { id: "section-4", sectionName: "칸4" },
+      { id: "section-5", sectionName: "칸5" },
+      { id: "section-6", sectionName: "칸6" },
+      { id: "section-7", sectionName: "칸7" },
+      { id: "section-8", sectionName: "칸8" },
+      { id: "section-9", sectionName: "칸9" },
+      { id: "section-10", sectionName: "칸10" },
+    ],
+  }),
+  getAllItems: async () => [],
+  getItemsBySectionId: async () => [],
+  getItemById: async () => null,
+  searchClothes: async () => ({
+    totalCount: 0,
+    currentPage: 0,
+    totalPages: 0,
+    hasNext: false,
+    items: [],
+  }),
+  getClothesDetail: async () => {
+    throw new Error("Closet preview does not provide clothes detail.");
+  },
+  updateClothes: async () => {
+    throw new Error("Closet preview does not support clothes updates.");
+  },
+  deleteClothes: async () => {
+    throw new Error("Closet preview does not support delete.");
+  },
+} satisfies ClosetDataRepository;
+
 export function ClosetMainScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
 
-  const { template, isLoading, error, refetch } = useClosetTemplate();
+  const { template, isLoading, error, refetch } = useClosetTemplate(
+    __DEV__ ? previewClosetRepository : getClosetRepository(),
+  );
   const lastToastMessageRef = useRef<string | null>(null);
   const slots = CLOSET_LAYOUTS[template.templateId];
   const frameWidth = screenWidth - 48;

@@ -16,6 +16,8 @@ const DONUT_GAP_SIZE = 2;
 const HEADER_TOP_OFFSET = 15;
 const HEADER_LINE_HEIGHT = 20;
 const SUMMARY_TOP_GAP = 27;
+const SUMMARY_HEIGHT = 121;
+const SUMMARY_BORDER_RADIUS = 13.15;
 
 const rankColorByRank: Record<number, string> = {
   1: colors.blue[4],
@@ -33,8 +35,7 @@ export function ClosetStatsScreen() {
   const lastToastMessageRef = useRef<string | null>(null);
 
   const summaryWidth = screenWidth - 48;
-  const summaryHeight = summaryWidth / 3;
-  const summarySubTextTop = summaryHeight * 0.22;
+  const summarySubTextTop = SUMMARY_HEIGHT * 0.22;
   const headerTop = insets.top + HEADER_TOP_OFFSET;
   const summaryTop = headerTop + HEADER_LINE_HEIGHT + SUMMARY_TOP_GAP;
 
@@ -86,7 +87,17 @@ export function ClosetStatsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingTop: summaryTop, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <View className="relative rounded-xl bg-cool pl-[21px]" style={{ width: summaryWidth, height: summaryHeight }}>
+        <View
+          className="relative pl-[21px]"
+          style={{
+            width: summaryWidth,
+            height: SUMMARY_HEIGHT,
+            borderRadius: SUMMARY_BORDER_RADIUS,
+            borderWidth: 0.5,
+            borderColor: colors.primary,
+            backgroundColor: colors.blue[1],
+          }}
+        >
           <View className="absolute left-[21px]" style={{ top: summarySubTextTop, gap: 17 }}>
             <Text className="font-pretendard text-subhead text-text-subdued">내 옷장에 지금..</Text>
             <Text className="font-pretendard-semibold text-headline text-text">
