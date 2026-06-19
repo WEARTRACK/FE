@@ -12,6 +12,7 @@ export const colors = {
     subdued: "#6B7280",
   },
   blue: {
+    0: "#FBFCFF",
     1: "#EDF2FF",
     2: "#CDDDFF",
     3: "#B1C9FF",
