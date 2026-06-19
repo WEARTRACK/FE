@@ -21,6 +21,7 @@ module.exports = {
         },
 
         blue: {
+          0: "#FBFCFF",
           1: "#EDF2FF",
           2: "#CDDDFF",
           3: "#B1C9FF",
@@ -44,29 +45,36 @@ module.exports = {
             letterSpacing: "-0.5px",
           },
         ],
+        heading: [
+          "15px",
+          {
+            lineHeight: "20px",
+            letterSpacing: "-0.5px",
+          },
+        ],
         subhead: [
-          "13px",
+          "14px",
           {
             lineHeight: "20px",
             letterSpacing: "-0.5px",
           },
         ],
         body: [
-          "12px",
+          "14px",
           {
             lineHeight: "20px",
             letterSpacing: "0px",
           },
         ],
         caption: [
-          "10px",
+          "12px",
           {
             lineHeight: "20px",
             letterSpacing: "-0.5px",
           },
         ],
         "button-lg": [
-          "16px",
+          "18px",
           {
             lineHeight: "20px",
             letterSpacing: "-0.5px",
