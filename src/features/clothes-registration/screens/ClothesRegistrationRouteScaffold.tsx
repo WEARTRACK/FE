@@ -1,9 +1,9 @@
-import { Href, Link, useRouter } from "expo-router";
+import { Href, Link } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ArrowBackIcon from "../../../../assets/arrow_back.svg";
+import { ClosetRegistrationHeader } from "@/features/clothes-registration/screens/ClosetRegistrationHeader";
 
 type RouteAction = {
   label: string;
@@ -26,7 +26,6 @@ export function ClothesRegistrationRouteScaffold({
   children,
   actions = [],
 }: ClothesRegistrationRouteScaffoldProps) {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
 
   return (
@@ -37,21 +36,7 @@ export function ClothesRegistrationRouteScaffold({
         paddingBottom: insets.bottom + 20,
       }}
     >
-      <View className="h-9 flex-row items-center justify-between">
-        <Pressable
-          accessibilityLabel="뒤로가기"
-          hitSlop={12}
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <ArrowBackIcon width={24} height={24} />
-        </Pressable>
-        <Text className="font-pretendard-semibold text-[14px] leading-[20px] text-text">
-          옷장등록
-        </Text>
-        <View className="w-5" />
-      </View>
+      <ClosetRegistrationHeader variant="compact" />
 
       <View className="mt-8">
         <Text className="mt-3 font-pretendard-semibold text-headline text-text">{title}</Text>

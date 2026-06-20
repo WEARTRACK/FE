@@ -1,85 +1,123 @@
 import type {
+  ClosetSectionId,
   ClosetSectionSlot,
   ClosetTemplateId,
   ClosetTemplateLayout,
 } from "@/features/closet/types/closet-layout";
 
-const BASE_SCREEN_WIDTH = 393;
-const BASE_SCREEN_HEIGHT = 852;
-const BASE_FRAME_LEFT = 24;
-const BASE_FRAME_TOP = 155;
-const BASE_FRAME_WIDTH = 345;
-const BASE_FRAME_HEIGHT = 517;
+type SlotSpec = Omit<ClosetSectionSlot, "id">;
 
-const SCREEN_LAYOUTS: ClosetTemplateLayout = {
-  LAYOUT_A: [
-    { id: "section-1", left: 10.4, top: 21.7, width: 37.2, height: 23.7 },
-    { id: "section-2", left: 52.2, top: 21.7, width: 37.2, height: 23.7 },
-    { id: "section-3", left: 10.4, top: 47.5, width: 37.2, height: 10.4 },
-    { id: "section-4", left: 52.2, top: 47.5, width: 37.2, height: 26.9 },
-    { id: "section-5", left: 10.4, top: 60.3, width: 37.2, height: 3.9 },
-    { id: "section-6", left: 10.4, top: 65.5, width: 37.2, height: 3.9 },
-    { id: "section-7", left: 10.4, top: 70.7, width: 37.2, height: 3.9 },
+export const CLOSET_TEMPLATE_IDS = [
+  "LAYOUT_1",
+  "LAYOUT_2",
+  "LAYOUT_3",
+  "LAYOUT_4",
+  "LAYOUT_5",
+  "LAYOUT_6",
+  "LAYOUT_7",
+  "LAYOUT_8",
+  "LAYOUT_9",
+] as const;
+
+const LAYOUT_SPECS: Record<(typeof CLOSET_TEMPLATE_IDS)[number], SlotSpec[]> = {
+  LAYOUT_1: [
+    { left: 5.2, top: 3.5, width: 89.6, height: 38.1, heightPx: 197 },
+    { left: 5.2, top: 44.7, width: 89.6, height: 48.9, heightPx: 253 },
   ],
-  LAYOUT_B: [
-    { id: "section-1", left: 10.4, top: 21.7, width: 78.6, height: 23.7 },
-    { id: "section-2", left: 10.4, top: 47.5, width: 78.6, height: 13.5 },
-    { id: "section-3", left: 10.4, top: 63.3, width: 78.6, height: 6.1 },
-    { id: "section-4", left: 10.4, top: 70.7, width: 78.6, height: 3.9 },
+  LAYOUT_2: [
+    { left: 5.2, top: 3.3, width: 89.6, height: 66.3, heightPx: 343 },
+    { left: 5.2, top: 71.4, width: 89.6, height: 7, heightPx: 36 },
+    { left: 5.2, top: 80.1, width: 89.6, height: 13.3, heightPx: 69 },
   ],
-  LAYOUT_C: [
-    { id: "section-1", left: 10.4, top: 21.7, width: 78.6, height: 6.0 },
-    { id: "section-2", left: 10.4, top: 30.2, width: 78.6, height: 30.5 },
-    { id: "section-3", left: 10.4, top: 63.3, width: 78.6, height: 6.1 },
-    { id: "section-4", left: 10.4, top: 70.7, width: 78.6, height: 3.9 },
+  LAYOUT_3: [
+    { left: 5.2, top: 3.3, width: 89.6, height: 18, heightPx: 93 },
+    { left: 5.2, top: 23.6, width: 89.6, height: 52, heightPx: 269 },
+    { left: 5.2, top: 77.9, width: 89.6, height: 7, heightPx: 36 },
+    { left: 5.2, top: 86.5, width: 89.6, height: 7, heightPx: 36 },
   ],
-  LAYOUT_D: [
-    { id: "section-1", left: 10.4, top: 21.7, width: 78.6, height: 6.0 },
-    { id: "section-2", left: 10.4, top: 30.6, width: 36.9, height: 30.5 },
-    { id: "section-3", left: 10.4, top: 63.3, width: 36.9, height: 6.1 },
-    { id: "section-4", left: 10.4, top: 70.7, width: 36.9, height: 3.9 },
-    { id: "section-5", left: 52.2, top: 30.6, width: 36.9, height: 6.2 },
-    { id: "section-6", left: 52.2, top: 37.7, width: 36.9, height: 6.2 },
-    { id: "section-7", left: 52.2, top: 44.7, width: 36.9, height: 6.2 },
-    { id: "section-8", left: 52.2, top: 52.3, width: 36.9, height: 22.2 },
+  LAYOUT_4: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 88.6, heightPx: 458 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 19.3, heightPx: 100 },
+    { left: 52.5, top: 27.1, width: 42.3, height: 19.3, heightPx: 100 },
+    { left: 52.5, top: 50.1, width: 42.3, height: 19.3, heightPx: 100 },
+    { left: 52.5, top: 73.3, width: 42.3, height: 19.3, heightPx: 100 },
   ],
-  LAYOUT_E: [
-    { id: "section-1", left: 10.4, top: 21.7, width: 48.3, height: 27.5 },
-    { id: "section-2", left: 10.4, top: 51.1, width: 48.3, height: 14.8 },
-    { id: "section-3", left: 10.4, top: 67.1, width: 23.2, height: 8.1 },
-    { id: "section-4", left: 35.6, top: 67.1, width: 23.2, height: 8.1 },
-    { id: "section-5", left: 62.1, top: 21.8, width: 27.0, height: 8.0 },
-    { id: "section-6", left: 62.1, top: 30.88, width: 27.0, height: 8.0 },
-    { id: "section-7", left: 62.1, top: 39.96, width: 27.0, height: 8.0 },
-    { id: "section-8", left: 62.1, top: 49.04, width: 27.0, height: 8.0 },
-    { id: "section-9", left: 62.1, top: 58.12, width: 27.0, height: 8.0 },
-    { id: "section-10", left: 62.1, top: 67.2, width: 27.0, height: 8.0 },
+  LAYOUT_5: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 4.9, top: 17.2, width: 42.3, height: 75.4, heightPx: 390 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 17.2, width: 42.3, height: 50.1, heightPx: 259 },
+    { left: 52.5, top: 69.8, width: 42.3, height: 10.6, heightPx: 55 },
+    { left: 52.5, top: 82, width: 42.3, height: 10.6, heightPx: 55 },
+  ],
+  LAYOUT_6: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 50.5, heightPx: 261 },
+    { left: 4.9, top: 57.6, width: 42.3, height: 10.6, heightPx: 55 },
+    { left: 4.9, top: 69.8, width: 42.3, height: 10.6, heightPx: 55 },
+    { left: 4.9, top: 82, width: 42.3, height: 10.6, heightPx: 55 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 64.2, heightPx: 332 },
+    { left: 52.5, top: 69.8, width: 42.3, height: 10.6, heightPx: 55 },
+    { left: 52.5, top: 82, width: 42.3, height: 10.6, heightPx: 55 },
+  ],
+  LAYOUT_7: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 4.9, top: 16.4, width: 42.3, height: 47.8, heightPx: 247 },
+    { left: 4.9, top: 66.3, width: 42.3, height: 7.7, heightPx: 40 },
+    { left: 4.9, top: 75.6, width: 42.3, height: 7.7, heightPx: 40 },
+    { left: 4.9, top: 84.9, width: 42.3, height: 7.7, heightPx: 40 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 16.4, width: 42.3, height: 54.2, heightPx: 280 },
+    { left: 52.5, top: 72.8, width: 42.3, height: 19.7, heightPx: 102 },
+  ],
+  LAYOUT_8: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 7.2, heightPx: 37 },
+    { left: 4.9, top: 13, width: 42.3, height: 46.6, heightPx: 241 },
+    { left: 4.9, top: 61.7, width: 42.3, height: 30.9, heightPx: 160 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 16.4, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 28.8, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 41.2, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 53.4, width: 42.3, height: 17.6, heightPx: 91 },
+    { left: 52.5, top: 73, width: 42.3, height: 19.7, heightPx: 102 },
+  ],
+  LAYOUT_9: [
+    { left: 4.9, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 4.9, top: 16.4, width: 42.3, height: 30.4, heightPx: 157 },
+    { left: 4.9, top: 48.7, width: 42.3, height: 13.7, heightPx: 71 },
+    { left: 4.9, top: 63.8, width: 42.3, height: 13.7, heightPx: 71 },
+    { left: 4.9, top: 78.9, width: 42.3, height: 13.7, heightPx: 71 },
+    { left: 52.5, top: 4.1, width: 42.3, height: 10.4, heightPx: 54 },
+    { left: 52.5, top: 16.4, width: 42.3, height: 30.4, heightPx: 157 },
+    { left: 52.5, top: 48.7, width: 42.3, height: 13.7, heightPx: 71 },
+    { left: 52.5, top: 63.8, width: 42.3, height: 13.7, heightPx: 71 },
+    { left: 52.5, top: 78.9, width: 42.3, height: 13.7, heightPx: 71 },
   ],
 };
 
-function convertToFramePercent(slot: ClosetSectionSlot): ClosetSectionSlot {
-  const leftPx = (slot.left / 100) * BASE_SCREEN_WIDTH;
-  const topPx = (slot.top / 100) * BASE_SCREEN_HEIGHT;
-  const widthPx = (slot.width / 100) * BASE_SCREEN_WIDTH;
-  const heightPx = (slot.height / 100) * BASE_SCREEN_HEIGHT;
-
-  return {
+function withSectionIds(slots: SlotSpec[]): ClosetSectionSlot[] {
+  return slots.map((slot, index) => ({
+    id: `section-${index + 1}` as ClosetSectionId,
     ...slot,
-    left: ((leftPx - BASE_FRAME_LEFT) / BASE_FRAME_WIDTH) * 100,
-    top: ((topPx - BASE_FRAME_TOP) / BASE_FRAME_HEIGHT) * 100,
-    width: (widthPx / BASE_FRAME_WIDTH) * 100,
-    height: (heightPx / BASE_FRAME_HEIGHT) * 100,
-  };
+  }));
 }
 
-function convertLayoutToFramePercent(templateId: ClosetTemplateId): ClosetSectionSlot[] {
-  return SCREEN_LAYOUTS[templateId].map(convertToFramePercent);
-}
+const NEW_LAYOUTS = CLOSET_TEMPLATE_IDS.reduce(
+  (layouts, templateId) => ({
+    ...layouts,
+    [templateId]: withSectionIds(LAYOUT_SPECS[templateId]),
+  }),
+  {} as Pick<ClosetTemplateLayout, (typeof CLOSET_TEMPLATE_IDS)[number]>,
+);
 
 export const CLOSET_LAYOUTS: ClosetTemplateLayout = {
-  LAYOUT_A: convertLayoutToFramePercent("LAYOUT_A"),
-  LAYOUT_B: convertLayoutToFramePercent("LAYOUT_B"),
-  LAYOUT_C: convertLayoutToFramePercent("LAYOUT_C"),
-  LAYOUT_D: convertLayoutToFramePercent("LAYOUT_D"),
-  LAYOUT_E: convertLayoutToFramePercent("LAYOUT_E"),
+  ...NEW_LAYOUTS,
+  LAYOUT_A: NEW_LAYOUTS.LAYOUT_6,
+  LAYOUT_B: NEW_LAYOUTS.LAYOUT_3,
+  LAYOUT_C: NEW_LAYOUTS.LAYOUT_3,
+  LAYOUT_D: NEW_LAYOUTS.LAYOUT_7,
+  LAYOUT_E: NEW_LAYOUTS.LAYOUT_9,
 };
+
+export function getClosetTemplateSectionCount(templateId: ClosetTemplateId) {
+  return CLOSET_LAYOUTS[templateId].length;
+}
