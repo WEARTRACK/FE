@@ -1,5 +1,3 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,14 +7,8 @@ import { Button } from "@/components/common/Button";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
-import {
-  launchClothesCamera,
-  launchClothesImageLibrary,
-} from "@/features/clothes-registration/utils/launchClothesCamera";
-import { showToast } from "@/lib/ui/showToast";
 
 export function ClothesRegistrationCompleteScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
@@ -100,7 +92,7 @@ export function ClothesRegistrationCompleteScreen() {
 
           <Button
             label="옷 추가하기"
-            onPress={() => setIsClothesGuideVisible(true)}
+            onPress={openClothesGuide}
             variant="secondary"
             fullWidth
             className="h-[58px] border-[0.5px] border-text-subdued"
@@ -111,7 +103,7 @@ export function ClothesRegistrationCompleteScreen() {
 
       <ClothesRegistrationGuideModal
         visible={isClothesGuideVisible}
-        onClose={() => setIsClothesGuideVisible(false)}
+        onClose={closeClothesGuide}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
         onPressShoppingMallLink={handlePressShoppingMallLink}

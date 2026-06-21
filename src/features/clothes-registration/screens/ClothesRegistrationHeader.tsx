@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 
 import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 
-export function ClothesRegistrationHeader({ title = "옷등록" }: { title?: string }) {
+export function ClothesRegistrationHeader({ title = "옷 등록" }: { title?: string }) {
   const router = useRouter();
 
   return (

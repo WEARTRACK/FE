@@ -1,4 +1,18 @@
-export type ClosetTemplateId = "LAYOUT_A" | "LAYOUT_B" | "LAYOUT_C" | "LAYOUT_D" | "LAYOUT_E";
+export type ClosetTemplateId =
+  | "LAYOUT_1"
+  | "LAYOUT_2"
+  | "LAYOUT_3"
+  | "LAYOUT_4"
+  | "LAYOUT_5"
+  | "LAYOUT_6"
+  | "LAYOUT_7"
+  | "LAYOUT_8"
+  | "LAYOUT_9"
+  | "LAYOUT_A"
+  | "LAYOUT_B"
+  | "LAYOUT_C"
+  | "LAYOUT_D"
+  | "LAYOUT_E";
 export type ClosetSectionId =
   | "section-1"
   | "section-2"
@@ -17,6 +31,7 @@ export type ClosetSectionSlot = {
   top: number;
   width: number;
   height: number;
+  heightPx: number;
 };
 
 export type ClosetTemplateLayout = Record<ClosetTemplateId, ClosetSectionSlot[]>;

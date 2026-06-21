@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SvgProps } from "react-native-svg";
 
@@ -65,15 +65,29 @@ type SearchSelectMode = "color" | "category";
 const colorRows: ClosetColor[][] = [
   ["red", "pink", "orange", "yellow"],
   ["green", "blue", "navy", "purple"],
-  ["white", "beige", "gray", "brown"],
+  ["white", "beige", "brown", "gray"],
   ["black"],
 ];
 
-const categoryRows: ClosetCategory[][] = [
-  ["tshirt", "shirt", "knit"],
-  ["hoodie", "vest", "cardigan"],
-  ["pants", "shorts", "skirt", "dress"],
-  ["jacket", "coat", "padding"],
+const CHIP_GAP = 8;
+
+const categorySections: { title: string; rows: ClosetCategory[][] }[] = [
+  {
+    title: "Tops",
+    rows: [["tshirt", "shirt", "knit", "hoodie"], ["vest"]],
+  },
+  {
+    title: "Outwears",
+    rows: [["cardigan", "jacket", "coat", "padding"]],
+  },
+  {
+    title: "Bottoms",
+    rows: [["skirt", "pants", "shorts"]],
+  },
+  {
+    title: "Dresses",
+    rows: [["dress"]],
+  },
 ];
 
 const colorActiveIconMap: Record<ClosetColor, React.ComponentType<SvgProps>> = {
@@ -151,6 +165,7 @@ function isSelectMode(value: string | null): value is SearchSelectMode {
 export function ClosetSearchSelectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const localSearchParams = useLocalSearchParams<{
     mode?: string | string[];
     entryKey?: string | string[];
@@ -191,6 +206,7 @@ export function ClosetSearchSelectScreen() {
   }
 
   const isColorMode = mode === "color";
+  const colorGridWidth = screenWidth - 48;
 
   return (
     <View className="flex-1 bg-bg-light px-6">
@@ -199,34 +215,35 @@ export function ClosetSearchSelectScreen() {
       </View>
 
       <View className="absolute left-0 right-0" style={{ top: insets.top + 15 }}>
-        <Text className="text-center font-pretendard text-headline text-text-subdued">
+        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">
           {isColorMode ? "색상으로 찾기" : "카테고리로 찾기"}
         </Text>
       </View>
 
       <Text
         className="font-pretendard-semibold text-headline text-text"
-        style={{ marginTop: insets.top + 67 }}
+        style={{ marginLeft: 4, marginTop: insets.top + 72 }}
       >
         {isColorMode ? "색상을 선택해주세요." : "카테고리를 선택해주세요."}
       </Text>
 
-      <View className="mt-6 items-start">
-        {(isColorMode ? colorRows : categoryRows).map((row, rowIndex, rows) => (
-          <View
-            key={`row-${rowIndex}`}
-            className="flex-row justify-start self-start"
-            style={{ marginBottom: rowIndex === rows.length - 1 ? 0 : 6 }}
-          >
-            {row.map((item, itemIndex) => {
-              const chipSpacingStyle = { marginRight: itemIndex === row.length - 1 ? 0 : 6 };
-
-              if (isColorMode) {
-                const color = item as ClosetColor;
+      {isColorMode ? (
+        <View className="mt-6 items-start">
+          {colorRows.map((row, rowIndex, rows) => (
+            <View
+              key={`row-${rowIndex}`}
+              className="flex-row self-start"
+              style={{
+                justifyContent: "space-between",
+                marginBottom: rowIndex === rows.length - 1 ? 0 : CHIP_GAP,
+                width: colorGridWidth,
+              }}
+            >
+              {row.map((color) => {
                 const Icon =
                   selectedColor === color ? colorActiveIconMap[color] : colorInactiveIconMap[color];
                 return (
-                  <View key={color} style={chipSpacingStyle}>
+                  <View key={color}>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityState={{ selected: selectedColor === color }}
@@ -239,35 +256,65 @@ export function ClosetSearchSelectScreen() {
                     </Pressable>
                   </View>
                 );
-              }
-
-              const category = item as ClosetCategory;
-              const Icon =
-                selectedCategory === category
-                  ? categoryActiveIconMap[category]
-                  : categoryInactiveIconMap[category];
-              return (
-                <View key={category} style={chipSpacingStyle}>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: selectedCategory === category }}
-                    onPress={() => setSelectedCategory(category)}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.75 : 1,
-                    })}
+              })}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View className="mt-[27px] items-start">
+          {categorySections.map((section, sectionIndex) => (
+            <View key={section.title} className={sectionIndex === 0 ? "" : "mt-[24px]"}>
+              <Text className="font-pretendard text-[15px] leading-[20px] tracking-[-0.5px] text-text">
+                {section.title}
+              </Text>
+              <View className="mt-[9px]">
+                {section.rows.map((row, rowIndex) => (
+                  <View
+                    key={`${section.title}-row-${rowIndex}`}
+                    className="flex-row self-start"
+                    style={{
+                      justifyContent: row.length === 4 ? "space-between" : "flex-start",
+                      marginBottom: rowIndex === section.rows.length - 1 ? 0 : 11,
+                      width: row.length === 4 ? colorGridWidth : undefined,
+                    }}
                   >
-                    <Icon />
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </View>
+                    {row.map((category, itemIndex) => {
+                      const Icon =
+                        selectedCategory === category
+                          ? categoryActiveIconMap[category]
+                          : categoryInactiveIconMap[category];
+                      return (
+                        <View
+                          key={category}
+                          style={{
+                            marginRight:
+                              row.length === 4 || itemIndex === row.length - 1 ? 0 : CHIP_GAP,
+                          }}
+                        >
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: selectedCategory === category }}
+                            onPress={() => setSelectedCategory(category)}
+                            style={({ pressed }) => ({
+                              opacity: pressed ? 0.75 : 1,
+                            })}
+                          >
+                            <Icon />
+                          </Pressable>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
 
       <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
         <Button
-          className="rounded-[10px]"
+          className="h-[58px] rounded-[8px]"
           fullWidth
           label="내 옷 찾기"
           onPress={() => {

@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import HeaderLogo from "../../../../assets/headerLogo.svg";
 import { Button } from "@/components/common/Button";
+import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import { ClothesStyleSelector } from "@/features/clothes-registration/screens/ClothesStyleSelector";
 import { launchClothesImageLibrary } from "@/features/clothes-registration/utils/launchClothesCamera";
 import {
@@ -65,7 +65,7 @@ export function ClothesStyleSelectionScreen() {
         contentContainerClassName="px-6 pb-[24px]"
         showsVerticalScrollIndicator={false}
       >
-        <HeaderLogo width={118} height={15} />
+        <ClothesRegistrationHeader />
 
         <Text className="mt-[24px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
           색상 및 카테고리를 선택해주세요.

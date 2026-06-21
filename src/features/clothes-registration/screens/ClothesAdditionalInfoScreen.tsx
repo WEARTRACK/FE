@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import HeaderLogo from "../../../../assets/headerLogo.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import {
@@ -26,6 +25,7 @@ import {
   getCategoryChipIcon,
   getColorChipIcon,
 } from "@/features/clothes-registration/screens/clothes-style-chip-icons";
+import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import {
   getParamString,
   normalizeCategoryName,
@@ -289,7 +289,7 @@ export function ClothesAdditionalInfoScreen() {
           paddingBottom: insets.bottom + 20,
         }}
       >
-        <HeaderLogo width={118} height={15} />
+        <ClothesRegistrationHeader />
 
         <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
           추가정보를 입력해주세요.

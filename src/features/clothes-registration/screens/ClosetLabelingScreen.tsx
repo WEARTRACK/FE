@@ -1,14 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ArrowBackIcon from "../../../../assets/arrow_back.svg";
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { createCloset } from "@/features/clothes-registration/api/createCloset";
 import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
+import { ClosetRegistrationHeader } from "@/features/clothes-registration/screens/ClosetRegistrationHeader";
 import {
   getClosetTemplateRequestId,
   getClosetTemplateSections,
@@ -234,22 +234,7 @@ export function ClosetLabelingScreen() {
           paddingBottom: insets.bottom + 20,
         }}
       >
-        <View className="h-[32px] flex-row items-center justify-between">
-          <Pressable
-            accessibilityLabel="뒤로가기"
-            hitSlop={12}
-            onPress={() => router.back()}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.65 : 1,
-            })}
-          >
-            <ArrowBackIcon width={24} height={24} />
-          </Pressable>
-          <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
-            옷장등록
-          </Text>
-          <View className="w-[32px]" />
-        </View>
+        <ClosetRegistrationHeader />
 
         <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
           {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}

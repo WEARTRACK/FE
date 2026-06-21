@@ -393,7 +393,7 @@ export function ClosetSearchResultsScreen() {
         {items.length > 0 ? (
           <>
             <View
-              className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[21px]"
+              className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[24px]"
               style={{ marginTop: summaryTop }}
             >
               <View className="absolute bottom-[34px] left-[21px] right-[21px] top-5 justify-between">
