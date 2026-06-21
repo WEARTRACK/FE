@@ -11,6 +11,7 @@ import {
   launchClothesCamera,
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
 
@@ -203,11 +204,13 @@ function ClothesRegistrationGuideModal({
   onClose,
   onPressCapture,
   onPressSelectImage,
+  onPressShoppingMallLink,
 }: {
   visible: boolean;
   onClose: () => void;
   onPressCapture: () => void;
   onPressSelectImage: () => void;
+  onPressShoppingMallLink: () => void;
 }) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -224,19 +227,19 @@ function ClothesRegistrationGuideModal({
             <ClotheExample width={180} height={257} />
           </View>
 
-          <Text className="mt-[33px] text-center font-pretendard text-[12px] leading-[20px] text-bg-dark">
-            예시 이미지처럼 옷 전체가 보이도록 촬영해주세요.
+          <Text className="mt-[23px] text-center font-pretendard text-[14px] leading-[20px] text-bg-dark">
+            예시 이미지처럼 옷 전체가 보이는{"\n"} 사진을 등록해주세요.
           </Text>
 
           <Pressable
-            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            className="mt-[20px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
-              촬영하기
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+              카메라
             </Text>
           </Pressable>
 
@@ -249,6 +252,18 @@ function ClothesRegistrationGuideModal({
           >
             <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
               앨범에서 선택
+            </Text>
+          </Pressable>
+
+          <Pressable
+            className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            onPress={onPressShoppingMallLink}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+              쇼핑몰 링크
             </Text>
           </Pressable>
         </Pressable>
@@ -363,6 +378,11 @@ export function MainHomeScreen() {
     }
   };
 
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
+
   const openClosetSearch = (mode: "color" | "category") => {
     router.push({
       pathname: "/home/search/select",
@@ -431,6 +451,7 @@ export function MainHomeScreen() {
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

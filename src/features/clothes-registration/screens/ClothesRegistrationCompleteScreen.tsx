@@ -7,6 +7,7 @@ import CheckActiveIcon from "../../../../assets/check-active.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import { Button } from "@/components/common/Button";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import {
   launchClothesCamera,
@@ -59,6 +60,11 @@ export function ClothesRegistrationCompleteScreen() {
     }
   };
 
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
+
   return (
     <>
       <View
@@ -108,6 +114,7 @@ export function ClothesRegistrationCompleteScreen() {
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

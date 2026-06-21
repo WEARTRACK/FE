@@ -151,7 +151,10 @@ function isSelectMode(value: string | null): value is SearchSelectMode {
 export function ClosetSearchSelectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const localSearchParams = useLocalSearchParams<{ mode?: string | string[]; entryKey?: string | string[] }>();
+  const localSearchParams = useLocalSearchParams<{
+    mode?: string | string[];
+    entryKey?: string | string[];
+  }>();
 
   const mode = useMemo(() => {
     const parsed = pickSingle(localSearchParams.mode);
@@ -161,7 +164,10 @@ export function ClosetSearchSelectScreen() {
   const [selectedColor, setSelectedColor] = useState<ClosetColor | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ClosetCategory | null>(null);
   const lastEntryKeyRef = useRef<string | null>(null);
-  const entryKey = useMemo(() => pickSingle(localSearchParams.entryKey), [localSearchParams.entryKey]);
+  const entryKey = useMemo(
+    () => pickSingle(localSearchParams.entryKey),
+    [localSearchParams.entryKey],
+  );
 
   useEffect(() => {
     if (!entryKey) {
@@ -177,7 +183,9 @@ export function ClosetSearchSelectScreen() {
   if (!mode) {
     return (
       <View className="flex-1 items-center justify-center bg-bg-light px-6">
-        <Text className="font-pretendard text-body text-text-subdued">유효하지 않은 검색 모드입니다.</Text>
+        <Text className="font-pretendard text-body text-text-subdued">
+          유효하지 않은 검색 모드입니다.
+        </Text>
       </View>
     );
   }
@@ -196,7 +204,10 @@ export function ClosetSearchSelectScreen() {
         </Text>
       </View>
 
-      <Text className="font-pretendard-semibold text-headline text-text" style={{ marginTop: insets.top + 67 }}>
+      <Text
+        className="font-pretendard-semibold text-headline text-text"
+        style={{ marginTop: insets.top + 67 }}
+      >
         {isColorMode ? "색상을 선택해주세요." : "카테고리를 선택해주세요."}
       </Text>
 
@@ -204,7 +215,7 @@ export function ClosetSearchSelectScreen() {
         {(isColorMode ? colorRows : categoryRows).map((row, rowIndex, rows) => (
           <View
             key={`row-${rowIndex}`}
-            className="flex-row self-start justify-start"
+            className="flex-row justify-start self-start"
             style={{ marginBottom: rowIndex === rows.length - 1 ? 0 : 6 }}
           >
             {row.map((item, itemIndex) => {

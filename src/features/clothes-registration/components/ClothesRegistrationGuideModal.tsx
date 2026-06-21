@@ -7,6 +7,7 @@ type ClothesRegistrationGuideModalProps = {
   onClose: () => void;
   onPressCapture: () => void;
   onPressSelectImage: () => void;
+  onPressShoppingMallLink: () => void;
 };
 
 export function ClothesRegistrationGuideModal({
@@ -14,6 +15,7 @@ export function ClothesRegistrationGuideModal({
   onClose,
   onPressCapture,
   onPressSelectImage,
+  onPressShoppingMallLink,
 }: ClothesRegistrationGuideModalProps) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -35,14 +37,14 @@ export function ClothesRegistrationGuideModal({
           </Text>
 
           <Pressable
-            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
-              촬영하기
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+              카메라
             </Text>
           </Pressable>
 
@@ -55,6 +57,18 @@ export function ClothesRegistrationGuideModal({
           >
             <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
               앨범에서 선택
+            </Text>
+          </Pressable>
+
+          <Pressable
+            className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            onPress={onPressShoppingMallLink}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+              쇼핑몰 링크
             </Text>
           </Pressable>
         </Pressable>

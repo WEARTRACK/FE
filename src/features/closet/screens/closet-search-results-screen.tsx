@@ -24,6 +24,7 @@ import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import {
   launchClothesCamera,
   launchClothesImageLibrary,
@@ -342,6 +343,12 @@ export function ClosetSearchResultsScreen() {
       showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
     }
   };
+
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
+
   const renderStatusScreen = (message: string) => (
     <View className="flex-1 bg-bg-light px-6">
       <View className="absolute left-6 z-10" style={{ top: insets.top + 15 }}>
@@ -675,6 +682,7 @@ export function ClosetSearchResultsScreen() {
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );
