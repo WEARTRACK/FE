@@ -25,12 +25,13 @@ export function ClosetPhotoPreviewScreen() {
     setClosetDraft({
       imageUri,
       imageUrl: null,
-      predictedSections: [],
+      detectedSectionCount: null,
+      recommendedTemplateIds: [],
       templateId: null,
     });
 
     router.push({
-      pathname: "/closet/register/select",
+      pathname: "/closet/register/analyzing",
       params: { imageUri },
     });
   };
@@ -45,7 +46,8 @@ export function ClosetPhotoPreviewScreen() {
       setClosetDraft({
         imageUri: nextImageUri,
         imageUrl: null,
-        predictedSections: [],
+        detectedSectionCount: null,
+        recommendedTemplateIds: [],
         templateId: null,
       });
 

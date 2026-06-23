@@ -41,7 +41,7 @@ function AnalysisResultHeader({
       </View>
 
       <View className="ml-[18px]">
-        <Text className="font-pretendard text-[12px] leading-[20px] text-bg-dark">
+        <Text className="font-pretendard text-[14px] leading-[20px] text-bg-dark">
           AI 분석 결과
         </Text>
         <View className="mt-[8px] flex-row gap-[6px]">
@@ -86,7 +86,7 @@ export function ClothesAnalysisResultScreen() {
   };
 
   return (
-    <View className="flex-1 bg-bg-light" style={{ paddingBottom: insets.bottom + 20 }}>
+    <View className="flex-1 bg-bg-light">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingTop: insets.top + 24 }}
@@ -95,7 +95,7 @@ export function ClothesAnalysisResultScreen() {
       >
         <ClothesRegistrationHeader />
 
-        <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+        <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
           분석이 완료됐습니다.
         </Text>
 
@@ -110,10 +110,11 @@ export function ClothesAnalysisResultScreen() {
           selectedColor={predictedColor}
           onChangeCategory={setSelectedCategory}
           onChangeColor={setSelectedColor}
+          variant="grouped"
         />
       </ScrollView>
 
-      <View className="px-6">
+      <View className="z-20 px-6" style={{ paddingBottom: insets.bottom + 20 }}>
         <Button
           label="다음"
           href={{

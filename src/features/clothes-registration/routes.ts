@@ -17,4 +17,8 @@ export const clothesRegistrationRoutes = {
   clothesStyle: "/clothes/register/style" as Href,
   clothesFailure: "/clothes/register/failure" as Href,
   clothesComplete: "/clothes/register/complete" as Href,
+  shoppingMallTerms: "/clothes/register/shopping-mall/terms" as Href,
+  shoppingMallLink: "/clothes/register/shopping-mall/link" as Href,
+  shoppingMallManualStyle: "/clothes/register/shopping-mall/manual-style" as Href,
+  shoppingMallManualDetails: "/clothes/register/shopping-mall/manual-details" as Href,
 } as const;

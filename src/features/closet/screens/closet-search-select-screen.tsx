@@ -287,7 +287,8 @@ export function ClosetSearchSelectScreen() {
                         <View
                           key={category}
                           style={{
-                            marginRight: row.length === 4 || itemIndex === row.length - 1 ? 0 : CHIP_GAP,
+                            marginRight:
+                              row.length === 4 || itemIndex === row.length - 1 ? 0 : CHIP_GAP,
                           }}
                         >
                           <Pressable

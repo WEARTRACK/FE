@@ -11,7 +11,14 @@ export function ClothesRegistrationHeader({ title = "옷 등록" }: { title?: st
       <Pressable
         accessibilityLabel="뒤로가기"
         hitSlop={12}
-        onPress={() => router.back()}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+            return;
+          }
+
+          router.replace("/home");
+        }}
         style={({ pressed }) => ({
           opacity: pressed ? 0.65 : 1,
         })}

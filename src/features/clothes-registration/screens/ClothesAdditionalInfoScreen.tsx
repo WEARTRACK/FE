@@ -1,19 +1,14 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-  Image,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
-import { colors } from "@/constants/colors";
+import {
+  ClosetSectionSelect,
+  PriceField,
+  PurchaseDateField,
+} from "@/features/clothes-registration/components/AdditionalInfoFields";
 import {
   createClothes,
   toClothesCategoryValue,
@@ -32,12 +27,7 @@ import {
   normalizeColorName,
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 import { showToast } from "@/lib/ui/showToast";
-import type { ClosetSectionOption } from "@/features/closet/utils/closet-section-options";
 import { queryClient } from "@/lib/queryClient";
-
-function formatPrice(value: string) {
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
 
 function AnalysisResultHeader({
   imageSource,
@@ -67,7 +57,7 @@ function AnalysisResultHeader({
 
       {showAnalysis ? (
         <View className="ml-[18px]">
-          <Text className="font-pretendard text-[12px] leading-[20px] text-bg-dark">
+          <Text className="font-pretendard text-[14px] leading-[20px] text-bg-dark">
             AI 분석 결과
           </Text>
           <View className="mt-[8px] flex-row gap-[6px]">
@@ -76,99 +66,6 @@ function AnalysisResultHeader({
           </View>
         </View>
       ) : null}
-    </View>
-  );
-}
-
-function LabeledInput({
-  label,
-  value,
-  placeholder,
-  unit,
-  onChangeText,
-}: {
-  label: string;
-  value: string;
-  placeholder: string;
-  unit?: string;
-  onChangeText: (value: string) => void;
-}) {
-  return (
-    <View>
-      <Text className="font-pretendard-semibold text-[16px] leading-[24px] text-text">{label}</Text>
-      <View className="mt-[14px] flex-row items-center">
-        <TextInput
-          className="h-[44px] flex-1 rounded-lg border-[0.5px] border-disabled bg-white px-[20px] font-pretendard text-[12px] text-text"
-          keyboardType="number-pad"
-          onChangeText={(nextValue) => onChangeText(nextValue.replace(/[^0-9]/g, ""))}
-          placeholder={placeholder}
-          placeholderTextColor={colors.disabled}
-          style={{ includeFontPadding: false, lineHeight: 16, paddingBottom: 2, paddingTop: 0 }}
-          value={value}
-        />
-        {unit ? (
-          <Text className="ml-[10px] font-pretendard text-[12px] leading-[20px] text-bg-dark">
-            {unit}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-function ClosetSelect({
-  options,
-  selectedOption,
-  onSelect,
-}: {
-  options: ClosetSectionOption[];
-  selectedOption: ClosetSectionOption | null;
-  onSelect: (option: ClosetSectionOption) => void;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <View className="mt-[28px]">
-      <Text className="font-pretendard-semibold text-[16px] leading-[24px] text-text">
-        옷장 보관 칸
-      </Text>
-
-      <View
-        className={[
-          "mt-[14px] overflow-hidden rounded-lg border-[0.5px] border-disabled bg-white",
-          open ? "pb-[7px]" : "",
-        ].join(" ")}
-      >
-        <Pressable
-          className="h-[44px] flex-row items-center justify-between px-[20px]"
-          disabled={options.length === 0}
-          onPress={() => setOpen((current) => !current)}
-        >
-          <Text className="font-pretendard text-[12px] leading-[20px] text-text">
-            {selectedOption?.label ?? "보관 칸을 불러오는 중"}
-          </Text>
-          <Text className="font-pretendard text-[18px] leading-[20px] text-disabled">⌄</Text>
-        </Pressable>
-
-        {open && options.length > 0 ? (
-          <ScrollView className="max-h-[220px]" contentContainerClassName="px-[20px]">
-            {options.map((option) => (
-              <Pressable
-                key={option.templateSectionId}
-                className="h-[41px] justify-center border-t-[0.5px] border-disabled"
-                onPress={() => {
-                  onSelect(option);
-                  setOpen(false);
-                }}
-              >
-                <Text className="font-pretendard text-[12px] leading-[20px] text-disabled">
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-      </View>
     </View>
   );
 }
@@ -210,6 +107,7 @@ export function ClothesAdditionalInfoScreen() {
     error: closetSectionsError,
   } = useClothesStorageSections();
   const isManualEntry = getParamString(entryModeParam) === "manual";
+  const [purchaseDate, setPurchaseDate] = useState(() => new Date());
   const [price, setPrice] = useState("");
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -247,7 +145,9 @@ export function ClothesAdditionalInfoScreen() {
     }
 
     if (!selectedClosetOption) {
-      showToast(closetSectionsError ? "옷장 보관 칸 정보를 불러오지 못했어요." : "보관 칸을 선택해주세요.");
+      showToast(
+        closetSectionsError ? "옷장 보관 칸 정보를 불러오지 못했어요." : "보관 칸을 선택해주세요.",
+      );
       return;
     }
 
@@ -291,7 +191,12 @@ export function ClothesAdditionalInfoScreen() {
       >
         <ClothesRegistrationHeader />
 
-        <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+        <Text
+          className={[
+            "font-pretendard-semibold text-[20px] leading-[24px] text-text",
+            isManualEntry ? "mt-[24px]" : "mt-[34px]",
+          ].join(" ")}
+        >
           추가정보를 입력해주세요.
         </Text>
 
@@ -303,15 +208,15 @@ export function ClothesAdditionalInfoScreen() {
         />
 
         <View className="mt-[34px]">
-          <LabeledInput
-            label="가격"
-            onChangeText={setPrice}
-            placeholder="숫자만 입력 가능"
-            unit="원"
-            value={formatPrice(price)}
-          />
+          <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
+        </View>
 
-          <ClosetSelect
+        <View className="mt-[34px]">
+          <PriceField onChange={setPrice} value={price} />
+        </View>
+
+        <View className="mt-[24px]">
+          <ClosetSectionSelect
             options={closetSectionOptions}
             selectedOption={selectedClosetOption}
             onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}

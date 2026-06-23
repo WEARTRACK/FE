@@ -1,30 +1,34 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
-import { getClosetTemplateRequestId } from "@/features/clothes-registration/screens/closet-template-data";
+import { getRandomTemplateIdsBySectionCounts } from "@/features/clothes-registration/screens/closet-template-data";
 import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
-import {
-  parseNumericParam,
-  serializePredictedSections,
-} from "@/features/clothes-registration/utils/closetRegistrationParams";
+import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
+
+const DOT_CHANGE_INTERVAL_MS = 600;
 
 export function ClosetAnalyzingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { imageUri: imageUriParam, templateId: templateIdParam } = useLocalSearchParams<{
-    imageUri?: string;
-    templateId?: string;
-  }>();
-  const imageUri = getParamString(imageUriParam);
-  const rawTemplateId = getParamString(templateIdParam);
-  const templateId =
-    parseNumericParam(templateIdParam) ?? getClosetTemplateRequestId(rawTemplateId ?? undefined);
+  const { imageUri: imageUriParam } = useLocalSearchParams<{ imageUri?: string }>();
+  const draftImageUri = useClosetRegistrationStore((state) => state.imageUri);
+  const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
+  const imageUri = getParamString(imageUriParam) ?? draftImageUri;
   const hasUploadedRef = useRef(false);
+  const [dotCount, setDotCount] = useState(1);
+
+  useEffect(() => {
+    const dotInterval = setInterval(() => {
+      setDotCount((currentCount) => (currentCount % 3) + 1);
+    }, DOT_CHANGE_INTERVAL_MS);
+
+    return () => clearInterval(dotInterval);
+  }, []);
 
   useEffect(() => {
     if (hasUploadedRef.current) {
@@ -33,46 +37,51 @@ export function ClosetAnalyzingScreen() {
 
     hasUploadedRef.current = true;
 
-    if (!imageUri || templateId === null) {
+    if (!imageUri) {
       router.replace(clothesRegistrationRoutes.failure);
       return;
     }
 
     const upload = async () => {
       try {
-        const result = await uploadClosetPhoto(imageUri, templateId);
+        const result = await uploadClosetPhoto(imageUri);
+        const recommendedTemplateIds = getRandomTemplateIdsBySectionCounts(
+          result.recommendedTemplates.map((template) => template.sectionCount),
+        );
 
-        const params = {
+        if (__DEV__) {
+          console.warn("[Closet photo analysis] result", {
+            analysisStatus: result.analysisStatus,
+            detectedSectionCount: result.detectedSectionCount,
+            recommendedTemplateIds,
+          });
+        }
+
+        setClosetDraft({
           imageUri,
           imageUrl: result.imageUrl,
-          templateId: String(result.templateId),
-          predictedSectionCount:
-            result.predictedSectionCount === null ? "" : String(result.predictedSectionCount),
-          predictedSections: serializePredictedSections(result.predictedSections),
-        };
+          detectedSectionCount: result.detectedSectionCount,
+          recommendedTemplateIds,
+          templateId: null,
+        });
 
-        if (result.analysisStatus === "SUCCESS") {
-          router.replace({
-            pathname: "/closet/register/result",
-            params,
-          });
+        if (result.analysisStatus === "SUCCESS" && recommendedTemplateIds.length > 0) {
+          router.replace(clothesRegistrationRoutes.select);
           return;
         }
 
-        router.replace({
-          pathname: "/closet/register/failure",
-          params,
-        });
-      } catch {
-        router.replace({
-          pathname: "/closet/register/failure",
-          params: { imageUri },
-        });
+        router.replace(clothesRegistrationRoutes.failure);
+      } catch (error) {
+        if (__DEV__) {
+          console.error("[Closet photo analysis] request failed", error);
+        }
+
+        router.replace(clothesRegistrationRoutes.failure);
       }
     };
 
     void upload();
-  }, [imageUri, router, templateId]);
+  }, [imageUri, router, setClosetDraft]);
 
   return (
     <View
@@ -85,8 +94,8 @@ export function ClosetAnalyzingScreen() {
       <View className="flex-1 items-center justify-center pb-[112px]">
         <ClosetIcon width={124} height={171} />
 
-        <Text className="font-pretendard-bold mt-[52px] text-center text-[20px] leading-[28px] text-text">
-          AI가 옷장을 분석하고 있어요..
+        <Text className="mt-[52px] text-center font-pretendard-bold text-[20px] leading-[28px] text-text">
+          AI가 옷장을 분석하고 있어요{".".repeat(dotCount)}
         </Text>
         <Text className="mt-[16px] text-center font-pretendard text-[12px] leading-[20px] text-text-subdued">
           잠시만 기다려주세요.

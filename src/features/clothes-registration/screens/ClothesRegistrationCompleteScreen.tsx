@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -6,9 +7,11 @@ import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import { Button } from "@/components/common/Button";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
 import { useClothesRegistrationGuide } from "@/features/clothes-registration/hooks/useClothesRegistrationGuide";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 
 export function ClothesRegistrationCompleteScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
     closeClothesGuide,
@@ -17,6 +20,11 @@ export function ClothesRegistrationCompleteScreen() {
     isClothesGuideVisible,
     openClothesGuide,
   } = useClothesRegistrationGuide();
+
+  const handlePressShoppingMallLink = () => {
+    closeClothesGuide();
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
 
   return (
     <>
@@ -67,6 +75,7 @@ export function ClothesRegistrationCompleteScreen() {
         onClose={closeClothesGuide}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

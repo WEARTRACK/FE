@@ -24,7 +24,7 @@ export function SocialActionButtons({ mode }: SocialActionButtonsProps) {
         size="lg"
         fullWidth
         className="border-[#FFE812] bg-[#FFE812]"
-        textClassName="text-text"
+        textClassName="font-pretendard-semibold text-[18px] text-text"
         leadingIcon={<KakaoLogo width={24} height={22} />}
         disabled={isPending}
         onPress={() => void startSocialAuth("KAKAO")}
@@ -35,7 +35,7 @@ export function SocialActionButtons({ mode }: SocialActionButtonsProps) {
         size="lg"
         fullWidth
         className="border-cool bg-white"
-        textClassName="text-text"
+        textClassName="font-pretendard-semibold text-[18px] text-text"
         leadingIcon={<GoogleLogo width={24} height={24} />}
         disabled={isPending}
         onPress={() => void startSocialAuth("GOOGLE")}
@@ -46,7 +46,7 @@ export function SocialActionButtons({ mode }: SocialActionButtonsProps) {
         size="lg"
         fullWidth
         className="border-[#03C75A] bg-[#03C75A]"
-        textClassName="text-white"
+        textClassName="font-pretendard-semibold text-[18px] text-white"
         leadingIcon={<NaverLogo width={36} height={36} />}
         leadingIconClassName="left-[5px]"
         disabled={isPending}

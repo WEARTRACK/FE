@@ -27,6 +27,7 @@ import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import {
   launchClothesCamera,
   launchClothesImageLibrary,
@@ -422,6 +423,11 @@ export function ClosetSectionScreen() {
     }
   };
 
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
+
   return (
     <>
       <View className="flex-1 bg-bg-light px-6">
@@ -788,6 +794,7 @@ export function ClosetSectionScreen() {
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

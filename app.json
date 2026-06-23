@@ -44,7 +44,8 @@
           "cameraPermission": "옷 사진을 촬영하려면 카메라 권한이 필요합니다.",
           "photosPermission": "촬영한 옷 사진을 불러오려면 사진 접근 권한이 필요합니다."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

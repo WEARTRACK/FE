@@ -30,7 +30,7 @@ export function ClosetRegistrationGuideModal({
             <ClosetExample width={180} height={257} />
           </View>
 
-          <Text className="mt-[18px] text-center font-pretendard text-[12px] leading-[20px] text-text">
+          <Text className="mt-[18px] text-center font-pretendard text-[14px] leading-[20px] text-text">
             예시 이미지처럼 옷장 전체와{"\n"}보관 칸이 보이도록 촬영해주세요.
           </Text>
 
@@ -41,7 +41,7 @@ export function ClosetRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-white">
               촬영하기
             </Text>
           </Pressable>
@@ -53,7 +53,7 @@ export function ClosetRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-text">
               앨범에서 선택
             </Text>
           </Pressable>

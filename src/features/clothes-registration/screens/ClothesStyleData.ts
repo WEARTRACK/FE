@@ -30,6 +30,19 @@ export const clothingCategories = [
   "Padding",
 ];
 
+export const clothingCategoryGroups = [
+  { title: "Tops", categories: ["T-shirt", "Shirt", "Blouse", "Knit", "Hoodie", "Vest"] },
+  { title: "Outwears", categories: ["Cardigan", "Jacket", "Coat", "Padding"] },
+  { title: "Bottoms", categories: ["Skirt", "Pants", "Shorts"] },
+  { title: "Dresses", categories: ["Dress"] },
+];
+
+export function splitIntoChipRows<T>(items: T[], columnCount = 4) {
+  return Array.from({ length: Math.ceil(items.length / columnCount) }, (_, rowIndex) =>
+    items.slice(rowIndex * columnCount, (rowIndex + 1) * columnCount),
+  );
+}
+
 export const clothingCategoryRows = [
   clothingCategories.slice(0, 3),
   clothingCategories.slice(3, 6),

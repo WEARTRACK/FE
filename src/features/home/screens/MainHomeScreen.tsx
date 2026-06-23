@@ -1,16 +1,20 @@
 import { Href, Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Alert, Modal, Pressable, Text, View } from "react-native";
 
 import ClotheExample from "../../../../assets/clotheExample.svg";
+import CategoryIcon from "../../../../assets/category.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
+import ColorIcon from "../../../../assets/color.svg";
 import HangerIcon from "../../../../assets/hanger-icon.svg";
+import { colors } from "@/constants/colors";
 import { ClosetRegistrationGuideModal } from "@/features/clothes-registration/components/ClosetRegistrationGuideModal";
 import {
   launchClothesCamera,
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
 
@@ -44,13 +48,13 @@ function SummaryCard({ summary }: { summary: ClosetSummary }) {
   return (
     <View className="h-[148px] flex-row justify-between rounded-xl border border-primary bg-white px-[21px] py-[27px]">
       <View className="justify-between">
-        <Text className="font-pretendard text-[13px] leading-[20px] text-text-subdued">
+        <Text className="font-pretendard text-[15px] leading-[20px] text-text-subdued">
           내 옷장은...
         </Text>
         <Text className="font-pretendard-semibold text-[20px] leading-[30px] text-text">
           총 {summary.totalClothes}벌
         </Text>
-        <Text className="font-pretendard text-[12px] leading-[16px] text-text-subdued">
+        <Text className="font-pretendard text-[14px] leading-[16px] text-text-subdued">
           {summary.closetCount} 옷장{"       "}
           {summary.storageCount} 보관 칸
         </Text>
@@ -74,39 +78,48 @@ function QuickActionButton({
   icon: React.ReactNode;
   emphasis: string;
 }) {
-  const content = (
+  const button = (
     <Pressable
-      className="h-[122px] flex-1 items-center justify-center rounded-lg bg-bg-dark"
+      className="flex-1 items-center justify-center rounded-lg bg-bg-dark"
       onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.72 : 1,
-      })}
+      style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1 })}
     >
       {icon}
       <View className="mt-3 flex-row items-center">
-        <Text className="font-pretendard-semibold text-[12px] leading-[20px] text-white">
+        <Text className="font-pretendard-semibold text-[14px] leading-[20px] text-white">
           {emphasis}
         </Text>
-        <Text className="font-pretendard text-[12px] leading-[20px] text-white"> 등록하기</Text>
+        <Text className="font-pretendard text-[14px] leading-[20px] text-white"> 등록하기</Text>
       </View>
     </Pressable>
   );
 
-  if (!href) {
-    return content;
-  }
-
   return (
-    <Link href={href} asChild>
-      {content}
-    </Link>
+    <View
+      className="h-[122px] flex-1"
+      style={{
+        elevation: 6,
+        shadowColor: colors.blue[3],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,
+      }}
+    >
+      {href ? (
+        <Link href={href} asChild>
+          {button}
+        </Link>
+      ) : (
+        button
+      )}
+    </View>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <View className="h-[118px] flex-1 justify-center rounded-lg border-[0.5px] border-blue-3 bg-blue-1 px-[22px]">
-      <Text className="font-pretendard text-[12px] leading-[20px] text-text-subdued">{label}</Text>
+      <Text className="font-pretendard text-[14px] leading-[20px] text-text-subdued">{label}</Text>
       <Text className="mt-2 font-pretendard-semibold text-[20px] leading-[30px] text-accent">
         {value}
       </Text>
@@ -117,25 +130,41 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function SearchCard({
   emphasis,
   suffix,
+  icon,
   onPress,
 }: {
   emphasis: string;
   suffix: string;
+  icon: React.ReactNode;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      className="h-[76px] flex-1 flex-row items-center justify-center rounded-lg bg-cool"
-      onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.72 : 1,
-      })}
+    <View
+      className="h-[81px] flex-1"
+      style={{
+        elevation: 6,
+        shadowColor: colors.blue[3],
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+      }}
     >
-      <Text className="font-pretendard-semibold text-[12px] leading-[20px] text-text">
-        {emphasis}
-      </Text>
-      <Text className="font-pretendard text-[12px] leading-[20px] text-text-subdued">{suffix}</Text>
-    </Pressable>
+      <Pressable
+        className="flex-1 items-center justify-center rounded-lg border-[0.5px] border-blue-3 bg-white"
+        onPress={onPress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1 })}
+      >
+        {icon}
+        <View className="mt-[8px] flex-row items-center">
+          <Text className="font-pretendard-semibold text-[14px] leading-[20px] text-text">
+            {emphasis}
+          </Text>
+          <Text className="font-pretendard text-[14px] leading-[20px] text-text-subdued">
+            {suffix}
+          </Text>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -144,11 +173,13 @@ function ClothesRegistrationGuideModal({
   onClose,
   onPressCapture,
   onPressSelectImage,
+  onPressShoppingMallLink,
 }: {
   visible: boolean;
   onClose: () => void;
   onPressCapture: () => void;
   onPressSelectImage: () => void;
+  onPressShoppingMallLink: () => void;
 }) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -165,18 +196,18 @@ function ClothesRegistrationGuideModal({
             <ClotheExample width={180} height={257} />
           </View>
 
-          <Text className="mt-[33px] text-center font-pretendard text-[12px] leading-[20px] text-bg-dark">
-            예시 이미지처럼 옷 전체가 보이도록 촬영해주세요.
+          <Text className="mt-[23px] text-center font-pretendard text-[14px] leading-[20px] text-bg-dark">
+            예시 이미지처럼 옷 전체가 보이는{"\n"} 사진을 등록해주세요.
           </Text>
 
           <Pressable
-            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            className="mt-[20px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-text">
               촬영하기
             </Text>
           </Pressable>
@@ -188,8 +219,20 @@ function ClothesRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-text">
               앨범에서 선택
+            </Text>
+          </Pressable>
+
+          <Pressable
+            className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            onPress={onPressShoppingMallLink}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-white">
+              쇼핑몰 링크
             </Text>
           </Pressable>
         </Pressable>
@@ -220,6 +263,23 @@ export function MainHomeScreen() {
     totalSpending: homeSummary?.weeklyExpenseAmount ?? defaultWeeklyFashionStats.totalSpending,
     closetUsageRate:
       homeSummary?.weeklyClosetUsageRate ?? defaultWeeklyFashionStats.closetUsageRate,
+  };
+
+  const handlePressClothesRegistration = () => {
+    if (!homeSummary) {
+      showToast("옷장 정보를 불러오는 중입니다.");
+      return;
+    }
+
+    if (homeSummary.closetCount === 0) {
+      Alert.alert("옷장 등록이 필요해요", "옷을 등록하려면 먼저 옷장을 등록해주세요.", [
+        { text: "취소", style: "cancel" },
+        { text: "옷장 등록하기", onPress: () => setIsClosetGuideVisible(true) },
+      ]);
+      return;
+    }
+
+    setIsClothesGuideVisible(true);
   };
 
   const handlePressCapture = () => {
@@ -304,6 +364,11 @@ export function MainHomeScreen() {
     }
   };
 
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+  };
+
   const openClosetSearch = (mode: "color" | "category") => {
     router.push({
       pathname: "/home/search/select",
@@ -323,7 +388,7 @@ export function MainHomeScreen() {
             emphasis="옷장"
           />
           <QuickActionButton
-            onPress={() => setIsClothesGuideVisible(true)}
+            onPress={handlePressClothesRegistration}
             icon={<ClothesIcon width={60} height={55} />}
             emphasis="옷"
           />
@@ -350,11 +415,13 @@ export function MainHomeScreen() {
             <SearchCard
               emphasis="색상"
               suffix="으로 찾기"
+              icon={<ColorIcon height={25} width={87} />}
               onPress={() => openClosetSearch("color")}
             />
             <SearchCard
               emphasis="카테고리"
               suffix="로 찾기"
+              icon={<CategoryIcon height={25} width={88} />}
               onPress={() => openClosetSearch("category")}
             />
           </View>
@@ -372,6 +439,7 @@ export function MainHomeScreen() {
         onClose={() => setIsClothesGuideVisible(false)}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

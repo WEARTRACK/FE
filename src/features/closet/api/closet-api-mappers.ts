@@ -167,23 +167,23 @@ export function mapClosetSectionIdToApiSectionId(sectionId: ClosetSectionId): nu
 
 export function mapApiTemplateIdToClosetTemplateId(rawTemplateId: number): ClosetTemplateId {
   switch (rawTemplateId) {
-    case 1:
-      return "LAYOUT_1";
     case 2:
-      return "LAYOUT_2";
+      return "LAYOUT_1";
     case 3:
-      return "LAYOUT_3";
+      return "LAYOUT_2";
     case 4:
-      return "LAYOUT_4";
+      return "LAYOUT_3";
     case 5:
-      return "LAYOUT_5";
+      return "LAYOUT_4";
     case 6:
-      return "LAYOUT_6";
+      return "LAYOUT_5";
     case 7:
-      return "LAYOUT_7";
+      return "LAYOUT_6";
     case 8:
-      return "LAYOUT_8";
+      return "LAYOUT_7";
     case 9:
+      return "LAYOUT_8";
+    case 10:
       return "LAYOUT_9";
     default:
       throw new ApiError({

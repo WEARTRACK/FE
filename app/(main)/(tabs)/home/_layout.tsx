@@ -8,7 +8,12 @@ export default function HomeLayout() {
       <Stack.Screen
         name="index"
         options={{
-          header: () => <CommonHeader />,
+          header: () => (
+            <CommonHeader
+              hasNew={{ notification: false, quest: false, weeklyReview: false }}
+              showActions
+            />
+          ),
           headerShown: true,
         }}
       />
