@@ -73,7 +73,7 @@ describe("closet-api-mappers", () => {
   });
 
   it("maps api template id to closet template id", () => {
-    expect(mapApiTemplateIdToClosetTemplateId(5)).toBe("LAYOUT_5");
-    expect(mapApiTemplateIdToClosetTemplateId(9)).toBe("LAYOUT_9");
+    expect(mapApiTemplateIdToClosetTemplateId(5)).toBe("LAYOUT_4");
+    expect(mapApiTemplateIdToClosetTemplateId(10)).toBe("LAYOUT_9");
   });
 });

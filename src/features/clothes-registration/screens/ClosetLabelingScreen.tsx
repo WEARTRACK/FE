@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,17 +7,11 @@ import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { createCloset } from "@/features/clothes-registration/api/createCloset";
-import { uploadClosetPhoto } from "@/features/clothes-registration/api/uploadClosetPhoto";
 import { ClosetRegistrationHeader } from "@/features/clothes-registration/screens/ClosetRegistrationHeader";
 import {
-  getClosetTemplateRequestId,
+  getClosetTemplate,
   getClosetTemplateSections,
 } from "@/features/clothes-registration/screens/closet-template-data";
-import { getParamString } from "@/features/clothes-registration/utils/clothesAnalysisParams";
-import {
-  parseNumericParam,
-  parsePredictedSections,
-} from "@/features/clothes-registration/utils/closetRegistrationParams";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -64,7 +58,7 @@ function SectionNameInput({
     <TextInput
       className={[
         [
-          "h-[44px] rounded-lg px-[22px] font-pretendard text-[12px] text-bg-dark",
+          "h-[44px] rounded-lg px-[22px] font-pretendard text-[14px] text-bg-dark",
           completed ? "w-[208px]" : "w-[250px]",
         ].join(" "),
         completed
@@ -89,50 +83,19 @@ function SectionNameInput({
 export function ClosetLabelingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const {
-    imageUri: imageUriParam,
-    imageUrl: imageUrlParam,
-    templateId: templateIdParam,
-    predictedSections: predictedSectionsParam,
-  } = useLocalSearchParams<{
-    imageUri?: string;
-    imageUrl?: string;
-    templateId?: string;
-    predictedSections?: string;
-  }>();
-  const draftImageUri = useClosetRegistrationStore((state) => state.imageUri);
   const draftImageUrl = useClosetRegistrationStore((state) => state.imageUrl);
   const draftTemplateId = useClosetRegistrationStore((state) => state.templateId);
-  const draftPredictedSections = useClosetRegistrationStore((state) => state.predictedSections);
-  const setClosetDraft = useClosetRegistrationStore((state) => state.setDraft);
   const resetClosetDraft = useClosetRegistrationStore((state) => state.resetDraft);
   const setClosetId = useClosetStore((state) => state.setClosetId);
-  const imageUri = getParamString(imageUriParam) ?? draftImageUri;
-  const imageUrl = getParamString(imageUrlParam) ?? draftImageUrl;
-  const rawTemplateId = getParamString(templateIdParam) ?? draftTemplateId;
-  const templateId =
-    parseNumericParam(templateIdParam) ??
-    getClosetTemplateRequestId(rawTemplateId ?? undefined) ??
-    getClosetTemplateRequestId(draftTemplateId ?? undefined);
-  const predictedSections = useMemo(() => {
-    const parsedSections = parsePredictedSections(predictedSectionsParam);
-    return parsedSections.length > 0 ? parsedSections : draftPredictedSections;
-  }, [draftPredictedSections, predictedSectionsParam]);
+  const selectedTemplate = getClosetTemplate(draftTemplateId);
+  const templateId = selectedTemplate?.sectionCount ?? null;
   const detectedClosetSections = useMemo(() => {
-    if (predictedSections.length > 0) {
-      return predictedSections.map((section) => ({
-        id: `closet-section-${section.sectionOrder}`,
-        initialName: "",
-        sectionOrder: section.sectionOrder,
-      }));
-    }
-
-    return getClosetTemplateSections(rawTemplateId ?? undefined).map((section, index) => ({
+    return getClosetTemplateSections(selectedTemplate?.id).map((section, index) => ({
       id: section.id,
       initialName: section.initialName,
       sectionOrder: index + 1,
     }));
-  }, [predictedSections, rawTemplateId]);
+  }, [selectedTemplate?.id]);
   const [sectionNames, setSectionNames] = useState(() =>
     detectedClosetSections.map((section) => section.initialName),
   );
@@ -149,7 +112,7 @@ export function ClosetLabelingScreen() {
     () => sectionNames.filter((name) => name.trim().length > 0).length,
     [sectionNames],
   );
-  const isComplete = completedSectionCount === detectedSectionCount;
+  const isComplete = detectedSectionCount > 0 && completedSectionCount === detectedSectionCount;
   const shouldShowError = !isComplete && touchedSectionIds.length > 0;
 
   const updateSectionName = (index: number, value: string) => {
@@ -179,28 +142,9 @@ export function ClosetLabelingScreen() {
     setIsSaving(true);
 
     try {
-      let resolvedImageUrl = imageUrl;
-
-      if (!resolvedImageUrl && imageUri) {
-        const uploadResult = await uploadClosetPhoto(imageUri, templateId);
-        resolvedImageUrl = uploadResult.imageUrl;
-        setClosetDraft({
-          imageUrl: uploadResult.imageUrl,
-          predictedSections:
-            uploadResult.predictedSections.length > 0
-              ? uploadResult.predictedSections
-              : draftPredictedSections,
-        });
-      }
-
-      if (!resolvedImageUrl) {
-        showToast("옷장 사진 정보를 확인할 수 없어요. 다시 시도해주세요.");
-        return;
-      }
-
       const createdCloset = await createCloset({
         templateId,
-        imageUrl: resolvedImageUrl,
+        imageUrl: draftImageUrl,
         sections: detectedClosetSections.map((section, index) => ({
           sectionOrder: section.sectionOrder,
           sectionName: sectionNames[index]?.trim() ?? "",
@@ -286,7 +230,9 @@ export function ClosetLabelingScreen() {
                 ? "저장 중..."
                 : isComplete
                   ? "저장하기"
-                  : `저장하기(${completedSectionCount}/${detectedSectionCount})`
+                  : detectedSectionCount > 0
+                    ? `저장하기(${completedSectionCount}/${detectedSectionCount})`
+                    : "템플릿을 다시 선택해주세요"
             }
             className="h-[58px]"
             textClassName="font-pretendard-semibold text-[18px] leading-[30px]"

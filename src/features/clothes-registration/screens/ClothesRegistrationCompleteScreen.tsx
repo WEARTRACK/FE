@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -5,55 +6,23 @@ import CheckActiveIcon from "../../../../assets/check-active.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import { Button } from "@/components/common/Button";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
+import { useClothesRegistrationGuide } from "@/features/clothes-registration/hooks/useClothesRegistrationGuide";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 
 export function ClothesRegistrationCompleteScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
-
-  const handlePressClothesCapture = async () => {
-    setIsClothesGuideVisible(false);
-
-    try {
-      const imageUri = await launchClothesCamera();
-
-      if (!imageUri) {
-        showToast("카메라 권한이 필요하거나 촬영이 취소됐어요.");
-        return;
-      }
-
-      router.push({
-        pathname: "/clothes/register/preview",
-        params: { imageUri },
-      });
-    } catch {
-      showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
-    }
-  };
-
-  const handlePressClothesImageSelect = async () => {
-    setIsClothesGuideVisible(false);
-
-    try {
-      const imageUri = await launchClothesImageLibrary();
-
-      if (!imageUri) {
-        showToast("사진 접근 권한이 필요하거나 선택이 취소됐어요.");
-        return;
-      }
-
-      router.push({
-        pathname: "/clothes/register/preview",
-        params: { imageUri },
-      });
-    } catch {
-      showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
-    }
-  };
+  const {
+    closeClothesGuide,
+    handlePressClothesCapture,
+    handlePressClothesImageSelect,
+    isClothesGuideVisible,
+    openClothesGuide,
+  } = useClothesRegistrationGuide();
 
   const handlePressShoppingMallLink = () => {
-    setIsClothesGuideVisible(false);
+    closeClothesGuide();
     router.push(clothesRegistrationRoutes.shoppingMallTerms);
   };
 

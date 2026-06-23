@@ -58,7 +58,7 @@ export function ClothesStyleSelectionScreen() {
   };
 
   return (
-    <View className="flex-1 bg-bg-light" style={{ paddingBottom: insets.bottom + 20 }}>
+    <View className="flex-1 bg-bg-light">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingTop: insets.top + 24 }}
@@ -72,7 +72,7 @@ export function ClothesStyleSelectionScreen() {
         </Text>
 
         <Pressable
-          className="mt-[24px] h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-white"
+          className="mt-[24px] h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-white"
           onPress={handlePressImage}
           style={({ pressed }) => ({
             opacity: pressed ? 0.72 : 1,
@@ -88,14 +88,15 @@ export function ClothesStyleSelectionScreen() {
         </Pressable>
 
         <ClothesStyleSelector
-          selectedCategory={initialCategory}
-          selectedColor={initialColor}
+          selectedCategory={selectedCategory}
+          selectedColor={selectedColor}
           onChangeCategory={setSelectedCategory}
           onChangeColor={setSelectedColor}
+          variant="grouped"
         />
       </ScrollView>
 
-      <View className="px-6">
+      <View className="px-6" style={{ paddingBottom: insets.bottom + 20 }}>
         <Button
           label="다음"
           href={{

@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import AblyLogo from "../../../../assets/ably_logo.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import MusinsaLogo from "../../../../assets/musinsa_logo.svg";
 import ZgzgLogo from "../../../../assets/zgzg_logo.svg";
@@ -23,14 +22,13 @@ import { clothesRegistrationRoutes } from "@/features/clothes-registration/route
 type FetchState = "idle" | "loading" | "error";
 
 const supportedMalls = [
-  { name: "에이블리", Logo: AblyLogo },
   { name: "지그재그", Logo: ZgzgLogo },
   { name: "무신사", Logo: MusinsaLogo },
 ];
 
 function SupportedMallList() {
   return (
-    <View className="mt-[8px] h-[90px] flex-row items-center justify-between rounded-[3px] bg-white px-[29px]">
+    <View className="mt-[8px] h-[90px] flex-row items-center justify-center gap-[70px] rounded-[3px] bg-white">
       {supportedMalls.map(({ name, Logo }) => (
         <View key={name} className="items-center">
           <Logo width={40} height={40} />

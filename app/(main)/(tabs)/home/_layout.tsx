@@ -10,7 +10,7 @@ export default function HomeLayout() {
         options={{
           header: () => (
             <CommonHeader
-              hasNew={{ notification: true, quest: false, weeklyReview: false }}
+              hasNew={{ notification: false, quest: false, weeklyReview: false }}
               showActions
             />
           ),

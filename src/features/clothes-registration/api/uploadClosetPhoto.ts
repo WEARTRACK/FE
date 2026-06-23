@@ -4,19 +4,19 @@ import { env } from "@/config/env";
 import { ApiError } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
 
-export type ClosetPhotoAnalysisStatus = "PENDING" | "SUCCESS" | "FAIL" | "FAILED";
+export type ClosetPhotoAnalysisStatus = string;
 
-export type PredictedClosetSection = {
-  sectionOrder: number;
-  sectionName: string;
+export type RecommendedClosetTemplate = {
+  templateId: number;
+  sectionCount: number;
 };
 
 export type UploadClosetPhotoResult = {
   analysisStatus: ClosetPhotoAnalysisStatus;
-  templateId: number;
+  message: string;
   imageUrl: string;
-  predictedSectionCount: number | null;
-  predictedSections: PredictedClosetSection[];
+  detectedSectionCount: number;
+  recommendedTemplates: RecommendedClosetTemplate[];
 };
 
 type UploadClosetPhotoResponse = {
@@ -24,6 +24,12 @@ type UploadClosetPhotoResponse = {
   code: string;
   message: string;
   result: UploadClosetPhotoResult | null;
+};
+
+type ApiErrorResponse = {
+  code: string;
+  message: string;
+  result?: unknown;
 };
 
 function createInvalidResponseError(details: unknown) {
@@ -35,13 +41,13 @@ function createInvalidResponseError(details: unknown) {
   });
 }
 
-function isPredictedClosetSection(value: unknown): value is PredictedClosetSection {
+function isRecommendedClosetTemplate(value: unknown): value is RecommendedClosetTemplate {
   if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as Record<string, unknown>;
-  return typeof candidate.sectionOrder === "number" && typeof candidate.sectionName === "string";
+  return typeof candidate.templateId === "number" && typeof candidate.sectionCount === "number";
 }
 
 function isUploadClosetPhotoResult(value: unknown): value is UploadClosetPhotoResult {
@@ -52,12 +58,11 @@ function isUploadClosetPhotoResult(value: unknown): value is UploadClosetPhotoRe
   const candidate = value as Record<string, unknown>;
   return (
     typeof candidate.analysisStatus === "string" &&
-    typeof candidate.templateId === "number" &&
+    typeof candidate.message === "string" &&
     typeof candidate.imageUrl === "string" &&
-    (typeof candidate.predictedSectionCount === "number" ||
-      candidate.predictedSectionCount === null) &&
-    Array.isArray(candidate.predictedSections) &&
-    candidate.predictedSections.every((section) => isPredictedClosetSection(section))
+    typeof candidate.detectedSectionCount === "number" &&
+    Array.isArray(candidate.recommendedTemplates) &&
+    candidate.recommendedTemplates.every((template) => isRecommendedClosetTemplate(template))
   );
 }
 
@@ -73,6 +78,24 @@ function isUploadClosetPhotoResponse(value: unknown): value is UploadClosetPhoto
     typeof candidate.message === "string" &&
     (candidate.result === null || isUploadClosetPhotoResult(candidate.result))
   );
+}
+
+function getApiErrorResponse(value: unknown): ApiErrorResponse | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  if (typeof candidate.code !== "string" || typeof candidate.message !== "string") {
+    return null;
+  }
+
+  return {
+    code: candidate.code,
+    message: candidate.message,
+    result: candidate.result,
+  };
 }
 
 function getImageFile(uri: string) {
@@ -110,10 +133,7 @@ async function appendImageToFormData(formData: FormData, imageUri: string) {
   formData.append("image", imageFile as unknown as Blob);
 }
 
-export async function uploadClosetPhoto(
-  imageUri: string,
-  templateId: number,
-): Promise<UploadClosetPhotoResult> {
+export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetPhotoResult> {
   if (!useSessionStore.persist.hasHydrated()) {
     await useSessionStore.persist.rehydrate();
   }
@@ -128,15 +148,22 @@ export async function uploadClosetPhoto(
   }
 
   const formData = new FormData();
-  formData.append("templateId", String(templateId));
   await appendImageToFormData(formData, imageUri);
 
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => abortController.abort(), 60000);
+  const requestUrl = `${env.apiBaseUrl}/api/closets/photo`;
+
+  if (__DEV__) {
+    console.warn("[Closet photo analysis] request started", {
+      url: requestUrl,
+      imageType: getImageFile(imageUri).type,
+    });
+  }
 
   let response: Response;
   try {
-    response = await fetch(`${env.apiBaseUrl}/api/closets/photo`, {
+    response = await fetch(requestUrl, {
       method: "POST",
       body: formData,
       headers: {
@@ -157,8 +184,16 @@ export async function uploadClosetPhoto(
 
   const data = (await response.json().catch(() => null)) as unknown;
 
+  if (__DEV__) {
+    console.warn("[Closet photo analysis] response received", {
+      status: response.status,
+      ok: response.ok,
+      body: data,
+    });
+  }
+
   if (!response.ok) {
-    const errorResponse = isUploadClosetPhotoResponse(data) ? data : null;
+    const errorResponse = getApiErrorResponse(data);
     throw new ApiError({
       code: errorResponse?.code ?? "UNKNOWN_API_ERROR",
       message: errorResponse?.message ?? "옷장 사진 등록에 실패했어요.",

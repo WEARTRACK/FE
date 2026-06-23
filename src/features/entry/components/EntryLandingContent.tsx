@@ -24,7 +24,7 @@ export function EntryLandingContent({ showActions }: EntryLandingContentProps) {
             size="lg"
             fullWidth
             className="bg-text-subdued"
-            textClassName="text-primary"
+            textClassName="font-pretendard-semibold text-[18px] text-primary"
           />
           <Button
             href={"/auth/sign-up" as Href}
@@ -33,7 +33,7 @@ export function EntryLandingContent({ showActions }: EntryLandingContentProps) {
             size="lg"
             fullWidth
             className="border-transparent bg-primary"
-            textClassName="text-text"
+            textClassName="font-pretendard-semibold text-[18px] text-text"
           />
         </View>
       ) : (

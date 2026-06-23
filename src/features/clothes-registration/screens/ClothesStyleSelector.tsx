@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import {
+  clothingCategoryGroups,
   clothingCategoryRows,
   clothingColors,
+  splitIntoChipRows,
 } from "@/features/clothes-registration/screens/ClothesStyleData";
 import {
   getCategoryChipIcon,
@@ -15,6 +17,7 @@ type ClothesStyleSelectorProps = {
   selectedCategory?: string;
   onChangeCategory?: (category: string) => void;
   onChangeColor?: (color: string) => void;
+  variant?: "compact" | "grouped";
 };
 
 type ColorChipProps = {
@@ -61,6 +64,7 @@ export function ClothesStyleSelector({
   selectedCategory = "T-shirt",
   onChangeCategory,
   onChangeColor,
+  variant = "compact",
 }: ClothesStyleSelectorProps) {
   const [currentColor, setCurrentColor] = useState(selectedColor);
   const [currentCategory, setCurrentCategory] = useState(selectedCategory);
@@ -70,40 +74,102 @@ export function ClothesStyleSelector({
       <Text className="mt-[39px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
         색상
       </Text>
-      <View className="mt-[24px] flex-row flex-wrap gap-[6px]">
-        {clothingColors.map((color) => (
-          <ColorChip
-            key={color.name}
-            color={color}
-            onPress={() => {
-              setCurrentColor(color.name);
-              onChangeColor?.(color.name);
-            }}
-            selected={color.name === currentColor}
-          />
-        ))}
-      </View>
+      {variant === "grouped" ? (
+        <View className="mt-[24px] gap-[8px]">
+          {splitIntoChipRows(clothingColors).map((row, rowIndex) => (
+            <View
+              key={`color-row-${rowIndex + 1}`}
+              className={row.length === 4 ? "flex-row justify-between" : "flex-row gap-[8px]"}
+            >
+              {row.map((color) => (
+                <ColorChip
+                  key={color.name}
+                  color={color}
+                  onPress={() => {
+                    setCurrentColor(color.name);
+                    onChangeColor?.(color.name);
+                  }}
+                  selected={color.name === currentColor}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View className="mt-[24px] flex-row flex-wrap gap-[6px]">
+          {clothingColors.map((color) => (
+            <ColorChip
+              key={color.name}
+              color={color}
+              onPress={() => {
+                setCurrentColor(color.name);
+                onChangeColor?.(color.name);
+              }}
+              selected={color.name === currentColor}
+            />
+          ))}
+        </View>
+      )}
 
-      <Text className="mt-[34px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+      <Text
+        className={[
+          "font-pretendard-semibold text-[20px] leading-[24px] text-text",
+          variant === "grouped" ? "mt-[27px]" : "mt-[34px]",
+        ].join(" ")}
+      >
         카테고리
       </Text>
-      <View className="mt-[21px] gap-[6px]">
-        {clothingCategoryRows.map((row, rowIndex) => (
-          <View key={rowIndex} className="flex-row gap-[6px]">
-            {row.map((category) => (
-              <CategoryChip
-                key={category}
-                label={category}
-                onPress={() => {
-                  setCurrentCategory(category);
-                  onChangeCategory?.(category);
-                }}
-                selected={category === currentCategory}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
+      {variant === "grouped" ? (
+        <View className="mt-[20px]">
+          {clothingCategoryGroups.map((group) => (
+            <View key={group.title} className="mb-[30px]">
+              <Text className="font-pretendard text-[15px] leading-[20px] text-text">
+                {group.title}
+              </Text>
+              <View className="mt-[10px] gap-[8px]">
+                {splitIntoChipRows(group.categories).map((row, rowIndex) => (
+                  <View
+                    key={`${group.title}-row-${rowIndex + 1}`}
+                    className={
+                      row.length === 4 ? "flex-row justify-between" : "flex-row gap-[14px]"
+                    }
+                  >
+                    {row.map((category) => (
+                      <CategoryChip
+                        key={category}
+                        label={category}
+                        onPress={() => {
+                          setCurrentCategory(category);
+                          onChangeCategory?.(category);
+                        }}
+                        selected={category === currentCategory}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View className="mt-[21px] gap-[6px]">
+          {clothingCategoryRows.map((row, rowIndex) => (
+            <View key={rowIndex} className="flex-row gap-[6px]">
+              {row.map((category) => (
+                <CategoryChip
+                  key={category}
+                  label={category}
+                  onPress={() => {
+                    setCurrentCategory(category);
+                    onChangeCategory?.(category);
+                  }}
+                  selected={category === currentCategory}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      )}
     </>
   );
 }

@@ -207,8 +207,8 @@ function ClothesRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
-              카메라
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-text">
+              촬영하기
             </Text>
           </Pressable>
 
@@ -219,7 +219,7 @@ function ClothesRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-text">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-text">
               앨범에서 선택
             </Text>
           </Pressable>
@@ -231,7 +231,7 @@ function ClothesRegistrationGuideModal({
               opacity: pressed ? 0.72 : 1,
             })}
           >
-            <Text className="font-pretendard-semibold text-[16px] leading-[20px] text-white">
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-white">
               쇼핑몰 링크
             </Text>
           </Pressable>
