@@ -13,8 +13,8 @@ import {
 } from "@/features/clothes-registration/screens/clothes-style-chip-icons";
 
 type ClothesStyleSelectorProps = {
-  selectedColor?: string;
-  selectedCategory?: string;
+  selectedColor?: string | null;
+  selectedCategory?: string | null;
   onChangeCategory?: (category: string) => void;
   onChangeColor?: (color: string) => void;
   variant?: "compact" | "grouped";
@@ -60,14 +60,16 @@ function CategoryChip({
 }
 
 export function ClothesStyleSelector({
-  selectedColor = "Black",
-  selectedCategory = "T-shirt",
+  selectedColor,
+  selectedCategory,
   onChangeCategory,
   onChangeColor,
   variant = "compact",
 }: ClothesStyleSelectorProps) {
-  const [currentColor, setCurrentColor] = useState(selectedColor);
-  const [currentCategory, setCurrentCategory] = useState(selectedCategory);
+  const [uncontrolledColor, setUncontrolledColor] = useState("Black");
+  const [uncontrolledCategory, setUncontrolledCategory] = useState("T-shirt");
+  const currentColor = selectedColor === undefined ? uncontrolledColor : selectedColor;
+  const currentCategory = selectedCategory === undefined ? uncontrolledCategory : selectedCategory;
 
   return (
     <>
@@ -86,7 +88,7 @@ export function ClothesStyleSelector({
                   key={color.name}
                   color={color}
                   onPress={() => {
-                    setCurrentColor(color.name);
+                    setUncontrolledColor(color.name);
                     onChangeColor?.(color.name);
                   }}
                   selected={color.name === currentColor}
@@ -102,7 +104,7 @@ export function ClothesStyleSelector({
               key={color.name}
               color={color}
               onPress={() => {
-                setCurrentColor(color.name);
+                setUncontrolledColor(color.name);
                 onChangeColor?.(color.name);
               }}
               selected={color.name === currentColor}
@@ -139,7 +141,7 @@ export function ClothesStyleSelector({
                         key={category}
                         label={category}
                         onPress={() => {
-                          setCurrentCategory(category);
+                          setUncontrolledCategory(category);
                           onChangeCategory?.(category);
                         }}
                         selected={category === currentCategory}
@@ -160,7 +162,7 @@ export function ClothesStyleSelector({
                   key={category}
                   label={category}
                   onPress={() => {
-                    setCurrentCategory(category);
+                    setUncontrolledCategory(category);
                     onChangeCategory?.(category);
                   }}
                   selected={category === currentCategory}
