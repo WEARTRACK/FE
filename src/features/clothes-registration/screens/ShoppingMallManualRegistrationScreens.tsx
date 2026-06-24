@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -73,12 +73,8 @@ export function ShoppingMallManualStyleScreen() {
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-          onPress={() =>
-            router.push({
-              pathname: "/clothes/register/shopping-mall/manual-details",
               params: { selectedColor, selectedCategory },
-            })
-          }
+          onPress={() => router.push("/clothes/register/shopping-mall/manual-details" as Href)}
         />
       </View>
     </View>

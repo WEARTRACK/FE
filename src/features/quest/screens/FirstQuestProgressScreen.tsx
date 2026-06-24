@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Href, Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -9,8 +9,9 @@ import {
   launchClothesCamera,
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
-import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
+import { useOnboardingQuestProgress } from "@/features/onboarding/hooks/useOnboardingQuestProgress";
 import { QuestProgressTemplate } from "@/features/quest/screens/QuestProgressTemplate";
+import { QuestQueryStateScreen } from "@/features/quest/screens/QuestQueryStateScreen";
 import { showToast } from "@/lib/ui/showToast";
 
 function RegisteredClosetTile() {
@@ -28,13 +29,36 @@ function RegisteredClosetTile() {
 
 export function FirstQuestProgressScreen() {
   const router = useRouter();
-  const { mockComplete } = useLocalSearchParams<{ mockComplete?: string }>();
-  const { data: homeSummary } = useHomeSummary();
+  const onboardingState = useOnboardingQuestProgress("REGISTER_CLOSET");
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
+  const isLoading =
+    onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
+  const hasError = onboardingState.statusQuery.isError || onboardingState.questsQuery.isError;
+  const quest = onboardingState.quest;
+  const currentClosetCount = Math.min(quest?.currentCount ?? 0, quest?.requiredCount ?? 1);
+  const isQuestComplete = quest?.completed ?? false;
 
-  const shouldShowMockComplete = mockComplete === "1";
-  const currentClosetCount = shouldShowMockComplete ? 1 : Math.min(homeSummary?.closetCount ?? 0, 1);
-  const isQuestComplete = currentClosetCount >= 1;
+  if (isLoading) {
+    return <QuestQueryStateScreen title="퀘스트 정보를 불러오는 중이에요." />;
+  }
+
+  if (hasError || !quest) {
+    return (
+      <QuestQueryStateScreen
+        title="퀘스트 정보를 불러오지 못했어요."
+        description="다시 시도해주세요."
+        actionLabel="다시 시도"
+        onPressAction={() => {
+          void onboardingState.statusQuery.refetch();
+          void onboardingState.questsQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  if (onboardingState.shouldRedirectToQuestEntry) {
+    return <Redirect href={"/quest" as Href} />;
+  }
 
   const handleOpenClosetGuide = () => {
     if (isQuestComplete) {
@@ -55,7 +79,7 @@ export function FirstQuestProgressScreen() {
         questIcon="👕"
         questTitle={isQuestComplete ? "옷장 등록 완료!" : "옷장 등록"}
         currentCount={currentClosetCount}
-        requiredCount={1}
+        requiredCount={quest.requiredCount}
         gridTitle="등록된 옷장"
         actionLabel={isQuestComplete ? "퀘스트 완료!" : "옷장 등록하기"}
         onPressAction={isQuestComplete ? handleCompleteQuest : handleOpenClosetGuide}

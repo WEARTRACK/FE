@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,8 +27,8 @@ import {
   normalizeCategoryName,
   normalizeColorName,
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
+import { invalidateRegistrationQueries } from "@/features/onboarding/utils/invalidateRegistrationQueries";
 import { showToast } from "@/lib/ui/showToast";
-import { queryClient } from "@/lib/queryClient";
 
 function AnalysisResultHeader({
   imageSource,
@@ -72,6 +73,7 @@ function AnalysisResultHeader({
 
 export function ClothesAdditionalInfoScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const {
     imageUri: imageUriParam,
@@ -168,7 +170,7 @@ export function ClothesAdditionalInfoScreen() {
         sectionId: selectedClosetOption.requestSectionId,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+      await invalidateRegistrationQueries(queryClient);
       router.replace("/clothes/register/complete");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");

@@ -33,6 +33,7 @@ function isAuthRequiredPath(pathname: string) {
     pathname === "/api/members/nickname/check" ||
     pathname === "/api/members/me/nickname" ||
     pathname.startsWith("/api/members/me/") ||
+    pathname.startsWith("/api/onboarding/") ||
     pathname.startsWith("/api/closets/") ||
     pathname.startsWith("/api/clothes/")
   );

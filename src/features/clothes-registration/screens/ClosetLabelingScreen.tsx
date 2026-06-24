@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import { Button } from "@/components/common/Button";
@@ -12,6 +13,7 @@ import {
   getClosetTemplate,
   getClosetTemplateSections,
 } from "@/features/clothes-registration/screens/closet-template-data";
+import { invalidateRegistrationQueries } from "@/features/onboarding/utils/invalidateRegistrationQueries";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -82,6 +84,7 @@ function SectionNameInput({
 
 export function ClosetLabelingScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const draftImageUrl = useClosetRegistrationStore((state) => state.imageUrl);
   const draftTemplateId = useClosetRegistrationStore((state) => state.templateId);
@@ -152,6 +155,7 @@ export function ClosetLabelingScreen() {
       });
 
       setClosetId(createdCloset.closetId);
+      await invalidateRegistrationQueries(queryClient);
       resetClosetDraft();
       router.replace({
         pathname: "/closet/register/complete",

@@ -81,19 +81,19 @@ export function CommonHeader({
               accessibilityLabel="주간 회고로 이동"
               hasNew={hasNew?.weeklyReview}
               icon={<WeeklyReviewIcon height={24} width={24} />}
-              onPress={() => router.push("/weekly-review")}
+              onPress={() => router.push("/weekly-review" as Href)}
             />
             <HeaderActionButton
               accessibilityLabel="알림으로 이동"
               hasNew={hasNew?.notification}
               icon={<NotificationIcon height={24} width={24} />}
-              onPress={() => router.push("/notifications")}
+              onPress={() => router.push("/notifications" as Href)}
             />
             <HeaderActionButton
               accessibilityLabel="퀘스트로 이동"
               hasNew={hasNew?.quest}
               icon={<QuestIcon height={24} width={24} />}
-              onPress={() => router.push("/quest/first")}
+              onPress={() => router.push("/quest" as Href)}
             />
           </View>
         ) : null}
