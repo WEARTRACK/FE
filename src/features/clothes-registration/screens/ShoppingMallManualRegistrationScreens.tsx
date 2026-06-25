@@ -73,7 +73,6 @@ export function ShoppingMallManualStyleScreen() {
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-              params: { selectedColor, selectedCategory },
           onPress={() => router.push("/clothes/register/shopping-mall/manual-details" as Href)}
         />
       </View>
