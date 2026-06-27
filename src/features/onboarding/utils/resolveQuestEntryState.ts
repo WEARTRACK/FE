@@ -5,8 +5,8 @@ import type { OnboardingDerivedState } from "@/features/onboarding/utils/onboard
 
 export type QuestEntryState =
   | {
-      kind: "progress";
-      progressRoute: Href;
+      kind: "template";
+      templateRoute: Href;
     }
   | {
       kind: "waiting";
@@ -30,8 +30,8 @@ function createComingSoonQuestCard(): QuestCardItem {
 export function resolveQuestEntryState(state: OnboardingDerivedState): QuestEntryState {
   if (state.currentAvailableQuest) {
     return {
-      kind: "progress",
-      progressRoute: state.currentAvailableQuest.progressRoute,
+      kind: "template",
+      templateRoute: state.currentAvailableQuest.templateRoute,
     };
   }
 

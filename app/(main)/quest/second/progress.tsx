@@ -7,8 +7,7 @@ import { AddQuestItemTile } from "@/features/quest/components/AddQuestItemTile";
 import { RegisteredQuestItemTile } from "@/features/quest/components/RegisteredQuestItemTile";
 import { QuestProgressTemplate } from "@/features/quest/screens/QuestProgressTemplate";
 import { QuestQueryStateScreen } from "@/features/quest/screens/QuestQueryStateScreen";
-
-const mockClotheImage = require("../../../../assets/clotheExample.png");
+import { useQuestRegistrationStore } from "@/stores/useQuestRegistrationStore";
 
 export default function SecondQuestProgressRoute() {
   const router = useRouter();
@@ -19,17 +18,22 @@ export default function SecondQuestProgressRoute() {
     handlePressClothesImageSelect,
     isClothesGuideVisible,
     openClothesGuide,
-  } = useClothesRegistrationGuide();
+  } = useClothesRegistrationGuide({
+    questRegistration: {
+      kind: "top",
+      returnRoute: "/quest/second/progress",
+    },
+  });
+  const registeredTopItems = useQuestRegistrationStore(
+    (state) => state.registeredItemsByKind.top,
+  );
   const isLoading =
     onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
   const hasError = onboardingState.statusQuery.isError || onboardingState.questsQuery.isError;
   const quest = onboardingState.quest;
-  const displayedTopCount = quest?.currentCount ?? 0;
-  const registeredTopTileCount = Math.min(
-    Math.max(displayedTopCount, 0),
-    quest?.requiredCount ?? 0,
-  );
-  const isQuestComplete = quest?.completed ?? false;
+  const displayedTopCount = Math.max(quest?.currentCount ?? 0, registeredTopItems.length);
+  const isQuestComplete =
+    (quest?.completed ?? false) || displayedTopCount >= (quest?.requiredCount ?? 1);
 
   if (isLoading) {
     return <QuestQueryStateScreen title="퀘스트 정보를 불러오는 중이에요." />;
@@ -66,7 +70,6 @@ export default function SecondQuestProgressRoute() {
     <>
       <QuestProgressTemplate
         headerTitle="두번째 퀘스트"
-        questIcon="👕"
         questTitle="상의 5벌 등록"
         currentCount={displayedTopCount}
         requiredCount={quest.requiredCount}
@@ -75,11 +78,11 @@ export default function SecondQuestProgressRoute() {
         onPressAction={handlePressAction}
         progressCardState={isQuestComplete ? "complete" : "default"}
         gridContent={[
-          ...Array.from({ length: registeredTopTileCount }, (_, index) => (
+          ...registeredTopItems.slice(0, quest.requiredCount).map((item, index) => (
             <RegisteredQuestItemTile
-              key={`registered-top-${index + 1}`}
+              key={item.id}
               accessibilityLabel={`등록된 상의 ${index + 1}`}
-              imageSource={mockClotheImage}
+              imageSource={{ uri: item.imageUri }}
               isComplete={isQuestComplete}
             />
           )),

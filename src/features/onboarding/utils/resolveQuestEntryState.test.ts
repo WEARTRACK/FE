@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { resolveQuestEntryState } from "./resolveQuestEntryState";
 
 describe("resolveQuestEntryState", () => {
-  it("routes to the current progress screen when a quest is available", () => {
+  it("routes to the current template screen when a quest is available", () => {
     expect(
       resolveQuestEntryState({
         orderedQuests: [],
@@ -33,8 +33,8 @@ describe("resolveQuestEntryState", () => {
         hasAmbiguousQuestAvailability: false,
       }),
     ).toEqual({
-      kind: "progress",
-      progressRoute: "/quest/second/progress",
+      kind: "template",
+      templateRoute: "/quest/second",
     });
   });
 

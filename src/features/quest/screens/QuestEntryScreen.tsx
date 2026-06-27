@@ -61,8 +61,8 @@ export function QuestEntryScreen() {
     );
   }
 
-  if (screenState.kind === "progress") {
-    return <Redirect href={screenState.progressRoute} />;
+  if (screenState.kind === "template") {
+    return <Redirect href={screenState.templateRoute} />;
   }
 
   if (screenState.kind === "waiting" || screenState.kind === "completed") {

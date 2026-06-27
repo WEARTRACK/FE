@@ -1,6 +1,15 @@
 import { useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
 
 import CalendarIcon from "../../../../assets/calendar.svg";
 import { colors } from "@/constants/colors";
@@ -109,9 +118,11 @@ export function PurchaseDateField({
 export function PriceField({
   value,
   onChange,
+  inputProps,
 }: {
   value: string;
   onChange: (value: string) => void;
+  inputProps?: TextInputProps & { ref?: (input: TextInput | null) => void };
 }) {
   return (
     <View>
@@ -125,6 +136,7 @@ export function PriceField({
           placeholderTextColor={colors.disabled}
           style={{ includeFontPadding: false, paddingBottom: 2, paddingTop: 0 }}
           value={formatPrice(value)}
+          {...inputProps}
         />
         <Text className="ml-[10px] font-pretendard text-[14px] leading-[20px] text-bg-dark">
           원

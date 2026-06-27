@@ -1,4 +1,5 @@
 import { Href, useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
@@ -9,6 +10,7 @@ import {
   clearSocialAuthIntent,
   getSocialAuthIntent,
 } from "@/features/entry/oauth/socialAuthIntentStorage";
+import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -50,6 +52,7 @@ function resolveNextHref(params: {
 
 export function SocialAuthCallbackScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams();
   const hasHandledCallbackRef = useRef(false);
   const setSession = useSessionStore((state) => state.setSession);
@@ -88,10 +91,21 @@ export function SocialAuthCallbackScreen() {
         }
         await clearSocialAuthIntent();
 
-        const nextHref = resolveNextHref({
+        let nextHref = resolveNextHref({
           intentSuccessHref: intent?.successHref,
           profileCompleted: result.profileCompleted,
         });
+
+        if (result.profileCompleted && nextHref === "/home") {
+          const entryResolution = await fetchOnboardingEntryResolution(queryClient);
+
+          if (entryResolution.shouldShowFetchFailureToast) {
+            showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요.");
+          }
+
+          nextHref = entryResolution.route;
+        }
+
         router.replace(nextHref);
       } catch (error) {
         await clearSocialAuthIntent();
@@ -101,7 +115,7 @@ export function SocialAuthCallbackScreen() {
     }
 
     void completeSocialLogin();
-  }, [params.handoff, params.provider, router, setClosetId, setSession]);
+  }, [params.handoff, params.provider, queryClient, router, setClosetId, setSession]);
 
   return (
     <View className="flex-1 items-center justify-center bg-bg-light">

@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 
 import {
@@ -6,9 +6,21 @@ import {
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
 import { showToast } from "@/lib/ui/showToast";
+import {
+  type QuestRegistrationKind,
+  useQuestRegistrationStore,
+} from "@/stores/useQuestRegistrationStore";
 
-export function useClothesRegistrationGuide() {
+type UseClothesRegistrationGuideOptions = {
+  questRegistration?: {
+    kind: Extract<QuestRegistrationKind, "top" | "bottom">;
+    returnRoute: Href;
+  };
+};
+
+export function useClothesRegistrationGuide(options?: UseClothesRegistrationGuideOptions) {
   const router = useRouter();
+  const startQuestRegistration = useQuestRegistrationStore((state) => state.startRegistration);
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
   const openClothesGuide = () => {
@@ -30,6 +42,10 @@ export function useClothesRegistrationGuide() {
         return;
       }
 
+      if (options?.questRegistration) {
+        startQuestRegistration(options.questRegistration);
+      }
+
       router.push({
         pathname: "/clothes/register/preview",
         params: { imageUri },
@@ -48,6 +64,10 @@ export function useClothesRegistrationGuide() {
       if (!imageUri) {
         showToast("사진 접근 권한이 필요하거나 선택이 취소됐어요.");
         return;
+      }
+
+      if (options?.questRegistration) {
+        startQuestRegistration(options.questRegistration);
       }
 
       router.push({

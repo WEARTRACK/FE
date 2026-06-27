@@ -14,8 +14,8 @@ export type QuestEntryScreenState =
       description: string;
     }
   | {
-      kind: "progress";
-      progressRoute: Href;
+      kind: "template";
+      templateRoute: Href;
     }
   | {
       kind: "waiting";
@@ -46,10 +46,10 @@ export function resolveQuestEntryScreenState(params: {
     };
   }
 
-  if (params.entryState.kind === "progress") {
+  if (params.entryState.kind === "template") {
     return {
-      kind: "progress",
-      progressRoute: params.entryState.progressRoute,
+      kind: "template",
+      templateRoute: params.entryState.templateRoute,
     };
   }
 

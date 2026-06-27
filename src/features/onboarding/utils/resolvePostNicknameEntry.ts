@@ -18,7 +18,7 @@ export function resolvePostNicknameEntry(params: {
 }): PostNicknameEntryResolution {
   if (!params.status && !params.quests) {
     return {
-      route: "/home",
+      route: "/quest",
       shouldShowFetchFailureToast: true,
     };
   }

@@ -48,7 +48,6 @@ function QuestCard({
       })}
     >
       <View className="flex-row items-center">
-        <Text className="font-pretendard text-heading text-text">🎯</Text>
         <Text className="font-pretendard text-heading text-text">{quest.title}</Text>
       </View>
 

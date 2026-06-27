@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Text, View, Image } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import {
   ClosetSectionSelect,
   PriceField,
@@ -29,6 +30,7 @@ import {
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 import { invalidateRegistrationQueries } from "@/features/onboarding/utils/invalidateRegistrationQueries";
 import { showToast } from "@/lib/ui/showToast";
+import { useQuestRegistrationStore } from "@/stores/useQuestRegistrationStore";
 
 function AnalysisResultHeader({
   imageSource,
@@ -75,6 +77,9 @@ export function ClothesAdditionalInfoScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const completeActiveQuestRegistration = useQuestRegistrationStore(
+    (state) => state.completeActiveRegistration,
+  );
   const {
     imageUri: imageUriParam,
     imageUrl: imageUrlParam,
@@ -113,6 +118,7 @@ export function ClothesAdditionalInfoScreen() {
   const [price, setPrice] = useState("");
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const selectedClosetOption = useMemo(
     () =>
       closetSectionOptions.find((option) => option.requestSectionId === selectedClosetSectionId) ??
@@ -171,6 +177,13 @@ export function ClothesAdditionalInfoScreen() {
       });
 
       await invalidateRegistrationQueries(queryClient);
+      const questReturnRoute = completeActiveQuestRegistration(uploadedPhoto.imageUrl ?? imageUri);
+
+      if (questReturnRoute) {
+        router.replace(questReturnRoute);
+        return;
+      }
+
       router.replace("/clothes/register/complete");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");
@@ -193,59 +206,64 @@ export function ClothesAdditionalInfoScreen() {
       >
         <ClothesRegistrationHeader />
 
-        <Text
-          className={[
-            "font-pretendard-semibold text-[20px] leading-[24px] text-text",
-            isManualEntry ? "mt-[24px]" : "mt-[34px]",
-          ].join(" ")}
-        >
-          추가정보를 입력해주세요.
-        </Text>
+      <Text
+        className={[
+          "font-pretendard-semibold text-[20px] leading-[24px] text-text",
+          isManualEntry ? "mt-[24px]" : "mt-[34px]",
+        ].join(" ")}
+      >
+        추가정보를 입력해주세요.
+      </Text>
 
-        <AnalysisResultHeader
-          category={selectedCategory}
-          color={selectedColor}
-          imageSource={imageUrl || imageUri}
-          showAnalysis={!isManualEntry}
-        />
+      <AnalysisResultHeader
+        category={selectedCategory}
+        color={selectedColor}
+        imageSource={imageUrl || imageUri}
+        showAnalysis={!isManualEntry}
+      />
 
-        <View className="mt-[34px]">
-          <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
-        </View>
-
-        <View className="mt-[34px]">
-          <PriceField onChange={setPrice} value={price} />
-        </View>
-
-        <View className="mt-[24px]">
-          <ClosetSectionSelect
-            options={closetSectionOptions}
-            selectedOption={selectedClosetOption}
-            onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
-          />
-          {isClosetSectionsLoading ? (
-            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
-              옷장 보관 칸 정보를 불러오는 중입니다.
-            </Text>
-          ) : null}
-          {closetSectionsError ? (
-            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
-              옷장 보관 칸 정보를 불러오지 못했어요. 임시 데이터 또는 API 연결 상태를 확인해주세요.
-            </Text>
-          ) : null}
-        </View>
-
-        <View className="mt-auto">
-          <Button
-            label={isSaving ? "저장 중..." : "저장하기"}
-            disabled={isSaving}
-            fullWidth
-            className="h-[58px]"
-            onPress={handleSave}
-            textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
-          />
-        </View>
+      <View className="mt-[34px]">
+        <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
       </View>
+
+      <View className="mt-[34px]">
+        <PriceField
+          inputProps={keyboardAccessory.getInputAccessoryProps(0)}
+          onChange={setPrice}
+          value={price}
+        />
+      </View>
+
+      <View className="mt-[24px]">
+        <ClosetSectionSelect
+          options={closetSectionOptions}
+          selectedOption={selectedClosetOption}
+          onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
+        />
+        {isClosetSectionsLoading ? (
+          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
+            옷장 보관 칸 정보를 불러오는 중입니다.
+          </Text>
+        ) : null}
+        {closetSectionsError ? (
+          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+            옷장 보관 칸 정보를 불러오지 못했어요. 임시 데이터 또는 API 연결 상태를 확인해주세요.
+          </Text>
+        ) : null}
+      </View>
+
+      <View className="mt-auto">
+        <Button
+          label={isSaving ? "저장 중..." : "저장하기"}
+          disabled={isSaving}
+          fullWidth
+          className="h-[58px]"
+          onPress={handleSave}
+          textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
+        />
+      </View>
+      </View>
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

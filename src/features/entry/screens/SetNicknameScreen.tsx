@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import SignupInput from "@/components/common/SignupInput";
 import { checkNicknameDuplicate } from "@/features/entry/api/checkNicknameDuplicate";
 import { saveNickname } from "@/features/entry/api/saveNickname";
@@ -24,6 +25,7 @@ export function SetNicknameScreen() {
   const [nickname, setNickname] = useState("");
   const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedNickname = useDebouncedValue(nickname, 400);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
 
   const baseState = useMemo(
     () =>
@@ -67,7 +69,8 @@ export function SetNicknameScreen() {
       ? "중복 확인에 실패했어요. 다시 시도해주세요."
       : undefined;
 
-  const errorMessage = baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
+  const errorMessage =
+    baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
   const successMessage =
     !errorMessage &&
     isEligibleForDuplicateCheck &&
@@ -186,6 +189,7 @@ export function SetNicknameScreen() {
 
         <View className="mt-[79px]">
           <SignupInput
+            {...keyboardAccessory.getInputAccessoryProps(0)}
             label="닉네임"
             placeholder="한글, 영문, 숫자 조합만 가능"
             maxLength={5}
@@ -225,6 +229,7 @@ export function SetNicknameScreen() {
           />
         </View>
       </View>
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

@@ -57,14 +57,14 @@ describe("resolvePostNicknameEntry", () => {
     });
   });
 
-  it("routes to /home and requests a toast when both onboarding queries fail", () => {
+  it("routes to /quest and requests a toast when both onboarding queries fail", () => {
     expect(
       resolvePostNicknameEntry({
         status: null,
         quests: null,
       }),
     ).toEqual({
-      route: "/home",
+      route: "/quest",
       shouldShowFetchFailureToast: true,
     });
   });

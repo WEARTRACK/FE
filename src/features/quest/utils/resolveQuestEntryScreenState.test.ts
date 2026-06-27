@@ -30,19 +30,19 @@ describe("resolveQuestEntryScreenState", () => {
     });
   });
 
-  it("passes through resolved progress state", () => {
+  it("passes through resolved template state", () => {
     expect(
       resolveQuestEntryScreenState({
         isLoading: false,
         hasError: false,
         entryState: {
-          kind: "progress",
-          progressRoute: "/quest/second/progress",
+          kind: "template",
+          templateRoute: "/quest/second",
         },
       }),
     ).toEqual({
-      kind: "progress",
-      progressRoute: "/quest/second/progress",
+      kind: "template",
+      templateRoute: "/quest/second",
     });
   });
 
