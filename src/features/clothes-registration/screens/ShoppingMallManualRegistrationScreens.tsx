@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ClotheExample from "../../../../assets/clotheExample.svg";
+import ImagePlaceholderIcon from "../../../../assets/image-placeholder.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import {
@@ -28,8 +28,8 @@ function ManualHeader() {
 
 function ProductThumb() {
   return (
-    <View className="h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-white">
-      <ClotheExample height={100} preserveAspectRatio="xMidYMid slice" width={100} />
+    <View className="h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-[#F4F6F8]">
+      <ImagePlaceholderIcon height={40} width={40} />
     </View>
   );
 }
