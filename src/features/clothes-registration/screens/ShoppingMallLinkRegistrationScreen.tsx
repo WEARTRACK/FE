@@ -16,6 +16,7 @@ import MusinsaLogo from "../../../../assets/musinsa_logo.svg";
 import ZgzgLogo from "../../../../assets/zgzg_logo.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import { colors } from "@/constants/colors";
 import { fetchProductLinkPreview } from "@/features/clothes-registration/api/link-preview-api";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
@@ -61,6 +62,8 @@ export function ShoppingMallLinkRegistrationScreen() {
   const insets = useSafeAreaInsets();
   const [url, setUrl] = useState("");
   const [fetchState, setFetchState] = useState<FetchState>("idle");
+
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const [errorMessage, setErrorMessage] = useState<string>();
   const setDraft = useShoppingMallRegistrationStore((state) => state.setDraft);
 
@@ -114,7 +117,6 @@ export function ShoppingMallLinkRegistrationScreen() {
     >
       <View>
         <BackButton onPress={handlePressBack} />
-
         <Text className="mt-[35px] font-pretendard-semibold text-[20px] leading-[20px] text-text">
           쇼핑몰 링크로 등록
         </Text>
@@ -126,6 +128,7 @@ export function ShoppingMallLinkRegistrationScreen() {
           상품 URL
         </Text>
         <TextInput
+          {...keyboardAccessory.getInputAccessoryProps(0)}
           className={[
             "mt-[8px] h-[58px] rounded-[3px] border-[0.5px] bg-white px-[13px] font-pretendard text-[14px] leading-[16px] text-text",
             fetchState === "error" ? "border-error" : "border-cool",
@@ -184,7 +187,9 @@ export function ShoppingMallLinkRegistrationScreen() {
               fullWidth
               className="h-[58px] rounded-[4px] border-[0.5px] border-text-subdued"
               textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-              onPress={() => router.push(clothesRegistrationRoutes.shoppingMallManualStyle)}
+              onPress={() =>
+                router.push(clothesRegistrationRoutes.shoppingMallManualStyle)
+              }
             />
             <Button
               label="다시 시도"
@@ -196,6 +201,8 @@ export function ShoppingMallLinkRegistrationScreen() {
           </View>
         ) : null}
       </View>
+
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

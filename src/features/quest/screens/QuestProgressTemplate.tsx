@@ -8,7 +8,6 @@ import { AddQuestItemTile } from "@/features/quest/components/AddQuestItemTile";
 
 type QuestProgressTemplateProps = {
   headerTitle: string;
-  questIcon: string;
   questTitle: string;
   currentCount: number;
   requiredCount: number;
@@ -25,13 +24,11 @@ function clampProgress(value: number) {
 }
 
 function QuestProgressCard({
-  icon,
   title,
   currentCount,
   requiredCount,
   state = "default",
 }: {
-  icon: string;
   title: string;
   currentCount: number;
   requiredCount: number;
@@ -51,7 +48,6 @@ function QuestProgressCard({
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
-          <Text className="font-pretendard text-heading text-text">{icon}</Text>
           <Text className="font-pretendard text-heading text-text">{title}</Text>
         </View>
         <Text className="font-pretendard text-heading text-text">
@@ -70,7 +66,6 @@ function QuestProgressCard({
 
 export function QuestProgressTemplate({
   headerTitle,
-  questIcon,
   questTitle,
   currentCount,
   requiredCount,
@@ -101,7 +96,6 @@ export function QuestProgressTemplate({
 
       <View className="mt-[32px]">
         <QuestProgressCard
-          icon={questIcon}
           title={questTitle}
           currentCount={currentCount}
           requiredCount={requiredCount}

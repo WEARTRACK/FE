@@ -1,7 +1,5 @@
 import type { SvgProps } from "react-native-svg";
 
-import BlouseActiveIcon from "../../../../assets/category/blouse-active.svg";
-import BlouseInactiveIcon from "../../../../assets/category/blouse-inactive.svg";
 import CardiganActiveIcon from "../../../../assets/category/cardigan-active.svg";
 import CardiganInactiveIcon from "../../../../assets/category/cardigan-inactive.svg";
 import CoatActiveIcon from "../../../../assets/category/coat-active.svg";
@@ -92,7 +90,6 @@ const colorInactiveIconMap: Record<string, ChipIcon> = {
 const categoryActiveIconMap: Record<string, ChipIcon> = {
   tshirt: TshirtActiveIcon,
   shirt: ShirtActiveIcon,
-  blouse: BlouseActiveIcon,
   knit: KnitActiveIcon,
   hoodie: HoodieActiveIcon,
   vest: VestActiveIcon,
@@ -109,7 +106,6 @@ const categoryActiveIconMap: Record<string, ChipIcon> = {
 const categoryInactiveIconMap: Record<string, ChipIcon> = {
   tshirt: TshirtInactiveIcon,
   shirt: ShirtInactiveIcon,
-  blouse: BlouseInactiveIcon,
   knit: KnitInactiveIcon,
   hoodie: HoodieInactiveIcon,
   vest: VestInactiveIcon,

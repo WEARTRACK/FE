@@ -22,6 +22,7 @@ import PageInactiveIcon from "../../../../assets/page-inactive.svg";
 import QuestionIcon from "../../../../assets/question-icon.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import { colors } from "@/constants/colors";
 import { ClothesRegistrationGuideModal } from "@/features/clothes-registration/components/ClothesRegistrationGuideModal";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
@@ -56,6 +57,7 @@ export function ClosetSearchResultsScreen() {
   const [draftSectionId, setDraftSectionId] = useState<ClosetSectionId | null>(null);
   const [draftSectionName, setDraftSectionName] = useState<string | null>(null);
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const lastToastMessageRef = useRef<string | null>(null);
 
   const localSearchParams = useLocalSearchParams<{
@@ -507,22 +509,23 @@ export function ClosetSearchResultsScreen() {
           transparent
           visible={Boolean(selectedItem)}
         >
-          <View className="flex-1 items-center justify-center px-6">
-            <Pressable
-              accessibilityLabel="상세 모달 닫기"
-              accessibilityRole="button"
-              className="absolute inset-0 bg-black/20"
-              onPress={handleCloseDetailModal}
-            />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            className="flex-1"
+          >
+            <View className="flex-1 items-center justify-center px-6">
+              <Pressable
+                accessibilityLabel="상세 모달 닫기"
+                accessibilityRole="button"
+                className="absolute inset-0 bg-black/20"
+                onPress={handleCloseDetailModal}
+              />
 
-            {selectedItem ? (
-              <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                className="h-[604px] w-[344px]"
-              >
+              {selectedItem ? (
                 <View
                   accessibilityViewIsModal
-                  className="h-[604px] w-[344px] rounded-2xl bg-white p-5"
+                  className="w-[344px] rounded-2xl bg-white p-5"
+                  style={{ maxHeight: "90%" }}
                 >
                   <View className="flex-row items-center justify-between">
                     <Text className="font-pretendard-semibold text-headline text-bg-dark">
@@ -539,104 +542,117 @@ export function ClosetSearchResultsScreen() {
                     </Pressable>
                   </View>
 
-                  <View className="mt-6 items-center">
-                    <View className="h-[302px] w-[306px] overflow-hidden rounded-xl">
-                      <Image
-                        className="h-[302px] w-[306px]"
-                        resizeMode="cover"
-                        source={{ uri: selectedItem.imageUri }}
-                      />
-                      <View className="absolute inset-0">
-                        <Svg height="302" width="306">
-                          <Rect
-                            x="0.5"
-                            y="0.5"
-                            width="305"
-                            height="301"
-                            rx="12"
-                            fill="none"
-                            stroke={colors.disabled}
-                            strokeDasharray="2 2"
-                            strokeWidth="1"
-                          />
-                        </Svg>
+                  <ScrollView
+                    className="mt-6"
+                    contentContainerStyle={{ paddingBottom: 8 }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ flexShrink: 1 }}
+                  >
+                    <View className="items-center">
+                      <View className="h-[302px] w-[306px] overflow-hidden rounded-xl">
+                        <Image
+                          className="h-[302px] w-[306px]"
+                          resizeMode="cover"
+                          source={{ uri: selectedItem.imageUri }}
+                        />
+                        <View className="absolute inset-0">
+                          <Svg height="302" width="306">
+                            <Rect
+                              x="0.5"
+                              y="0.5"
+                              width="305"
+                              height="301"
+                              rx="12"
+                              fill="none"
+                              stroke={colors.disabled}
+                              strokeDasharray="2 2"
+                              strokeWidth="1"
+                            />
+                          </Svg>
+                        </View>
                       </View>
                     </View>
-                  </View>
 
-                  <View className="mt-7 flex-row items-center gap-[6px]">
-                    {(() => {
-                      const ColorIcon = getColorIcon(selectedItem.color);
-                      return <ColorIcon />;
-                    })()}
-                    {(() => {
-                      const CategoryIcon = getCategoryIcon(selectedItem.category);
-                      return <CategoryIcon />;
-                    })()}
-                  </View>
+                    <View className="mt-7 flex-row items-center gap-[6px]">
+                      {(() => {
+                        const ColorIcon = getColorIcon(selectedItem.color);
+                        return <ColorIcon />;
+                      })()}
+                      {(() => {
+                        const CategoryIcon = getCategoryIcon(selectedItem.category);
+                        return <CategoryIcon />;
+                      })()}
+                    </View>
 
-                  <View className="relative mt-6 gap-4">
-                    <View className="flex-row items-center justify-between">
-                      <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
-                      {isEditing ? (
-                        <View className="items-end">
-                          <Pressable
-                            accessibilityRole="button"
-                            className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
-                            onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
-                          >
-                            <Text className="font-pretendard text-body text-text-subdued">
-                              {draftSectionName ?? selectedItem.sectionName}
-                            </Text>
-                          </Pressable>
-                          {isSectionDropdownOpen ? (
-                            <View
-                              className="absolute right-0 top-9 max-h-[180px] w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
-                              style={{ position: "absolute", zIndex: 999 }}
+                    <View className="relative mt-6 gap-4">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="font-pretendard text-body text-text-subdued">보관 칸</Text>
+                        {isEditing ? (
+                          <View className="items-end">
+                            <Pressable
+                              accessibilityRole="button"
+                              className="rounded-md border-[0.5px] border-disabled bg-white px-2 py-1"
+                              onPress={() => setIsSectionDropdownOpen((prev) => !prev)}
                             >
-                              <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
-                                {sectionOptions.map((option) => (
-                                  <Pressable
-                                    key={option.id}
-                                    className="px-3 py-2"
-                                    onPress={() => {
-                                      setDraftSectionId(option.id);
-                                      setDraftSectionName(option.name);
-                                      setIsSectionDropdownOpen(false);
-                                    }}
-                                  >
-                                    <Text className="font-pretendard text-body text-text-subdued">
-                                      {option.name}
-                                    </Text>
-                                  </Pressable>
-                                ))}
-                              </ScrollView>
-                            </View>
-                          ) : null}
-                        </View>
-                      ) : (
-                        <Text className="font-pretendard text-body text-text-subdued">
-                          {selectedItem.sectionName}
-                        </Text>
-                      )}
+                              <Text className="font-pretendard text-body text-text-subdued">
+                                {draftSectionName ?? selectedItem.sectionName}
+                              </Text>
+                            </Pressable>
+                            {isSectionDropdownOpen ? (
+                              <View
+                                className="absolute right-0 top-9 max-h-[180px] w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
+                                style={{ position: "absolute", zIndex: 999 }}
+                              >
+                                <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                                  {sectionOptions.map((option) => (
+                                    <Pressable
+                                      key={option.id}
+                                      className="px-3 py-2"
+                                      onPress={() => {
+                                        setDraftSectionId(option.id);
+                                        setDraftSectionName(option.name);
+                                        setIsSectionDropdownOpen(false);
+                                      }}
+                                    >
+                                      <Text className="font-pretendard text-body text-text-subdued">
+                                        {option.name}
+                                      </Text>
+                                    </Pressable>
+                                  ))}
+                                </ScrollView>
+                              </View>
+                            ) : null}
+                          </View>
+                        ) : (
+                          <Text className="font-pretendard text-body text-text-subdued">
+                            {selectedItem.sectionName}
+                          </Text>
+                        )}
+                      </View>
+                      <View className="flex-row items-center justify-between">
+                        <Text className="font-pretendard text-body text-text-subdued">가격</Text>
+                        {isEditing ? (
+                          <TextInput
+                            {...keyboardAccessory.getInputAccessoryProps(0)}
+                            className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
+                            keyboardType="numeric"
+                            onChangeText={(value) =>
+                              setDraftPriceInput(value.replace(/[^0-9]/g, ""))
+                            }
+                            value={draftPriceInput}
+                          />
+                        ) : (
+                          <Text className="font-pretendard text-body text-text-subdued">
+                            {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString(
+                              "ko-KR",
+                            )}
+                            원
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                    <View className="flex-row items-center justify-between">
-                      <Text className="font-pretendard text-body text-text-subdued">가격</Text>
-                      {isEditing ? (
-                        <TextInput
-                          className="min-w-[120px] rounded-md border-[0.5px] border-disabled px-2 py-1 text-right font-pretendard text-body text-text-subdued"
-                          keyboardType="numeric"
-                          onChangeText={(value) => setDraftPriceInput(value.replace(/[^0-9]/g, ""))}
-                          value={draftPriceInput}
-                        />
-                      ) : (
-                        <Text className="font-pretendard text-body text-text-subdued">
-                          {(selectedItemDetailPrice ?? selectedItem.price).toLocaleString("ko-KR")}
-                          원
-                        </Text>
-                      )}
-                    </View>
-                  </View>
+                  </ScrollView>
 
                   <View className="mt-7 flex-row items-center gap-1">
                     <View className="flex-1">
@@ -672,9 +688,10 @@ export function ClosetSearchResultsScreen() {
                     </View>
                   </View>
                 </View>
-              </KeyboardAvoidingView>
-            ) : null}
-          </View>
+              ) : null}
+            </View>
+          </KeyboardAvoidingView>
+          {keyboardAccessory.toolbar}
         </Modal>
       </View>
       <ClothesRegistrationGuideModal

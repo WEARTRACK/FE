@@ -40,7 +40,7 @@ export function QuestCompleteScreen({
       </View>
 
       <View className="mt-[26px] h-[105px] rounded-[4px] border-[0.5px] border-cool bg-white px-[24px] pt-[19px]">
-        <Text className="font-pretendard text-heading text-text">🎁 획득한 보상</Text>
+        <Text className="font-pretendard text-heading text-text">획득한 보상</Text>
 
         <View className="mt-[7px] gap-0">
           {rewards.map((reward) => (
