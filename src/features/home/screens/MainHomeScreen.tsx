@@ -116,14 +116,29 @@ function QuickActionButton({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  onPress?: () => void;
+}) {
+  const Component = onPress ? Pressable : View;
+
   return (
-    <View className="h-[118px] flex-1 justify-center rounded-lg border-[0.5px] border-blue-3 bg-blue-1 px-[22px]">
+    <Component
+      accessibilityRole={onPress ? "button" : undefined}
+      className="h-[118px] flex-1 justify-center rounded-lg border-[0.5px] border-blue-3 bg-blue-1 px-[22px]"
+      onPress={onPress}
+      style={onPress ? ({ pressed }) => ({ opacity: pressed ? 0.72 : 1 }) : undefined}
+    >
       <Text className="font-pretendard text-[14px] leading-[20px] text-text-subdued">{label}</Text>
       <Text className="mt-2 font-pretendard-semibold text-[20px] leading-[30px] text-accent">
         {value}
       </Text>
-    </View>
+    </Component>
   );
 }
 
@@ -402,6 +417,7 @@ export function MainHomeScreen() {
             <StatCard
               label="이번주 총 패션 지출액"
               value={formatWon(weeklyFashionStats.totalSpending)}
+              onPress={() => router.push("/home/weekly-spending")}
             />
             <StatCard label="이번주 옷장 활용률" value={`${weeklyFashionStats.closetUsageRate}%`} />
           </View>
