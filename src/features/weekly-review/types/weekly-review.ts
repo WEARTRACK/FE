@@ -95,9 +95,6 @@ export type ClosetUsageProfile = {
 export type WeeklyReceiptReportItem = {
   clothesId: number;
   imageUrl: string;
-  color: string;
-  category: WeeklyReviewCategory;
-  categoryLabel: WeeklyReviewCategoryLabel;
   price: number;
 };
 

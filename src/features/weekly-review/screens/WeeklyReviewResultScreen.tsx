@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { ActivityIndicator, FlatList, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import QuestCompleteIcon from "../../../../assets/quest-complete-icon.svg";
 import { Button } from "@/components/common/Button";
@@ -17,20 +16,6 @@ import { clampClosetUsageRate } from "@/features/weekly-review/utils/closet-usag
 
 import { WeeklyReviewWornCategorySection } from "./WeeklyReviewResultComponents";
 import { WeeklyReviewRouteScaffold } from "./WeeklyReviewRouteScaffold";
-
-function BottomActionFade() {
-  return (
-    <Svg className="absolute -top-16 left-0 right-0 h-16" pointerEvents="none">
-      <Defs>
-        <LinearGradient id="weekly-review-result-fade" x1="0" x2="0" y1="0" y2="1">
-          <Stop offset="0" stopColor="#F7F9FC" stopOpacity="0" />
-          <Stop offset="1" stopColor="#F7F9FC" stopOpacity="0.96" />
-        </LinearGradient>
-      </Defs>
-      <Rect fill="url(#weekly-review-result-fade)" height="100%" width="100%" x="0" y="0" />
-    </Svg>
-  );
-}
 
 export function WeeklyReviewResultScreen() {
   const router = useRouter();
@@ -154,11 +139,11 @@ export function WeeklyReviewResultScreen() {
         />
 
         <View
-          className="absolute bottom-0 left-0 right-0 bg-bg-light/95 pt-5"
-          style={{ paddingBottom: Math.max(insets.bottom, 20) + 6 }}
+          className="absolute left-0 right-0"
+          style={{ bottom: Math.max(insets.bottom, 20) + 6 }}
         >
-          <BottomActionFade />
           <Button
+            className="h-[57px]"
             disabled={!hasWeeklyReview}
             fullWidth
             href={weeklyReviewRoutes.analysis}

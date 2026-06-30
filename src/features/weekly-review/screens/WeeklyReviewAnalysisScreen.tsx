@@ -2,11 +2,11 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 
 import { Button } from "@/components/common/Button";
-import { useCurrentWeeklyReview } from "@/features/weekly-review/hooks/use-current-weekly-review";
+import { useWeeklyClosetUsageAnalysis } from "@/features/weekly-review/hooks/use-current-weekly-review";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 import {
   clampClosetUsageRate,
-  getClosetUsageProfile,
+  getClosetUsageProfileByTitle,
 } from "@/features/weekly-review/utils/closet-usage";
 import { isWeeklyReviewNotFoundError } from "@/features/weekly-review/utils/weekly-review-error";
 
@@ -16,29 +16,16 @@ import {
 } from "./WeeklyReviewAnalysisComponents";
 import { WeeklyReviewRouteScaffold } from "./WeeklyReviewRouteScaffold";
 
-function getUnwornClothesCount(totalClothesCount: number | undefined, wornClothesCount: number) {
-  if (typeof totalClothesCount !== "number") {
-    return null;
-  }
-
-  return Math.max(totalClothesCount - wornClothesCount, 0);
-}
-
 export function WeeklyReviewAnalysisScreen() {
   const router = useRouter();
-  const currentWeeklyReviewQuery = useCurrentWeeklyReview();
-  const weeklyReview = currentWeeklyReviewQuery.data;
-  const usageRate = clampClosetUsageRate(weeklyReview?.weeklyClosetUsageRate ?? 0);
-  const usageProfile = getClosetUsageProfile(usageRate);
-  const hasWeeklyReview = Boolean(weeklyReview);
-  const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(currentWeeklyReviewQuery.error);
-  const unwornClothesCount = getUnwornClothesCount(
-    weeklyReview?.totalClothesCount,
-    weeklyReview?.wornClothesCount ?? 0,
-  );
+  const weeklyClosetUsageAnalysisQuery = useWeeklyClosetUsageAnalysis();
+  const analysis = weeklyClosetUsageAnalysisQuery.data;
+  const usageRate = clampClosetUsageRate(analysis?.weeklyClosetUsageRate ?? 0);
+  const usageProfile = getClosetUsageProfileByTitle(analysis?.closetUsageType, usageRate);
+  const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(weeklyClosetUsageAnalysisQuery.error);
 
   const renderContent = () => {
-    if (currentWeeklyReviewQuery.isLoading) {
+    if (weeklyClosetUsageAnalysisQuery.isLoading) {
       return (
         <View className="min-h-[360px] items-center justify-center">
           <ActivityIndicator />
@@ -49,7 +36,7 @@ export function WeeklyReviewAnalysisScreen() {
       );
     }
 
-    if (currentWeeklyReviewQuery.isError && !isWeeklyReviewNotFound) {
+    if (weeklyClosetUsageAnalysisQuery.isError && !isWeeklyReviewNotFound) {
       return (
         <View className="min-h-[360px] items-center justify-center">
           <Text className="font-pretendard text-heading text-text-subdued">
@@ -58,14 +45,14 @@ export function WeeklyReviewAnalysisScreen() {
           <Button
             className="mt-4"
             label="다시 불러오기"
-            onPress={() => void currentWeeklyReviewQuery.refetch()}
+            onPress={() => void weeklyClosetUsageAnalysisQuery.refetch()}
             variant="secondary"
           />
         </View>
       );
     }
 
-    if (!hasWeeklyReview) {
+    if (!analysis) {
       return (
         <View className="min-h-[360px] items-center justify-center">
           <Text className="text-center font-pretendard text-heading text-text-subdued">
@@ -92,7 +79,7 @@ export function WeeklyReviewAnalysisScreen() {
         <WeeklyReviewUsageProfileCard
           className="mt-[15px]"
           profile={usageProfile}
-          unwornClothesCount={unwornClothesCount}
+          unwornClothesCount={analysis.unwornClothesCount}
         />
       </View>
     );

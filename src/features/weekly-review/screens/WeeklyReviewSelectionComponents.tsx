@@ -1,5 +1,11 @@
-import { useMemo } from "react";
-import { FlatList, Image, Pressable, Text, View } from "react-native";
+import { useRef } from "react";
+import {
+  Animated,
+  Image,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import type { DailyReviewCategoryApi } from "@/features/weekly-review/api/weekly-review-api-types";
@@ -9,10 +15,11 @@ import {
   toWeeklyReviewCategory,
 } from "@/features/weekly-review/utils/weekly-review-category";
 
-const CLOTHES_PER_PAGE = 6;
 const GRID_COLUMN_COUNT = 3;
 const CARD_HEIGHT = 110;
 const GRID_GAP = 8;
+const SCROLLBAR_HEIGHT = 3;
+const SCROLLBAR_MIN_THUMB_WIDTH = 52;
 
 type WeeklyReviewClothesCardProps = {
   imageUrl: string;
@@ -20,16 +27,6 @@ type WeeklyReviewClothesCardProps = {
   onPress: () => void;
   size: number;
 };
-
-function chunkArray<T>(items: T[], size: number) {
-  const chunks: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-
-  return chunks;
-}
 
 function WeeklyReviewClothesCard({
   imageUrl,
@@ -95,10 +92,23 @@ export function WeeklyReviewCategorySection({
   const selectedCount = category.clothes.filter((clothes) =>
     selectedIds.has(clothes.clothesId),
   ).length;
-  const pages = useMemo(() => chunkArray(category.clothes, CLOTHES_PER_PAGE), [category.clothes]);
+  const scrollX = useRef(new Animated.Value(0)).current;
   const cardSize = (contentWidth - GRID_GAP * (GRID_COLUMN_COUNT - 1)) / GRID_COLUMN_COUNT;
   const rowCount = Math.min(2, Math.max(1, Math.ceil(category.clothes.length / GRID_COLUMN_COUNT)));
   const gridHeight = rowCount * CARD_HEIGHT + (rowCount - 1) * GRID_GAP;
+  const columnCount = Math.ceil(category.clothes.length / rowCount);
+  const scrollContentWidth = columnCount * cardSize + Math.max(columnCount - 1, 0) * GRID_GAP;
+  const scrollableDistance = Math.max(scrollContentWidth - contentWidth, 0);
+  const scrollbarThumbWidth =
+    scrollableDistance > 0
+      ? Math.max(SCROLLBAR_MIN_THUMB_WIDTH, (contentWidth / scrollContentWidth) * contentWidth)
+      : contentWidth;
+  const scrollbarTravelDistance = Math.max(contentWidth - scrollbarThumbWidth, 0);
+  const scrollbarTranslateX = scrollX.interpolate({
+    inputRange: [0, scrollableDistance || 1],
+    outputRange: [0, scrollbarTravelDistance],
+    extrapolate: "clamp",
+  });
 
   return (
     <View className="mt-[25px]">
@@ -109,36 +119,55 @@ export function WeeklyReviewCategorySection({
         </Text>
       </View>
 
-      <FlatList
+      <Animated.ScrollView
         className="mt-4"
-        data={pages}
         horizontal
-        keyExtractor={(_, index) => `${category.category}-${index}`}
-        pagingEnabled
-        renderItem={({ item: page }) => (
-          <View
-            className="flex-row flex-wrap"
-            style={{
-              gap: GRID_GAP,
-              height: gridHeight,
-              width: contentWidth,
-            }}
-          >
-            {page.map((clothes) => (
-              <WeeklyReviewClothesCard
-                imageUrl={clothes.imageUrl}
-                isSelected={selectedIds.has(clothes.clothesId)}
-                key={clothes.clothesId}
-                onPress={() => onToggle(clothes.clothesId)}
-                size={cardSize}
-              />
-            ))}
-          </View>
-        )}
-        scrollEnabled={pages.length > 1}
-        showsHorizontalScrollIndicator={pages.length > 1}
+        contentContainerStyle={{
+          columnGap: GRID_GAP,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          height: gridHeight,
+          rowGap: GRID_GAP,
+          width: scrollContentWidth,
+        }}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+          useNativeDriver: false,
+        })}
+        scrollEnabled={scrollableDistance > 0}
+        scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
         style={{ height: gridHeight }}
-      />
+      >
+        {category.clothes.map((clothes) => (
+          <View key={clothes.clothesId}>
+            <WeeklyReviewClothesCard
+              imageUrl={clothes.imageUrl}
+              isSelected={selectedIds.has(clothes.clothesId)}
+              onPress={() => onToggle(clothes.clothesId)}
+              size={cardSize}
+            />
+          </View>
+        ))}
+      </Animated.ScrollView>
+
+      {scrollableDistance > 0 ? (
+        <View
+          className="mt-3 overflow-hidden bg-disabled"
+          style={{
+            height: SCROLLBAR_HEIGHT,
+            width: contentWidth,
+          }}
+        >
+          <Animated.View
+            className="bg-bg-dark"
+            style={{
+              height: SCROLLBAR_HEIGHT,
+              transform: [{ translateX: scrollbarTranslateX }],
+              width: scrollbarThumbWidth,
+            }}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }

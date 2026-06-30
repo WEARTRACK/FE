@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { Pressable, Text, View } from "react-native";
-import Svg, { Circle, Defs, Path, RadialGradient, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
 import { colors } from "@/constants/colors";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
@@ -61,10 +61,17 @@ export function WeeklyReviewUsageDonut({ profile, usageRate }: WeeklyReviewUsage
       <View className="h-[220px] w-[220px] items-center justify-center">
         <Svg height={DONUT_SIZE} width={DONUT_SIZE}>
           <Defs>
-            <RadialGradient id="weekly-usage-gradient" cx="50%" cy="50%" r="60%">
+            <LinearGradient
+              gradientUnits="userSpaceOnUse"
+              id="weekly-usage-gradient"
+              x1={DONUT_CENTER - DONUT_RADIUS}
+              x2={DONUT_CENTER + DONUT_RADIUS}
+              y1={DONUT_CENTER - DONUT_RADIUS}
+              y2={DONUT_CENTER + DONUT_RADIUS}
+            >
               <Stop offset="0%" stopColor={usageColor.gradientStart} />
               <Stop offset="100%" stopColor={usageColor.gradientEnd} />
-            </RadialGradient>
+            </LinearGradient>
           </Defs>
           <Circle
             cx={DONUT_CENTER}
@@ -94,7 +101,7 @@ export function WeeklyReviewUsageDonut({ profile, usageRate }: WeeklyReviewUsage
               color: usageColor.accent,
               fontSize: 24,
               letterSpacing: -0.5,
-              lineHeight: 20,
+              lineHeight: 32,
             }}
           >
             {usageRate}%
@@ -158,7 +165,7 @@ export function WeeklyReviewUsageProfileCard({
             </Text>
           </View>
 
-          <Svg fill="none" height={24} viewBox="0 0 24 24" width={24}>
+          <Svg fill="none" height={32} viewBox="0 0 24 24" width={32}>
             <Path
               d="M9.70498 6L8.29498 7.41L12.875 12L8.29498 16.59L9.70498 18L15.705 12L9.70498 6Z"
               fill="#000000"

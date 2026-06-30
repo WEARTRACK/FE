@@ -28,6 +28,7 @@ function resolveRequestPathname(url: string | undefined, baseURL: string | undef
 function isAuthRequiredPath(pathname: string) {
   return (
     pathname === "/api/home" ||
+    pathname.startsWith("/api/home/") ||
     pathname.startsWith("/api/clothes") ||
     pathname.startsWith("/api/daily-reviews") ||
     pathname.startsWith("/api/weekly-reviews") ||

@@ -220,7 +220,7 @@ describe("weekly-review-api", () => {
     });
   });
 
-  it("throws INVALID_RESPONSE when save daily review result is empty", async () => {
+  it("falls back to current weekly review when save daily review result is empty", async () => {
     postMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -230,15 +230,23 @@ describe("weekly-review-api", () => {
         result: null,
       },
     });
+    getMock.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        isSuccess: true,
+        code: "COMMON_200",
+        message: "ok",
+        result: weeklyReviewResult,
+      },
+    });
 
     const { saveDailyReviewToday } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1])).rejects.toMatchObject({
-      code: "INVALID_RESPONSE",
-    });
+    await expect(saveDailyReviewToday([1])).resolves.toEqual(weeklyReviewResult);
+    expect(getMock).toHaveBeenCalledWith("/api/weekly-reviews/current");
   });
 
-  it("throws INVALID_RESPONSE when save daily review result is malformed", async () => {
+  it("falls back to current weekly review when save daily review result is malformed", async () => {
     postMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -248,11 +256,19 @@ describe("weekly-review-api", () => {
         result: {},
       },
     });
+    getMock.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        isSuccess: true,
+        code: "COMMON_200",
+        message: "ok",
+        result: weeklyReviewResult,
+      },
+    });
 
     const { saveDailyReviewToday } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1])).rejects.toMatchObject({
-      code: "INVALID_RESPONSE",
-    });
+    await expect(saveDailyReviewToday([1])).resolves.toEqual(weeklyReviewResult);
+    expect(getMock).toHaveBeenCalledWith("/api/weekly-reviews/current");
   });
 });

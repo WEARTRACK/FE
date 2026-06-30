@@ -157,10 +157,22 @@ export function WeeklyReceiptCarousel({ items, screenWidth, theme }: ReceiptCaro
         const distance = Math.abs(value);
         const scale = interpolate(distance, [0, 1], [1, 0.86], Extrapolation.CLAMP);
         const opacity = interpolate(distance, [0, 1], [1, 0.62], Extrapolation.CLAMP);
+        const translateX = interpolate(
+          value,
+          [-1, 0, 1],
+          [-RECEIPT_CARD_SLOT_WIDTH * 0.54, 0, RECEIPT_CARD_SLOT_WIDTH * 0.54],
+          Extrapolation.CLAMP,
+        );
+        const rotateY = interpolate(value, [-1, 0, 1], [16, 0, -16], Extrapolation.CLAMP);
 
         return {
           opacity,
-          transform: [{ scale }],
+          transform: [
+            { perspective: 900 },
+            { translateX },
+            { rotateY: `${rotateY}deg` },
+            { scale },
+          ],
         };
       }}
       data={items}

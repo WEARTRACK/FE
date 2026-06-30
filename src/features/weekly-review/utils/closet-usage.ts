@@ -63,3 +63,14 @@ export function getClosetUsageType(rate: number): ClosetUsageType {
 export function getClosetUsageProfile(rate: number): ClosetUsageProfile {
   return CLOSET_USAGE_PROFILES[getClosetUsageType(rate)];
 }
+
+export function getClosetUsageProfileByTitle(
+  closetUsageType: string | undefined,
+  fallbackRate: number,
+): ClosetUsageProfile {
+  const profile = Object.values(CLOSET_USAGE_PROFILES).find(
+    (candidate) => candidate.title === closetUsageType,
+  );
+
+  return profile ?? getClosetUsageProfile(fallbackRate);
+}

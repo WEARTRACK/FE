@@ -2,16 +2,19 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Rect } from "react-native-svg";
@@ -42,12 +45,14 @@ import { queryClient } from "@/lib/queryClient";
 import { showToast } from "@/lib/ui/showToast";
 
 const PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP = 13;
+const SEARCH_PAGE_GAP = 24;
 
 export function ClosetSearchResultsScreen() {
   const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
   const { template } = useClosetTemplate();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedItemDetail, setSelectedItemDetail] = useState<ClosetDetailResult | null>(null);
   const [selectedItemDetailPrice, setSelectedItemDetailPrice] = useState<number | null>(null);
@@ -59,6 +64,7 @@ export function ClosetSearchResultsScreen() {
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
   const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const lastToastMessageRef = useRef<string | null>(null);
+  const pageListRef = useRef<FlatList<number>>(null);
 
   const localSearchParams = useLocalSearchParams<{
     mode?: string | string[];
@@ -75,6 +81,7 @@ export function ClosetSearchResultsScreen() {
     totalCount,
     totalPages,
     currentPage,
+    pageItemsByIndex,
     setPage,
     applyDetailToList,
     removeItemOptimistic,
@@ -88,32 +95,11 @@ export function ClosetSearchResultsScreen() {
   const selectedItemClothesId = selectedItem?.clothesId ?? null;
   const summaryTop = insets.top + 67;
   const paginationBottom = PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP;
-  const swipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponderCapture: (_, gestureState) =>
-          Math.abs(gestureState.dx) > 8 &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.2,
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderRelease: (_, gestureState) => {
-          if (totalPages <= 1) {
-            return;
-          }
-
-          const shouldMoveNext = gestureState.dx < -32 || gestureState.vx < -0.35;
-          const shouldMovePrev = gestureState.dx > 32 || gestureState.vx > 0.35;
-
-          if (shouldMoveNext && currentPage < totalPages - 1) {
-            setPage(currentPage + 1);
-            return;
-          }
-
-          if (shouldMovePrev && currentPage > 0) {
-            setPage(currentPage - 1);
-          }
-        },
-      }),
-    [currentPage, setPage, totalPages],
+  const contentWidth = screenWidth - 48;
+  const swipePageStride = contentWidth + SEARCH_PAGE_GAP;
+  const pageIndices = useMemo(
+    () => Array.from({ length: totalPages }, (_, index) => index),
+    [totalPages],
   );
 
   const sectionOptions = useMemo(() => {
@@ -351,6 +337,73 @@ export function ClosetSearchResultsScreen() {
     router.push(clothesRegistrationRoutes.shoppingMallTerms);
   };
 
+  const handlePageMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const nextPage = Math.round(event.nativeEvent.contentOffset.x / swipePageStride);
+    const boundedPage = Math.min(Math.max(nextPage, 0), totalPages - 1);
+
+    setPage(boundedPage);
+  };
+
+  const handlePaginationPress = (targetPage: number) => {
+    if (targetPage === currentPage) {
+      return;
+    }
+
+    pageListRef.current?.scrollToOffset({
+      offset: targetPage * swipePageStride,
+      animated: true,
+    });
+    setPage(targetPage);
+  };
+
+  const renderSearchPage = (targetPage: number) => {
+    const targetItems = targetPage === currentPage ? items : (pageItemsByIndex[targetPage] ?? []);
+
+    return (
+      <View className="gap-2" style={{ width: contentWidth }}>
+        {targetItems.map((item) => {
+          const ColorIcon = getColorIcon(item.color);
+          const CategoryIcon = getCategoryIcon(item.category);
+
+          return (
+            <Pressable
+              key={item.id}
+              accessibilityRole="button"
+              className="h-[99px] flex-row items-start rounded-lg border-[0.5px] border-text-subdued bg-cool px-[18px] pt-[11.5px]"
+              onPress={() => setSelectedItemId(item.id)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+            >
+              <Image
+                className="h-[76px] w-[76px] rounded-xl border-[0.5px] border-text-subdued"
+                resizeMode="cover"
+                source={{ uri: item.imageUri }}
+              />
+
+              <View className="ml-3 flex-1">
+                <View className="flex-row items-center gap-[6px]">
+                  {searchMode === "color" ? (
+                    <>
+                      <ColorIcon />
+                      <CategoryIcon />
+                    </>
+                  ) : (
+                    <>
+                      <CategoryIcon />
+                      <ColorIcon />
+                    </>
+                  )}
+                </View>
+                <Text className="ml-[5px] mt-[13px] font-pretendard text-body text-bg-dark">
+                  {item.sectionName}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  };
+
   const renderStatusScreen = (message: string) => (
     <View className="flex-1 bg-bg-light px-6">
       <View className="absolute left-6 z-10" style={{ top: insets.top + 15 }}>
@@ -395,10 +448,10 @@ export function ClosetSearchResultsScreen() {
         {items.length > 0 ? (
           <>
             <View
-              className="relative h-[148px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[24px]"
+              className="relative h-[134px] rounded-xl border-[0.5px] border-blue-3 bg-blue-1 px-[24px]"
               style={{ marginTop: summaryTop }}
             >
-              <View className="absolute bottom-[34px] left-[21px] right-[21px] top-5 justify-between">
+              <View className="absolute bottom-[20px] left-[21px] right-[21px] top-5 justify-between">
                 <Text className="font-pretendard text-subhead text-text-subdued">검색 결과</Text>
                 <Text className="font-pretendard-semibold text-headline text-text">
                   {totalCount}벌을 찾았습니다.
@@ -408,46 +461,28 @@ export function ClosetSearchResultsScreen() {
                 </Text>
               </View>
             </View>
-            <View className="mt-[38px] gap-2" {...swipeResponder.panHandlers}>
-              {items.map((item) => {
-                const ColorIcon = getColorIcon(item.color);
-                const CategoryIcon = getCategoryIcon(item.category);
-
-                return (
-                  <Pressable
-                    key={item.id}
-                    accessibilityRole="button"
-                    className="h-[99px] flex-row items-start rounded-lg border-[0.5px] border-text-subdued bg-cool px-[18px] pt-[11.5px]"
-                    onPress={() => setSelectedItemId(item.id)}
-                    style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
-                  >
-                    <Image
-                      className="h-[76px] w-[76px] rounded-xl border-[0.5px] border-text-subdued"
-                      resizeMode="cover"
-                      source={{ uri: item.imageUri }}
-                    />
-
-                    <View className="ml-3 flex-1">
-                      <View className="flex-row items-center gap-[6px]">
-                        {searchMode === "color" ? (
-                          <>
-                            <ColorIcon />
-                            <CategoryIcon />
-                          </>
-                        ) : (
-                          <>
-                            <CategoryIcon />
-                            <ColorIcon />
-                          </>
-                        )}
-                      </View>
-                      <Text className="ml-[5px] mt-[13px] font-pretendard text-body text-bg-dark">
-                        {item.sectionName}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
+            <View className="mt-[21px] overflow-hidden">
+              <FlatList
+                ref={pageListRef}
+                horizontal
+                bounces={false}
+                data={pageIndices}
+                decelerationRate="fast"
+                disableIntervalMomentum
+                getItemLayout={(_, index) => ({
+                  length: swipePageStride,
+                  offset: swipePageStride * index,
+                  index,
+                })}
+                keyExtractor={(targetPage) => `search-page-${targetPage}`}
+                onMomentumScrollEnd={handlePageMomentumEnd}
+                pagingEnabled={false}
+                renderItem={({ item: targetPage }) => renderSearchPage(targetPage)}
+                showsHorizontalScrollIndicator={false}
+                snapToAlignment="start"
+                snapToInterval={swipePageStride}
+                ItemSeparatorComponent={() => <View style={{ width: SEARCH_PAGE_GAP }} />}
+              />
             </View>
 
             <View
@@ -460,7 +495,7 @@ export function ClosetSearchResultsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`${index + 1} 페이지로 이동`}
                   hitSlop={10}
-                  onPress={() => setPage(index)}
+                  onPress={() => handlePaginationPress(index)}
                   style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                 >
                   {index === currentPage ? (

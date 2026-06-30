@@ -1,14 +1,9 @@
 import { colors } from "@/constants/colors";
-import type { WeeklyReviewResultApi } from "@/features/weekly-review/api/weekly-review-api-types";
+import type { WeeklyWornClothesResultApi } from "@/features/weekly-review/api/weekly-review-api-types";
 import type {
   ClosetUsageProfile,
   WeeklyReceiptReport,
 } from "@/features/weekly-review/types/weekly-review";
-import {
-  getWeeklyReviewCategoryLabel,
-  toWeeklyReviewCategory,
-} from "@/features/weekly-review/utils/weekly-review-category";
-import { getMockReceiptPrice } from "@/features/weekly-review/utils/weekly-review-receipt-mock";
 
 export type WeeklyReceiptTheme = {
   accent: string;
@@ -47,47 +42,29 @@ export const weeklyReceiptThemeByToken: Record<
   },
 };
 
-function flattenWornItems(weeklyReview: WeeklyReviewResultApi | undefined) {
-  return (
-    weeklyReview?.categories.flatMap((category) =>
-      category.clothes.map((clothes) => ({
-        ...clothes,
-        category: category.category,
-      })),
-    ) ?? []
-  );
-}
-
 export function createWeeklyReceiptReport({
   profile,
   usageRate,
-  weeklyReview,
+  wornClothesResult,
 }: {
   profile: ClosetUsageProfile;
   usageRate: number;
-  weeklyReview: WeeklyReviewResultApi | undefined;
+  wornClothesResult: WeeklyWornClothesResultApi | undefined;
 }): WeeklyReceiptReport {
-  const wornItems = flattenWornItems(weeklyReview);
-  const reportItems = wornItems.map((item, index) => {
-    const category = toWeeklyReviewCategory(item.category);
-
-    return {
-      category,
-      categoryLabel: getWeeklyReviewCategoryLabel(category),
+  const reportItems =
+    wornClothesResult?.wornClothes.map((item) => ({
       clothesId: item.clothesId,
-      color: item.color,
       imageUrl: item.imageUrl,
-      price: getMockReceiptPrice(profile, index),
-    };
-  });
+      price: item.price,
+    })) ?? [];
 
   return {
     usageProfile: profile,
     usageRate,
-    weekStartDate: weeklyReview?.weekStartDate ?? "",
-    weekEndDate: weeklyReview?.weekEndDate ?? "",
+    weekStartDate: "",
+    weekEndDate: "",
     wornItems: reportItems,
-    totalPrice: reportItems.reduce((sum, item) => sum + item.price, 0),
+    totalPrice: wornClothesResult?.totalWornClothesPrice ?? 0,
   };
 }
 

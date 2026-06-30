@@ -14,11 +14,11 @@ import Svg, { Path } from "react-native-svg";
 import ReceiptLogo from "../../../../assets/WEARTRACK-logo.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
-import { useCurrentWeeklyReview } from "@/features/weekly-review/hooks/use-current-weekly-review";
+import { useWeeklyWornClothes } from "@/features/weekly-review/hooks/use-current-weekly-review";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 import {
   clampClosetUsageRate,
-  getClosetUsageProfile,
+  getClosetUsageProfileByTitle,
 } from "@/features/weekly-review/utils/closet-usage";
 import { isWeeklyReviewNotFoundError } from "@/features/weekly-review/utils/weekly-review-error";
 import {
@@ -41,17 +41,17 @@ export function WeeklyReviewReceiptScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const currentWeeklyReviewQuery = useCurrentWeeklyReview();
-  const weeklyReview = currentWeeklyReviewQuery.data;
-  const usageRate = clampClosetUsageRate(weeklyReview?.weeklyClosetUsageRate ?? 0);
-  const usageProfile = getClosetUsageProfile(usageRate);
+  const weeklyWornClothesQuery = useWeeklyWornClothes();
+  const wornClothesResult = weeklyWornClothesQuery.data;
+  const usageRate = clampClosetUsageRate(wornClothesResult?.weeklyClosetUsageRate ?? 0);
+  const usageProfile = getClosetUsageProfileByTitle(wornClothesResult?.closetUsageType, usageRate);
   const receiptReport = createWeeklyReceiptReport({
     profile: usageProfile,
     usageRate,
-    weeklyReview,
+    wornClothesResult,
   });
   const receiptTheme = weeklyReceiptThemeByToken[usageProfile.colorToken];
-  const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(currentWeeklyReviewQuery.error);
+  const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(weeklyWornClothesQuery.error);
 
   const handlePressBack = () => {
     if (router.canGoBack()) {
@@ -63,7 +63,7 @@ export function WeeklyReviewReceiptScreen() {
   };
 
   const renderContent = () => {
-    if (currentWeeklyReviewQuery.isLoading) {
+    if (weeklyWornClothesQuery.isLoading) {
       return (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.white} />
@@ -74,7 +74,7 @@ export function WeeklyReviewReceiptScreen() {
       );
     }
 
-    if (currentWeeklyReviewQuery.isError && !isWeeklyReviewNotFound) {
+    if (weeklyWornClothesQuery.isError && !isWeeklyReviewNotFound) {
       return (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="font-pretendard text-heading text-white">
@@ -83,7 +83,7 @@ export function WeeklyReviewReceiptScreen() {
           <Button
             className="mt-4 border-white bg-bg-dark"
             label="다시 불러오기"
-            onPress={() => void currentWeeklyReviewQuery.refetch()}
+            onPress={() => void weeklyWornClothesQuery.refetch()}
             textClassName="font-pretendard-semibold text-button-md text-white"
             variant="secondary"
           />
@@ -91,7 +91,7 @@ export function WeeklyReviewReceiptScreen() {
       );
     }
 
-    if (!weeklyReview) {
+    if (!wornClothesResult) {
       return (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center font-pretendard text-heading text-white">
@@ -118,7 +118,7 @@ export function WeeklyReviewReceiptScreen() {
         <View className="items-center">
           <ReceiptLogo height={21} width={163} />
           <Text
-            className="mt-1 font-pretendard"
+            className="mt-2 font-pretendard"
             style={{
               color: receiptTheme.soft,
               fontSize: 16,
@@ -130,7 +130,9 @@ export function WeeklyReviewReceiptScreen() {
           </Text>
         </View>
 
-        <WeeklyReceiptDivider className="mt-[22px]" color={colors.white} />
+        <View className="px-6">
+          <WeeklyReceiptDivider className="mt-[22px]" color={colors.white} />
+        </View>
 
         <View className="mt-[20px] flex-row items-center justify-between px-6">
           <WeeklyReceiptProfileTitle text={usageProfile.title} theme={receiptTheme} />
@@ -179,7 +181,7 @@ export function WeeklyReviewReceiptScreen() {
         >
           <WeeklyReceiptTotal
             color={receiptTheme.accent}
-            itemCount={receiptReport.wornItems.length}
+            itemCount={wornClothesResult.wornClothesCount}
             priceLabel={formatReceiptPrice(receiptReport.totalPrice)}
             softColor={receiptTheme.soft}
           />
