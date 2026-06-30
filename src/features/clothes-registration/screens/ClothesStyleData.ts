@@ -31,7 +31,7 @@ export const clothingCategories = [
 ];
 
 export const clothingCategoryGroups = [
-  { title: "Tops", categories: ["T-shirt", "Shirt", "Blouse", "Knit", "Hoodie", "Vest"] },
+  { title: "Tops", categories: ["T-shirt", "Shirt", "Knit", "Hoodie", "Vest"] },
   { title: "Outwears", categories: ["Cardigan", "Jacket", "Coat", "Padding"] },
   { title: "Bottoms", categories: ["Skirt", "Pants", "Shorts"] },
   { title: "Dresses", categories: ["Dress"] },

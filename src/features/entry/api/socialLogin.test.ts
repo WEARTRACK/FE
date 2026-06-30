@@ -9,7 +9,7 @@ vi.mock("@/lib/api/client", () => ({
 }));
 
 describe("socialLogin", () => {
-  it("accepts valid closetId", async () => {
+  it("returns login result for a valid response", async () => {
     postMock.mockResolvedValueOnce({
       data: {
         isSuccess: true,
@@ -32,7 +32,7 @@ describe("socialLogin", () => {
     expect(result.closetId).toBe(3);
   });
 
-  it("rejects invalid closetId", async () => {
+  it("rejects an invalid closetId", async () => {
     postMock.mockResolvedValueOnce({
       data: {
         isSuccess: true,

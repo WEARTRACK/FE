@@ -1,11 +1,12 @@
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ClotheExample from "../../../../assets/clotheExample.svg";
+import ImagePlaceholderIcon from "../../../../assets/image-placeholder.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import {
   ClosetSectionSelect,
   PriceField,
@@ -28,8 +29,8 @@ function ManualHeader() {
 
 function ProductThumb() {
   return (
-    <View className="h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-white">
-      <ClotheExample height={100} preserveAspectRatio="xMidYMid slice" width={100} />
+    <View className="h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-lg border-[0.5px] border-text-subdued bg-[#F4F6F8]">
+      <ImagePlaceholderIcon height={40} width={40} />
     </View>
   );
 }
@@ -73,12 +74,7 @@ export function ShoppingMallManualStyleScreen() {
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-          onPress={() =>
-            router.push({
-              pathname: "/clothes/register/shopping-mall/manual-details",
-              params: { selectedColor, selectedCategory },
-            })
-          }
+          onPress={() => router.push("/clothes/register/shopping-mall/manual-details" as Href)}
         />
       </View>
     </View>
@@ -96,6 +92,7 @@ export function ShoppingMallManualDetailsScreen() {
   const [purchaseDate, setPurchaseDate] = useState(() => new Date());
   const [price, setPrice] = useState("");
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(null);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const selectedClosetOption = useMemo(
     () =>
       closetSectionOptions.find((option) => option.requestSectionId === selectedClosetSectionId) ??
@@ -127,51 +124,56 @@ export function ShoppingMallManualDetailsScreen() {
       >
         <ManualHeader />
 
-        <Text className="mt-[24px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-          추가정보를 입력해주세요.
-        </Text>
+      <Text className="mt-[24px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+        추가정보를 입력해주세요.
+      </Text>
 
-        <View className="mt-[24px]">
-          <ProductThumb />
-        </View>
-
-        <View className="mt-[34px]">
-          <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
-        </View>
-
-        <View className="mt-[34px]">
-          <PriceField onChange={setPrice} value={price} />
-        </View>
-
-        <View className="mt-[24px]">
-          <ClosetSectionSelect
-            options={closetSectionOptions}
-            selectedOption={selectedClosetOption}
-            onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
-          />
-          {isClosetSectionsLoading ? (
-            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
-              옷장 보관 칸 정보를 불러오는 중입니다.
-            </Text>
-          ) : null}
-          {closetSectionsError ? (
-            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
-              옷장 보관 칸 정보를 불러오지 못했어요.
-            </Text>
-          ) : null}
-        </View>
-
-        <View className="mt-auto">
-          <Button
-            label="저장하기"
-            disabled={!canGoNext}
-            fullWidth
-            className="h-[58px]"
-            textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-            onPress={() => router.replace("/clothes/register/complete")}
-          />
-        </View>
+      <View className="mt-[24px]">
+        <ProductThumb />
       </View>
+
+      <View className="mt-[34px]">
+        <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
+      </View>
+
+      <View className="mt-[34px]">
+        <PriceField
+          inputProps={keyboardAccessory.getInputAccessoryProps(0)}
+          onChange={setPrice}
+          value={price}
+        />
+      </View>
+
+      <View className="mt-[24px]">
+        <ClosetSectionSelect
+          options={closetSectionOptions}
+          selectedOption={selectedClosetOption}
+          onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
+        />
+        {isClosetSectionsLoading ? (
+          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
+            옷장 보관 칸 정보를 불러오는 중입니다.
+          </Text>
+        ) : null}
+        {closetSectionsError ? (
+          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+            옷장 보관 칸 정보를 불러오지 못했어요.
+          </Text>
+        ) : null}
+      </View>
+
+      <View className="mt-auto">
+        <Button
+          label="저장하기"
+          disabled={!canGoNext}
+          fullWidth
+          className="h-[58px]"
+          textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
+          onPress={() => router.replace("/clothes/register/complete")}
+        />
+      </View>
+      </View>
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

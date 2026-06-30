@@ -1,24 +1,31 @@
-import { useRouter } from "expo-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Href, useRouter } from "expo-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import SignupInput from "@/components/common/SignupInput";
 import { checkNicknameDuplicate } from "@/features/entry/api/checkNicknameDuplicate";
 import { saveNickname } from "@/features/entry/api/saveNickname";
 import { getNicknameInputState } from "@/features/entry/utils/getNicknameInputState";
+import { getOnboardingQuests } from "@/features/onboarding/api/getOnboardingQuests";
+import { getOnboardingStatus } from "@/features/onboarding/api/getOnboardingStatus";
+import { onboardingQueryKeys } from "@/features/onboarding/hooks/onboardingQueryKeys";
+import { resolvePostNicknameEntry } from "@/features/onboarding/utils/resolvePostNicknameEntry";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 
 export function SetNicknameScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const [nickname, setNickname] = useState("");
   const [hasInteracted, setHasInteracted] = useState(false);
   const debouncedNickname = useDebouncedValue(nickname, 400);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
 
   const baseState = useMemo(
     () =>
@@ -62,7 +69,8 @@ export function SetNicknameScreen() {
       ? "중복 확인에 실패했어요. 다시 시도해주세요."
       : undefined;
 
-  const errorMessage = baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
+  const errorMessage =
+    baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
   const successMessage =
     !errorMessage &&
     isEligibleForDuplicateCheck &&
@@ -81,9 +89,37 @@ export function SetNicknameScreen() {
     !duplicateResult?.isDuplicate;
   const { mutate: saveNicknameMutate, isPending: isSavingNickname } = useMutation({
     mutationFn: saveNickname,
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       if (response.result.profileCompleted) {
-        router.replace("/home");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: onboardingQueryKeys.status() }),
+          queryClient.invalidateQueries({ queryKey: onboardingQueryKeys.quests() }),
+        ]);
+
+        const [statusResult, questsResult] = await Promise.allSettled([
+          queryClient.fetchQuery({
+            queryKey: onboardingQueryKeys.status(),
+            queryFn: getOnboardingStatus,
+          }),
+          queryClient.fetchQuery({
+            queryKey: onboardingQueryKeys.quests(),
+            queryFn: getOnboardingQuests,
+          }),
+        ]);
+
+        const onboardingStatus = statusResult.status === "fulfilled" ? statusResult.value : null;
+        const onboardingQuests = questsResult.status === "fulfilled" ? questsResult.value : null;
+
+        const entryResolution = resolvePostNicknameEntry({
+          status: onboardingStatus,
+          quests: onboardingQuests,
+        });
+
+        if (entryResolution.shouldShowFetchFailureToast) {
+          showToast("온보딩 정보를 불러오지 못했어요. 홈에서 다시 시도해주세요.");
+        }
+
+        router.replace(entryResolution.route as Href);
         return;
       }
 
@@ -153,6 +189,7 @@ export function SetNicknameScreen() {
 
         <View className="mt-[79px]">
           <SignupInput
+            {...keyboardAccessory.getInputAccessoryProps(0)}
             label="닉네임"
             placeholder="한글, 영문, 숫자 조합만 가능"
             maxLength={5}
@@ -192,6 +229,7 @@ export function SetNicknameScreen() {
           />
         </View>
       </View>
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

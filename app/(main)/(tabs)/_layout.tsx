@@ -28,13 +28,17 @@ function resolveTabScreenName(tab: TabRouteName): string {
   if (tab === "home") {
     return "home";
   }
-  if (tab === "closet") {
-    return "closet";
+  if (tab === "closet" || tab === "report") {
+    return tab;
   }
   return `${tab}/index`;
 }
 
-function MainTabBar({ state, navigation, insetsBottom }: BottomTabBarProps & { insetsBottom: number }) {
+function MainTabBar({
+  state,
+  navigation,
+  insetsBottom,
+}: BottomTabBarProps & { insetsBottom: number }) {
   const tabBarBottomSpacing = insetsBottom + 20;
   const activeTab = resolveActiveTab(state.routeNames[state.index] ?? "");
 
@@ -141,7 +145,7 @@ export default function MainTabsLayout() {
       {otherTabs.map((tab) => (
         <Tabs.Screen
           key={tab.name}
-          name={tab.name === "closet" ? "closet" : `${tab.name}/index`}
+          name={tab.name === "closet" || tab.name === "report" ? tab.name : `${tab.name}/index`}
           options={{
             title: tab.title,
           }}

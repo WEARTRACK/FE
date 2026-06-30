@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,8 +16,11 @@ import MusinsaLogo from "../../../../assets/musinsa_logo.svg";
 import ZgzgLogo from "../../../../assets/zgzg_logo.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
+import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import { colors } from "@/constants/colors";
+import { fetchProductLinkPreview } from "@/features/clothes-registration/api/link-preview-api";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { useShoppingMallRegistrationStore } from "@/stores/useShoppingMallRegistrationStore";
 
 type FetchState = "idle" | "loading" | "error";
 
@@ -41,11 +44,11 @@ function SupportedMallList() {
   );
 }
 
-function ErrorPanel() {
+function ErrorPanel({ message }: { message?: string }) {
   return (
     <View className="mt-[10px] h-[90px] justify-center rounded-[3px] border-[0.5px] border-error bg-[#FFE1E1] px-[17px]">
       <Text className="font-pretendard text-[15px] leading-[20px] text-error">
-        정보를 불러올 수 없습니다.
+        {message ?? "정보를 불러올 수 없습니다."}
       </Text>
       <Text className="mt-[6px] font-pretendard-light text-[12px] leading-[14px] text-text-subdued">
         상품 페이지를 찾을 수 없습니다. 직접 입력해주세요.
@@ -60,13 +63,38 @@ export function ShoppingMallLinkRegistrationScreen() {
   const [url, setUrl] = useState("");
   const [fetchState, setFetchState] = useState<FetchState>("idle");
 
-  const handleFetchProductInfo = () => {
+  const keyboardAccessory = useKeyboardAccessoryNavigation(1);
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const setDraft = useShoppingMallRegistrationStore((state) => state.setDraft);
+
+  const handleFetchProductInfo = async () => {
     if (!url.trim()) {
       Alert.alert("상품 페이지 링크를 입력해주세요");
       return;
     }
 
     setFetchState("loading");
+    setErrorMessage(undefined);
+
+    try {
+      const preview = await fetchProductLinkPreview(url.trim());
+
+      setDraft({
+        sourceUrl: preview.sourceUrl,
+        productName: preview.productName,
+        imageUrl: preview.imageUrl,
+        price: preview.price,
+        color: preview.color,
+        category: preview.category,
+        purchaseDate: null,
+        storageLocation: null,
+        sectionId: null,
+      });
+      router.push(clothesRegistrationRoutes.shoppingMallStyle);
+    } catch {
+      setErrorMessage("상품 정보를 불러올 수 없습니다. 상품 페이지를 확인하거나 직접 입력해 주세요.");
+      setFetchState("error");
+    }
   };
 
   const handlePressBack = () => {
@@ -77,18 +105,6 @@ export function ShoppingMallLinkRegistrationScreen() {
 
     router.back();
   };
-
-  useEffect(() => {
-    if (fetchState !== "loading") {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setFetchState("error");
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, [fetchState]);
 
   return (
     <KeyboardAvoidingView
@@ -101,7 +117,6 @@ export function ShoppingMallLinkRegistrationScreen() {
     >
       <View>
         <BackButton onPress={handlePressBack} />
-
         <Text className="mt-[35px] font-pretendard-semibold text-[20px] leading-[20px] text-text">
           쇼핑몰 링크로 등록
         </Text>
@@ -113,6 +128,7 @@ export function ShoppingMallLinkRegistrationScreen() {
           상품 URL
         </Text>
         <TextInput
+          {...keyboardAccessory.getInputAccessoryProps(0)}
           className={[
             "mt-[8px] h-[58px] rounded-[3px] border-[0.5px] bg-white px-[13px] font-pretendard text-[14px] leading-[16px] text-text",
             fetchState === "error" ? "border-error" : "border-cool",
@@ -121,6 +137,7 @@ export function ShoppingMallLinkRegistrationScreen() {
             setUrl(nextUrl);
             if (fetchState === "error") {
               setFetchState("idle");
+              setErrorMessage(undefined);
             }
           }}
           placeholder="https://www.musinsa.com/..."
@@ -144,7 +161,7 @@ export function ShoppingMallLinkRegistrationScreen() {
             <Text className="mt-[15px] font-pretendard text-[14px] leading-[14px] text-text-subdued">
               지원 쇼핑몰
             </Text>
-            {fetchState === "error" ? <ErrorPanel /> : <SupportedMallList />}
+            {fetchState === "error" ? <ErrorPanel message={errorMessage} /> : <SupportedMallList />}
           </>
         )}
 
@@ -170,7 +187,9 @@ export function ShoppingMallLinkRegistrationScreen() {
               fullWidth
               className="h-[58px] rounded-[4px] border-[0.5px] border-text-subdued"
               textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-              onPress={() => router.push(clothesRegistrationRoutes.shoppingMallManualStyle)}
+              onPress={() =>
+                router.push(clothesRegistrationRoutes.shoppingMallManualStyle)
+              }
             />
             <Button
               label="다시 시도"
@@ -182,6 +201,8 @@ export function ShoppingMallLinkRegistrationScreen() {
           </View>
         ) : null}
       </View>
+
+      {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>
   );
 }

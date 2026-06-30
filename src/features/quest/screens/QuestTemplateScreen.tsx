@@ -9,11 +9,17 @@ import { Button } from "@/components/common/Button";
 export type QuestCardItem = {
   title: string;
   description?: string;
+  kind?: "available" | "completed" | "locked" | "coming-soon";
 };
 
 type QuestTemplateScreenProps = {
   quests: QuestCardItem[];
-  startHref: Href;
+  startHref?: Href;
+  startLabel?: string;
+  initialSelectedQuestIndex?: number | null;
+  selectableQuestIndexes?: number[];
+  onPressStart?: (selectedQuestIndex: number | null) => void;
+  onPressQuestCard?: (quest: QuestCardItem, index: number) => void;
 };
 
 function QuestCard({
@@ -42,7 +48,6 @@ function QuestCard({
       })}
     >
       <View className="flex-row items-center">
-        <Text className="font-pretendard text-heading text-text">🎯</Text>
         <Text className="font-pretendard text-heading text-text">{quest.title}</Text>
       </View>
 
@@ -55,15 +60,32 @@ function QuestCard({
   );
 }
 
-export function QuestTemplateScreen({ quests, startHref }: QuestTemplateScreenProps) {
+export function QuestTemplateScreen({
+  quests,
+  startHref,
+  startLabel = "퀘스트 시작하기",
+  initialSelectedQuestIndex = null,
+  selectableQuestIndexes = [0],
+  onPressStart,
+  onPressQuestCard,
+}: QuestTemplateScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selectedQuestIndex, setSelectedQuestIndex] = useState<number | null>(null);
+  const [selectedQuestIndex, setSelectedQuestIndex] = useState<number | null>(initialSelectedQuestIndex);
 
   const isStartDisabled = selectedQuestIndex === null;
 
   const handlePressStart = () => {
     if (isStartDisabled) {
+      return;
+    }
+
+    if (onPressStart) {
+      onPressStart(selectedQuestIndex);
+      return;
+    }
+
+    if (!startHref) {
       return;
     }
 
@@ -91,7 +113,7 @@ export function QuestTemplateScreen({ quests, startHref }: QuestTemplateScreenPr
 
       <View className="mt-[26px] gap-[9px]">
         {quests.map((quest, index) => {
-          const isSelectable = index === 0;
+          const isSelectable = selectableQuestIndexes.includes(index);
 
           return (
             <QuestCard
@@ -99,7 +121,10 @@ export function QuestTemplateScreen({ quests, startHref }: QuestTemplateScreenPr
               quest={quest}
               isSelectable={isSelectable}
               isSelected={selectedQuestIndex === index}
-              onPress={() => setSelectedQuestIndex(index)}
+              onPress={() => {
+                setSelectedQuestIndex(index);
+                onPressQuestCard?.(quest, index);
+              }}
             />
           );
         })}
@@ -108,7 +133,7 @@ export function QuestTemplateScreen({ quests, startHref }: QuestTemplateScreenPr
       <Button
         disabled={isStartDisabled}
         fullWidth
-        label="퀘스트 시작하기"
+        label={startLabel}
         className="mt-[59px] h-[58px]"
         onPress={handlePressStart}
       />

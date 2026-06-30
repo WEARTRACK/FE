@@ -1,8 +1,9 @@
 import { Href, useRouter } from "expo-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { socialLogin, type SocialLoginPayload } from "@/features/entry/api/socialLogin";
 import { isValidClosetId } from "@/features/closet/utils/closet-id";
+import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -24,18 +25,30 @@ function getSocialLoginErrorMessage(error: unknown) {
 
 export function useSocialLoginMutation({ successHref }: UseSocialLoginMutationOptions = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
   const setClosetId = useClosetStore((state) => state.setClosetId);
 
   return useMutation({
     mutationFn: (payload: SocialLoginPayload) => socialLogin(payload),
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       setSession(result);
       if (isValidClosetId(result.closetId) || result.closetId === null) {
         setClosetId(result.closetId);
       }
 
-      const nextHref = successHref ?? (result.profileCompleted ? "/home" : "/auth/set-nickname");
+      let nextHref = successHref ?? (result.profileCompleted ? "/home" : "/auth/set-nickname");
+
+      if (result.profileCompleted && nextHref === "/home") {
+        const entryResolution = await fetchOnboardingEntryResolution(queryClient);
+
+        if (entryResolution.shouldShowFetchFailureToast) {
+          showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요.");
+        }
+
+        nextHref = entryResolution.route;
+      }
+
       router.replace(nextHref as Href);
     },
     onError: (error) => {
