@@ -9,7 +9,7 @@ vi.mock("@/lib/api/client", () => ({
 }));
 
 describe("deleteClothes", () => {
-  it("throws INVALID_RESPONSE when result is undefined", async () => {
+  it("returns null when successful delete response has no result", async () => {
     deleteMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -21,6 +21,6 @@ describe("deleteClothes", () => {
 
     const { deleteClothes } = await import("./clothes-delete-api");
 
-    await expect(deleteClothes(1)).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+    await expect(deleteClothes(1)).resolves.toBeNull();
   });
 });
