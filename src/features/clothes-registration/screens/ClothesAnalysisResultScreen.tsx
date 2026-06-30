@@ -106,8 +106,8 @@ export function ClothesAnalysisResultScreen() {
         />
 
         <ClothesStyleSelector
-          selectedCategory={predictedCategory}
-          selectedColor={predictedColor}
+          selectedCategory={selectedCategory}
+          selectedColor={selectedColor}
           onChangeCategory={setSelectedCategory}
           onChangeColor={setSelectedColor}
           variant="grouped"

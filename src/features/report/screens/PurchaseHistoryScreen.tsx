@@ -1,33 +1,50 @@
-import { Image, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import EmptyClosetIcon from "../../../../assets/empty-closet.svg";
 import { BackButton } from "@/components/common/BackButton";
-import { getWeeklyReport } from "@/features/report/reportMockData";
-import type { ReportProduct } from "@/features/report/reportMockData";
+import type { WeeklyCategoryClothesItem } from "@/features/report/api/weeklyFashionReportApi";
+import { useWeeklyCategoryClothes } from "@/features/report/hooks/useWeeklyFashionReport";
+import { formatCategoryLabel } from "@/features/report/utils/reportCategory";
 
 function formatWon(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-function ProductCard({ product }: { product: ReportProduct }) {
+function ProductCard({
+  product,
+  categoryLabel,
+}: {
+  product: WeeklyCategoryClothesItem;
+  categoryLabel: string;
+}) {
+  const description = product.sourceShopName ?? product.color;
+
   return (
     <View className="mb-[9px] h-[93px] flex-row items-center rounded-[12px] border-[0.5px] border-blue-2 bg-white px-[24px]">
       <Image
         className="h-[58px] w-[58px] rounded-[5px] bg-cool"
         resizeMode="cover"
-        source={require("../../../../assets/clotheExample.png")}
+        source={
+          product.imageUrl
+            ? { uri: product.imageUrl }
+            : require("../../../../assets/clotheExample.png")
+        }
       />
       <View className="ml-[23px] h-[58px] flex-1 justify-between py-[3px]">
-        <Text className="font-pretendard text-[15px] leading-[20px] text-text">{product.name}</Text>
+        <Text className="font-pretendard text-[15px] leading-[20px] text-text">
+          {product.productName ?? categoryLabel}
+        </Text>
         <View className="flex-row items-center justify-between pr-[55px]">
           <Text className="font-pretendard-light text-[13px] leading-[16px] text-text-subdued">
-            {product.brand}
+            {description ?? ""}
           </Text>
-          <Text className="font-pretendard-light text-[13px] leading-[16px] text-text-subdued">
-            {formatWon(product.price)}
-          </Text>
+          {product.price !== null ? (
+            <Text className="font-pretendard-light text-[13px] leading-[16px] text-text-subdued">
+              {formatWon(product.price)}
+            </Text>
+          ) : null}
         </View>
       </View>
     </View>
@@ -36,11 +53,12 @@ function ProductCard({ product }: { product: ReportProduct }) {
 
 export function PurchaseHistoryScreen() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ category?: string; reportId?: string }>();
-  const report = getWeeklyReport(params.reportId);
-  const category = report.categories.find((item) => item.label === params.category);
-  const categoryLabel = category?.label ?? params.category ?? "카테고리";
-  const products = category?.products ?? [];
+  const params = useLocalSearchParams<{ category?: string; weekStartDate?: string }>();
+  const category = params.category ?? "";
+  const weekStartDate = params.weekStartDate ?? "";
+  const categoryLabel = category ? formatCategoryLabel(category) : "카테고리";
+  const clothesQuery = useWeeklyCategoryClothes(weekStartDate, category);
+  const products = clothesQuery.data?.clothes ?? [];
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingTop: insets.top }}>
@@ -54,7 +72,24 @@ export function PurchaseHistoryScreen() {
         <View className="w-8" />
       </View>
 
-      {products.length > 0 ? (
+      {clothesQuery.isPending ? (
+        <View className="flex-1 items-center justify-center pb-[86px]">
+          <ActivityIndicator color="#272C35" />
+        </View>
+      ) : clothesQuery.isError ? (
+        <View className="flex-1 items-center justify-center px-6 pb-[86px]">
+          <Text className="font-pretendard text-[15px] text-text-subdued">
+            구매 내역을 불러오지 못했어요.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            className="mt-4 rounded-[6px] bg-bg-dark px-5 py-3"
+            onPress={() => clothesQuery.refetch()}
+          >
+            <Text className="font-pretendard text-[14px] text-white">다시 시도</Text>
+          </Pressable>
+        </View>
+      ) : products.length > 0 ? (
         <ScrollView
           className="flex-1 px-6"
           contentContainerStyle={{ paddingBottom: 24 }}
@@ -64,7 +99,7 @@ export function PurchaseHistoryScreen() {
             {categoryLabel}
           </Text>
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.clothesId} product={product} categoryLabel={categoryLabel} />
           ))}
         </ScrollView>
       ) : (
