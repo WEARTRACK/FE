@@ -17,6 +17,7 @@ import {
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
+import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 
 type ClosetSummary = {
   totalClothes: number;
@@ -421,7 +422,11 @@ export function MainHomeScreen() {
               value={formatWon(weeklyFashionStats.totalSpending)}
               onPress={() => router.push("/home/weekly-spending")}
             />
-            <StatCard label="이번주 옷장 활용률" value={`${weeklyFashionStats.closetUsageRate}%`} />
+            <StatCard
+              label="이번주 옷장 활용률"
+              value={`${weeklyFashionStats.closetUsageRate}%`}
+              onPress={() => router.push(weeklyReviewRoutes.analysis)}
+            />
           </View>
         </View>
 

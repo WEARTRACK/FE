@@ -96,18 +96,7 @@ export function resolveClosetImageUrl(rawImageUrl: string) {
   }
 
   if (/^(https?:\/\/|\/\/)/i.test(imageUrl)) {
-    const resolved = new URL(imageUrl, baseUrl);
-
-    if (resolved.host !== baseUrl.host) {
-      throw new ApiError({
-        code: "INVALID_IMAGE_URL_DOMAIN",
-        message: "imageUrl 도메인이 API 도메인과 일치하지 않습니다.",
-        status: 500,
-        details: { rawImageUrl, baseHost: baseUrl.host, imageHost: resolved.host },
-      });
-    }
-
-    return resolved.toString();
+    return new URL(imageUrl, baseUrl).toString();
   }
 
   const normalizedBase = env.apiBaseUrl.replace(/\/$/, "");
