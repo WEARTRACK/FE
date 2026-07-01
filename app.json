@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "googleServicesFile": "./ios/GoogleService-Info.plist",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.anonymous.weartrack",
       "entitlements": {
         "aps-environment": "production"
@@ -41,6 +41,7 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      "./plugins/with-fmt-consteval-fix",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       [
@@ -62,6 +63,7 @@
         {
           "ios": {
             "useFrameworks": "static",
+            "buildReactNativeFromSource": true,
             "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
           }
         }
