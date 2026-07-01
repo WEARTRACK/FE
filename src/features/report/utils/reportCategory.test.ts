@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sortCategoriesByExpense } from "./reportCategory";
+import { groupCategoriesByExpense, sortCategoriesByExpense } from "./reportCategory";
 
 describe("sortCategoriesByExpense", () => {
   const categories = [
@@ -27,5 +27,23 @@ describe("sortCategoriesByExpense", () => {
     const zeroCategories = categories.map((item) => ({ ...item, expenseAmount: 0 }));
 
     expect(sortCategoriesByExpense(zeroCategories)).toEqual(zeroCategories);
+  });
+});
+
+describe("groupCategoriesByExpense", () => {
+  it("combines category aliases and sums their expenses", () => {
+    expect(
+      groupCategoriesByExpense([
+        { category: "T-SHIRT", expenseAmount: 35_900 },
+        { category: "T_SHIRT", expenseAmount: 23_800 },
+        { category: "t shirt", expenseAmount: 10_000 },
+      ]),
+    ).toEqual([
+      {
+        category: "T-SHIRT",
+        expenseAmount: 69_700,
+        sourceCategories: ["T-SHIRT", "T_SHIRT", "t shirt"],
+      },
+    ]);
   });
 });

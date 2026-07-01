@@ -12,12 +12,13 @@ import type {
   MonthlyFashionReport,
   MonthlyTopCategory,
 } from "@/features/report/api/monthlyFashionReportApi";
-import type { WeeklyFashionReportCategory } from "@/features/report/api/weeklyFashionReportApi";
 import { useMonthlyFashionReport } from "@/features/report/hooks/useMonthlyFashionReport";
 import { useWeeklyFashionReport } from "@/features/report/hooks/useWeeklyFashionReport";
 import {
   formatCategoryLabel,
+  groupCategoriesByExpense,
   sortCategoriesByExpense,
+  type GroupedExpenseCategory,
 } from "@/features/report/utils/reportCategory";
 import {
   getCurrentYearMonth,
@@ -318,7 +319,7 @@ function CategorySpendingCard({
   total,
   onPress,
 }: {
-  item: WeeklyFashionReportCategory;
+  item: GroupedExpenseCategory;
   total: number;
   onPress: () => void;
 }) {
@@ -479,7 +480,7 @@ export function WeeklyReportScreen() {
               카테고리 별 지출
             </Text>
 
-            {sortCategoriesByExpense(report.categories).map((item) => (
+            {sortCategoriesByExpense(groupCategoriesByExpense(report.categories)).map((item) => (
               <CategorySpendingCard
                 key={item.category}
                 item={item}
@@ -489,6 +490,7 @@ export function WeeklyReportScreen() {
                     pathname: "/report/purchase-history",
                     params: {
                       category: item.category,
+                      sourceCategories: item.sourceCategories.join(","),
                       weekStartDate: report.weekStartDate,
                     },
                   })

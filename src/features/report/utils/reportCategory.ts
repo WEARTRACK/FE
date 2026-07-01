@@ -14,10 +14,54 @@ const categoryLabels: Record<string, string> = {
   PADDING: "Padding",
 };
 
+export type GroupedExpenseCategory = {
+  category: string;
+  expenseAmount: number;
+  sourceCategories: string[];
+};
+
+export function normalizeCategory(category: string) {
+  return category
+    .trim()
+    .toUpperCase()
+    .replaceAll("_", "-")
+    .replace(/\s+/g, "-")
+    .replace("HODDIE", "HOODIE");
+}
+
 export function formatCategoryLabel(category: string) {
-  const normalizedCategory = category.trim().toUpperCase().replaceAll("_", "-");
+  const normalizedCategory = normalizeCategory(category);
 
   return categoryLabels[normalizedCategory] ?? category;
+}
+
+export function groupCategoriesByExpense(
+  categories: { category: string; expenseAmount: number }[],
+): GroupedExpenseCategory[] {
+  const groupedCategories = new Map<string, GroupedExpenseCategory>();
+
+  categories.forEach((item) => {
+    const normalizedCategory = normalizeCategory(item.category);
+    const existingCategory = groupedCategories.get(normalizedCategory);
+
+    if (existingCategory) {
+      existingCategory.expenseAmount += item.expenseAmount;
+
+      if (!existingCategory.sourceCategories.includes(item.category)) {
+        existingCategory.sourceCategories.push(item.category);
+      }
+
+      return;
+    }
+
+    groupedCategories.set(normalizedCategory, {
+      category: normalizedCategory,
+      expenseAmount: item.expenseAmount,
+      sourceCategories: [item.category],
+    });
+  });
+
+  return [...groupedCategories.values()];
 }
 
 export function sortCategoriesByExpense<T extends { expenseAmount: number }>(categories: T[]) {

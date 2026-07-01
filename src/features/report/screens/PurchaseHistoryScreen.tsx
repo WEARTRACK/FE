@@ -51,20 +51,32 @@ function ProductCard({
   );
 }
 
-export function PurchaseHistoryScreen() {
+export function PurchaseHistoryScreen({
+  backAccessibilityLabel = "리포트로 돌아가기",
+}: {
+  backAccessibilityLabel?: string;
+}) {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ category?: string; weekStartDate?: string }>();
+  const params = useLocalSearchParams<{
+    category?: string;
+    currentWeek?: string;
+    sourceCategories?: string;
+    weekStartDate?: string;
+  }>();
   const category = params.category ?? "";
+  const isCurrentWeek = params.currentWeek === "true";
   const weekStartDate = params.weekStartDate ?? "";
+  const sourceCategories =
+    params.sourceCategories?.split(",").filter(Boolean) ?? (category ? [category] : []);
   const categoryLabel = category ? formatCategoryLabel(category) : "카테고리";
-  const clothesQuery = useWeeklyCategoryClothes(weekStartDate, category);
+  const clothesQuery = useWeeklyCategoryClothes(weekStartDate, sourceCategories, isCurrentWeek);
   const products = clothesQuery.data?.clothes ?? [];
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingTop: insets.top }}>
       <View className="h-[72px] flex-row items-center px-6">
         <View className="w-8 items-start">
-          <BackButton accessibilityLabel="리포트로 돌아가기" />
+          <BackButton accessibilityLabel={backAccessibilityLabel} />
         </View>
         <Text className="flex-1 text-center font-pretendard-semibold text-[20px] leading-[24px] text-text-subdued">
           구매 내역

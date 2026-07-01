@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { apiClient } from "@/lib/api/client";
-import { getWeeklyCategoryClothes, getWeeklyFashionReport } from "./weeklyFashionReportApi";
+import {
+  getCurrentWeeklyCategoryClothes,
+  getWeeklyCategoryClothes,
+  getWeeklyFashionReport,
+} from "./weeklyFashionReportApi";
 
 vi.mock("@/lib/api/client", () => ({
   apiClient: {
@@ -76,6 +80,31 @@ describe("weeklyFashionReportApi", () => {
     });
     expect(getMock).toHaveBeenCalledWith(
       "/api/fashion-consumption/reports/weekly/2026-06-14/categories/PANTS/clothes",
+      { params: { page: 0, size: 10 } },
+    );
+  });
+
+  it("requests category clothes for the current week", async () => {
+    getMock.mockResolvedValue({
+      data: {
+        isSuccess: true,
+        code: "COMMON_200",
+        message: "요청에 성공했습니다.",
+        result: {
+          weekStartDate: "2026-06-28",
+          weekEndDate: "2026-07-04",
+          category: "T_SHIRT",
+          clothes: [],
+        },
+      },
+    });
+
+    await expect(getCurrentWeeklyCategoryClothes({ category: "T_SHIRT" })).resolves.toMatchObject({
+      category: "T_SHIRT",
+      clothes: [],
+    });
+    expect(getMock).toHaveBeenCalledWith(
+      "/api/fashion-consumption/reports/weekly/current/categories/T_SHIRT/clothes",
       { params: { page: 0, size: 10 } },
     );
   });

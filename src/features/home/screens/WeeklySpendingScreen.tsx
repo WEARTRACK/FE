@@ -1,14 +1,18 @@
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line } from "react-native-svg";
 
 import WeartrackLogo from "../../../../assets/WEARTRACK-logo.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { useCurrentWeeklyFashionConsumption } from "@/features/home/hooks/useCurrentWeeklyFashionConsumption";
+import { groupCategoriesByExpense } from "@/features/report/utils/reportCategory";
 
 type CategorySpending = {
+  category: string;
   label: string;
   amount: number;
+  sourceCategories: string[];
 };
 
 const categoryDefinitions = [
@@ -98,14 +102,22 @@ function ReceiptCard({
 function CategorySpendingRow({
   item,
   totalSpending,
+  onPress,
 }: {
   item: CategorySpending;
   totalSpending: number;
+  onPress: () => void;
 }) {
   const progress = totalSpending > 0 ? item.amount / totalSpending : 0;
 
   return (
-    <View className="mx-6 mb-2 rounded-[4px] border-[0.5px] border-cool bg-white px-6 pb-[12px] pt-[12px]">
+    <Pressable
+      accessibilityLabel={`${item.label} 구매 내역 보기`}
+      accessibilityRole="button"
+      className="mx-6 mb-2 rounded-[4px] border-[0.5px] border-cool bg-white px-6 pb-[12px] pt-[12px]"
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
       <View className="flex-row items-center justify-between">
         <Text className="font-pretendard text-[14px] leading-[17px] text-text">{item.label}</Text>
         <Text className="font-pretendard text-[14px] leading-[17px] text-text">
@@ -119,24 +131,26 @@ function CategorySpendingRow({
           style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }}
         />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export function WeeklySpendingScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { data: weeklyConsumption } = useCurrentWeeklyFashionConsumption({ page: 0, size: 13 });
   const totalSpending = weeklyConsumption?.totalExpenseAmount ?? 0;
   const changeRate = weeklyConsumption ? weeklyConsumption.expenseChangeRate : null;
+  const groupedCategories = groupCategoriesByExpense(weeklyConsumption?.categories ?? []);
   const categorySpending = categoryDefinitions
     .map(({ key, label }, originalIndex) => {
-      const category = weeklyConsumption?.categories.find(
-        (item) => item.category.toUpperCase().replaceAll("_", "-") === key,
-      );
+      const category = groupedCategories.find((item) => item.category === key);
 
       return {
+        category: key,
         label,
         amount: category?.expenseAmount ?? 0,
+        sourceCategories: category?.sourceCategories ?? [key],
         originalIndex,
       };
     })
@@ -172,7 +186,21 @@ export function WeeklySpendingScreen() {
         </Text>
 
         {categorySpending.map((item) => (
-          <CategorySpendingRow key={item.label} item={item} totalSpending={totalSpending} />
+          <CategorySpendingRow
+            key={item.label}
+            item={item}
+            totalSpending={totalSpending}
+            onPress={() =>
+              router.push({
+                pathname: "/home/purchase-history",
+                params: {
+                  category: item.category,
+                  currentWeek: "true",
+                  sourceCategories: item.sourceCategories.join(","),
+                },
+              })
+            }
+          />
         ))}
       </ScrollView>
     </View>

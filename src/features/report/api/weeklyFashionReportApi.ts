@@ -70,6 +70,10 @@ type WeeklyCategoryClothesQuery = WeeklyReportQuery & {
   category: string;
 };
 
+type CurrentWeeklyCategoryClothesQuery = PaginationQuery & {
+  category: string;
+};
+
 function createInvalidResponseError(details: unknown) {
   return new ApiError({
     code: "INVALID_RESPONSE",
@@ -229,6 +233,33 @@ export async function getWeeklyCategoryClothes({
     `/api/fashion-consumption/reports/weekly/${encodeURIComponent(
       weekStartDate,
     )}/categories/${encodeURIComponent(category)}/clothes`,
+    { params: { page, size } },
+  );
+
+  const result = getSuccessfulResult(response.data, isWeeklyCategoryClothes);
+
+  return {
+    ...result,
+    clothes: result.clothes.map((item) => ({
+      clothesId: item.clothesId,
+      imageUrl: item.imageUrl,
+      productName: item.productName ?? null,
+      sourceShopName: item.sourceShopName ?? null,
+      price: item.price ?? null,
+      color: item.color ?? null,
+    })),
+  };
+}
+
+export async function getCurrentWeeklyCategoryClothes({
+  category,
+  page = 0,
+  size = 10,
+}: CurrentWeeklyCategoryClothesQuery): Promise<WeeklyCategoryClothes> {
+  const response = await apiClient.get<ApiResponse<WeeklyCategoryClothes>>(
+    `/api/fashion-consumption/reports/weekly/current/categories/${encodeURIComponent(
+      category,
+    )}/clothes`,
     { params: { page, size } },
   );
 
