@@ -2,6 +2,7 @@ import "../global.css";
 
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppProvider } from "@/providers/AppProvider";
@@ -15,11 +16,13 @@ export default function RootLayout() {
   });
 
   const layout = (
-    <SafeAreaProvider>
-      <AppProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-      </AppProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 
   if (error) {

@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  getClosetRepository,
-} from "@/features/closet/data/closet-repository-provider";
+import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
 import type { ClosetDataRepository } from "@/features/closet/data/closet-repository";
 import type { ClosetDetailResult } from "@/features/closet/api/closet-api-types";
 import type {
@@ -28,9 +26,13 @@ export function useClosetSearchResults(
   const [revision, setRevision] = useState(0);
   const [page, setPage] = useState(0);
   const [pageData, setPageData] = useState<ClosetSearchPage>(EMPTY_PAGE);
+  const [pageItemsByIndex, setPageItemsByIndex] = useState<
+    Record<number, ClosetSearchResultItem[]>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [paramError, setParamError] = useState<string | null>(null);
+  const hasDisplayedDataRef = useRef(false);
 
   const pageSize = LIST_PAGE_SIZE;
   const searchMode = searchParams?.mode ?? null;
@@ -109,7 +111,10 @@ export function useClosetSearchResults(
 
   useEffect(() => {
     setPage(0);
-  }, [searchMode, searchValue]);
+    setPageData(EMPTY_PAGE);
+    setPageItemsByIndex({});
+    hasDisplayedDataRef.current = false;
+  }, [revision, searchMode, searchValue]);
 
   useEffect(() => {
     let isActive = true;
@@ -124,7 +129,7 @@ export function useClosetSearchResults(
       }
 
       try {
-        setIsLoading(true);
+        setIsLoading(!hasDisplayedDataRef.current);
         setParamError(null);
         setError(null);
 
@@ -133,7 +138,9 @@ export function useClosetSearchResults(
           page,
           size: pageSize,
         });
-        const needsFallbackSimilarCount = data.items.some((item) => typeof item.similarCount !== "number");
+        const needsFallbackSimilarCount = data.items.some(
+          (item) => typeof item.similarCount !== "number",
+        );
 
         let nextPageData = data;
 
@@ -142,7 +149,10 @@ export function useClosetSearchResults(
           const similarCountByCategory = new Map<string, number>();
 
           allItems.forEach((item) => {
-            similarCountByCategory.set(item.category, (similarCountByCategory.get(item.category) ?? 0) + 1);
+            similarCountByCategory.set(
+              item.category,
+              (similarCountByCategory.get(item.category) ?? 0) + 1,
+            );
           });
 
           nextPageData = {
@@ -159,15 +169,45 @@ export function useClosetSearchResults(
         }
 
         setPageData(nextPageData);
+        hasDisplayedDataRef.current = true;
+        setPageItemsByIndex((current) => ({
+          ...current,
+          [nextPageData.currentPage]: nextPageData.items,
+        }));
         if (nextPageData.currentPage !== page) {
           setPage(nextPageData.currentPage);
         }
+
+        const adjacentPages = [nextPageData.currentPage - 1, nextPageData.currentPage + 1].filter(
+          (targetPage) => targetPage >= 0 && targetPage < nextPageData.totalPages,
+        );
+
+        void Promise.all(
+          adjacentPages.map(async (targetPage) => {
+            const adjacentData = await repository.searchClothes({
+              searchParams: normalizedSearchParams,
+              page: targetPage,
+              size: pageSize,
+            });
+
+            if (!isActive) {
+              return;
+            }
+
+            setPageItemsByIndex((current) => ({
+              ...current,
+              [adjacentData.currentPage]: adjacentData.items,
+            }));
+          }),
+        ).catch(() => undefined);
       } catch (targetError) {
         if (!isActive) {
           return;
         }
 
-        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet items"));
+        setError(
+          targetError instanceof Error ? targetError : new Error("Failed to fetch closet items"),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -199,6 +239,7 @@ export function useClosetSearchResults(
     hasNext: pageData.hasNext,
     currentPage: pageData.currentPage,
     page,
+    pageItemsByIndex,
     pageSize,
     setPage: onPageChange,
     applyDetailToList,

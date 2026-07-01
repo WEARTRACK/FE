@@ -798,8 +798,8 @@ export function ClosetSectionScreen() {
                             </Pressable>
                             {isSectionDropdownOpen ? (
                               <View
-                                className="absolute right-0 top-9 max-h-[180px] w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
-                                style={{ position: "absolute", zIndex: 999 }}
+                                className="mt-2 max-h-[180px] w-[140px] rounded-md border-[0.5px] border-disabled bg-white"
+                                style={{ zIndex: 999 }}
                               >
                                 <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
                                   {sectionOptions.map((option) => (
