@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
 
@@ -25,7 +25,11 @@ import {
   getMonthDistance,
   shiftYearMonth,
 } from "@/features/report/utils/monthlyReportDate";
-import { getCurrentWeekStartDate, shiftDate } from "@/features/report/utils/weeklyReportDate";
+import {
+  getCurrentWeekStartDate,
+  getWeekDistance,
+  shiftDate,
+} from "@/features/report/utils/weeklyReportDate";
 
 const MAX_WEEK_INDEX = 3;
 const MAX_MONTH_INDEX = 3;
@@ -353,6 +357,7 @@ function CategorySpendingCard({
 export function WeeklyReportScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ weekStartDate?: string }>();
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
   const isWeekly = period === "weekly";
   const [weekIndex, setWeekIndex] = useState(0);
@@ -370,6 +375,25 @@ export function WeeklyReportScreen() {
   });
   const report = weeklyReportQuery.data;
   const monthlyReport = monthlyReportQuery.data;
+
+  useEffect(() => {
+    if (!params.weekStartDate) {
+      return;
+    }
+
+    const notificationWeekIndex = getWeekDistance(currentWeekStartDate, params.weekStartDate);
+
+    if (
+      notificationWeekIndex === null ||
+      notificationWeekIndex < 0 ||
+      notificationWeekIndex > MAX_WEEK_INDEX
+    ) {
+      return;
+    }
+
+    setPeriod("weekly");
+    setWeekIndex(notificationWeekIndex);
+  }, [currentWeekStartDate, params.weekStartDate]);
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingTop: insets.top }}>

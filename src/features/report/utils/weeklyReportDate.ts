@@ -22,3 +22,13 @@ export function getCurrentWeekStartDate(today = new Date()) {
 
   return formatLocalDate(weekStart);
 }
+
+export function getWeekDistance(fromDateString: string, toDateString: string) {
+  const [fromYear, fromMonth, fromDay] = fromDateString.split("-").map(Number);
+  const [toYear, toMonth, toDay] = toDateString.split("-").map(Number);
+  const fromTime = Date.UTC(fromYear, fromMonth - 1, fromDay);
+  const toTime = Date.UTC(toYear, toMonth - 1, toDay);
+  const distance = (fromTime - toTime) / (7 * 24 * 60 * 60 * 1000);
+
+  return Number.isInteger(distance) ? distance : null;
+}

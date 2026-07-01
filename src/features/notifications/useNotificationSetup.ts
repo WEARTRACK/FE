@@ -12,8 +12,8 @@ import {
 import { navigateFromNotificationData } from "@/features/notifications/notification-navigation";
 import { requestNotificationPermission } from "@/features/notifications/notification-permission";
 import {
-  subscribeDailyReviewReminderTopic,
-  unsubscribeDailyReviewReminderTopic,
+  subscribeAppNotificationTopics,
+  unsubscribeAppNotificationTopics,
 } from "@/features/notifications/notification-topics";
 import { useSessionStore } from "@/stores/useSessionStore";
 
@@ -68,7 +68,7 @@ export function useNotificationSetup() {
   useEffect(() => {
     let active = true;
 
-    async function syncDailyReviewReminderTopic() {
+    async function syncNotificationTopics() {
       try {
         if (accessToken) {
           const granted = await requestNotificationPermission();
@@ -77,7 +77,7 @@ export function useNotificationSetup() {
             return;
           }
 
-          await subscribeDailyReviewReminderTopic();
+          await subscribeAppNotificationTopics();
           topicSubscribedRef.current = true;
           return;
         }
@@ -86,14 +86,14 @@ export function useNotificationSetup() {
           return;
         }
 
-        await unsubscribeDailyReviewReminderTopic();
+        await unsubscribeAppNotificationTopics();
         topicSubscribedRef.current = false;
       } catch (error) {
-        console.warn("[FCM] Failed to sync daily review reminder topic", error);
+        console.warn("[FCM] Failed to sync notification topics", error);
       }
     }
 
-    syncDailyReviewReminderTopic();
+    syncNotificationTopics();
 
     return () => {
       active = false;
