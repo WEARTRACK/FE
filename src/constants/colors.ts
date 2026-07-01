@@ -18,6 +18,24 @@ export const colors = {
     3: "#B1C9FF",
     4: "#7EA5FF",
   },
+  red: {
+    1: "#FFF9F9",
+    2: "#FFE0E0",
+    3: "#FF9E9E",
+    4: "#FF5050",
+  },
+  yellow: {
+    1: "#FFFCF8",
+    2: "#FFF3DD",
+    3: "#FFD78B",
+    4: "#FFB041",
+  },
+  green: {
+    1: "#FBFFFB",
+    2: "#E6FFEA",
+    3: "#8CDDB6",
+    4: "#32BA81",
+  },
   cool: "#EFF0F3",
   disabled: "#BDBDBD",
 } as const;

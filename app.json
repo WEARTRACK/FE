@@ -15,6 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "googleServicesFile": "./ios/GoogleService-Info.plist",
       "bundleIdentifier": "com.anonymous.weartrack",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -38,6 +39,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       [
         "expo-dev-client",
         {
