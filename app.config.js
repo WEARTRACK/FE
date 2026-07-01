@@ -1,4 +1,20 @@
+const { withPodfile } = require("expo/config-plugins");
+
 const googleServicesFile = process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist";
+
+const withFirebaseModularHeaders = (config) =>
+  withPodfile(config, (config) => {
+    const marker = "use_modular_headers!";
+
+    if (!config.modResults.contents.includes(marker)) {
+      config.modResults.contents = config.modResults.contents.replace(
+        "prepare_react_native_project!\n",
+        `prepare_react_native_project!\n\n${marker}\n`,
+      );
+    }
+
+    return config;
+  });
 
 module.exports = {
   expo: {
@@ -46,6 +62,7 @@ module.exports = {
       "./plugins/with-fmt-consteval-fix",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
+      withFirebaseModularHeaders,
       [
         "expo-dev-client",
         {
