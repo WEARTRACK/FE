@@ -72,7 +72,10 @@ export function WeeklyReviewAnalysisScreen() {
       <View className="pt-[52px]">
         <WeeklyReviewUsageDonut profile={usageProfile} usageRate={usageRate} />
 
-        <Text className="mt-6 font-pretendard-semibold text-headline text-bg-dark">
+        <Text
+          className="mt-6 font-pretendard-semibold text-headline text-bg-dark"
+          style={{ lineHeight: 28 }}
+        >
           활용도 분포
         </Text>
 

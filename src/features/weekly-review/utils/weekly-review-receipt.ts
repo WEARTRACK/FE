@@ -1,4 +1,5 @@
 import { colors } from "@/constants/colors";
+import { resolveClosetImageUrl } from "@/features/closet/api/closet-api-mappers";
 import type { WeeklyWornClothesResultApi } from "@/features/weekly-review/api/weekly-review-api-types";
 import type {
   ClosetUsageProfile,
@@ -54,7 +55,7 @@ export function createWeeklyReceiptReport({
   const reportItems =
     wornClothesResult?.wornClothes.map((item) => ({
       clothesId: item.clothesId,
-      imageUrl: item.imageUrl,
+      imageUrl: resolveClosetImageUrl(item.imageUrl),
       price: item.price,
     })) ?? [];
 

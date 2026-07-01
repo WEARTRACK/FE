@@ -1,6 +1,12 @@
 import { Image, Text, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
-import { Extrapolation, interpolate } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  Extrapolation,
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 
 import type { WeeklyReceiptReportItem } from "@/features/weekly-review/types/weekly-review";
@@ -9,6 +15,7 @@ import type { WeeklyReceiptTheme } from "@/features/weekly-review/utils/weekly-r
 const RECEIPT_CARD_WIDTH = 215;
 const RECEIPT_CARD_HEIGHT = 296;
 const RECEIPT_CARD_SLOT_WIDTH = 234;
+const RECEIPT_CARD_TRAVEL_DURATION = 2600;
 const BARCODE_HEIGHT = 50;
 const BARCODE_WIDTHS = [3, 6, 12, 6, 12, 6, 21, 6, 3];
 
@@ -147,58 +154,104 @@ type ReceiptCarouselProps = {
   theme: WeeklyReceiptTheme;
 };
 
+type ReceiptCarouselCardProps = {
+  animationValue: SharedValue<number>;
+  item: WeeklyReceiptReportItem;
+  theme: WeeklyReceiptTheme;
+};
+
+function WeeklyReceiptCarouselCard({ animationValue, item, theme }: ReceiptCarouselCardProps) {
+  const dimmedOverlayStyle = useAnimatedStyle(() => {
+    const distance = Math.abs(animationValue.value);
+
+    return {
+      opacity: interpolate(distance, [0, 1], [0, 0.5], Extrapolation.CLAMP),
+    };
+  });
+
+  return (
+    <View
+      className="overflow-hidden rounded-xl"
+      style={{
+        backgroundColor: theme.softer,
+        borderColor: theme.accent,
+        borderWidth: 1,
+        height: RECEIPT_CARD_HEIGHT,
+        width: RECEIPT_CARD_WIDTH,
+      }}
+    >
+      <Image
+        onError={(event) => {
+          console.warn("Failed to load weekly receipt image", {
+            clothesId: item.clothesId,
+            error: event.nativeEvent.error,
+            imageUrl: item.imageUrl,
+          });
+        }}
+        resizeMode="cover"
+        source={{ uri: item.imageUrl }}
+        style={{
+          height: RECEIPT_CARD_HEIGHT,
+          width: RECEIPT_CARD_WIDTH,
+        }}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            backgroundColor: "#000000",
+            bottom: 0,
+            left: 0,
+            position: "absolute",
+            right: 0,
+            top: 0,
+          },
+          dimmedOverlayStyle,
+        ]}
+      />
+    </View>
+  );
+}
+
 export function WeeklyReceiptCarousel({ items, screenWidth, theme }: ReceiptCarouselProps) {
   return (
     <Carousel
-      autoFillData={false}
+      autoPlay={items.length > 1}
+      autoPlayInterval={0}
+      autoFillData={items.length > 1}
       customAnimation={(value) => {
         "worklet";
 
         const distance = Math.abs(value);
-        const scale = interpolate(distance, [0, 1], [1, 0.86], Extrapolation.CLAMP);
-        const opacity = interpolate(distance, [0, 1], [1, 0.62], Extrapolation.CLAMP);
+        const scale = interpolate(distance, [0, 1], [1, 0.82], Extrapolation.CLAMP);
+        const zIndex = Math.round(interpolate(distance, [0, 1], [20, 0], Extrapolation.CLAMP));
         const translateX = interpolate(
           value,
           [-1, 0, 1],
-          [-RECEIPT_CARD_SLOT_WIDTH * 0.54, 0, RECEIPT_CARD_SLOT_WIDTH * 0.54],
+          [-RECEIPT_CARD_SLOT_WIDTH * 0.62, 0, RECEIPT_CARD_SLOT_WIDTH * 0.62],
           Extrapolation.CLAMP,
         );
-        const rotateY = interpolate(value, [-1, 0, 1], [16, 0, -16], Extrapolation.CLAMP);
+        const translateY = interpolate(
+          distance,
+          [0, 1],
+          [0, 18],
+          Extrapolation.CLAMP,
+        );
 
         return {
-          opacity,
-          transform: [
-            { perspective: 900 },
-            { translateX },
-            { rotateY: `${rotateY}deg` },
-            { scale },
-          ],
+          elevation: zIndex,
+          transform: [{ translateX }, { translateY }, { scale }],
+          zIndex,
         };
       }}
       data={items}
+      enabled={false}
       height={RECEIPT_CARD_HEIGHT}
       loop={items.length > 1}
-      renderItem={({ item }) => (
-        <View
-          className="overflow-hidden rounded-xl bg-white"
-          style={{
-            borderColor: theme.accent,
-            borderWidth: 1,
-            height: RECEIPT_CARD_HEIGHT,
-            width: RECEIPT_CARD_WIDTH,
-          }}
-        >
-          <Image
-            resizeMode="cover"
-            source={{ uri: item.imageUrl }}
-            style={{
-              height: RECEIPT_CARD_HEIGHT,
-              width: RECEIPT_CARD_WIDTH,
-            }}
-          />
-        </View>
+      renderItem={({ animationValue, item }) => (
+        <WeeklyReceiptCarouselCard animationValue={animationValue} item={item} theme={theme} />
       )}
-      scrollAnimationDuration={520}
+      scrollAnimationDuration={RECEIPT_CARD_TRAVEL_DURATION}
       style={{
         alignItems: "center",
         height: RECEIPT_CARD_HEIGHT,
@@ -207,6 +260,13 @@ export function WeeklyReceiptCarousel({ items, screenWidth, theme }: ReceiptCaro
         width: screenWidth,
       }}
       width={RECEIPT_CARD_SLOT_WIDTH}
+      withAnimation={{
+        config: {
+          duration: RECEIPT_CARD_TRAVEL_DURATION,
+          easing: Easing.linear,
+        },
+        type: "timing",
+      }}
       windowSize={5}
     />
   );
