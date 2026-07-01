@@ -1,6 +1,6 @@
 import { Href, Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Modal, Pressable, Text, View } from "react-native";
+import { Alert, Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
 
 import ClotheExample from "../../../../assets/clotheExample.svg";
 import CategoryIcon from "../../../../assets/category.svg";
@@ -17,6 +17,7 @@ import {
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
+import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 
 type ClosetSummary = {
   totalClothes: number;
@@ -258,9 +259,11 @@ function ClothesRegistrationGuideModal({
 
 export function MainHomeScreen() {
   const router = useRouter();
+  const { height: screenHeight } = useWindowDimensions();
   const { data: homeSummary, refetch: refetchHomeSummary } = useHomeSummary();
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
+  const isCompactHeight = screenHeight < 870;
 
   useFocusEffect(
     useCallback(() => {
@@ -393,10 +396,10 @@ export function MainHomeScreen() {
 
   return (
     <>
-      <View className="flex-1 bg-bg-light px-6 pb-8 pt-4">
+      <View className={`flex-1 bg-bg-light px-6 ${isCompactHeight ? "pb-6 pt-3" : "pb-8 pt-4"}`}>
         <SummaryCard summary={closetSummary} />
 
-        <View className="mt-[34px] flex-row gap-[18px]">
+        <View className={`${isCompactHeight ? "mt-[26px]" : "mt-[34px]"} flex-row gap-[18px]`}>
           <QuickActionButton
             onPress={() => setIsClosetGuideVisible(true)}
             icon={<HangerIcon width={75} height={47} />}
@@ -409,25 +412,29 @@ export function MainHomeScreen() {
           />
         </View>
 
-        <View className="mt-[27px]">
+        <View className={isCompactHeight ? "mt-[20px]" : "mt-[27px]"}>
           <Text className="font-pretendard-bold text-[14px] leading-[24px] text-text">
             주간 패션 소비
           </Text>
-          <View className="mt-[12px] flex-row gap-[18px]">
+          <View className={`${isCompactHeight ? "mt-[10px]" : "mt-[12px]"} flex-row gap-[18px]`}>
             <StatCard
               label="이번주 총 패션 지출액"
               value={formatWon(weeklyFashionStats.totalSpending)}
               onPress={() => router.push("/home/weekly-spending")}
             />
-            <StatCard label="이번주 옷장 활용률" value={`${weeklyFashionStats.closetUsageRate}%`} />
+            <StatCard
+              label="이번주 옷장 활용률"
+              value={`${weeklyFashionStats.closetUsageRate}%`}
+              onPress={() => router.push(weeklyReviewRoutes.analysis)}
+            />
           </View>
         </View>
 
-        <View className="mt-[27px]">
+        <View className={isCompactHeight ? "mt-[20px]" : "mt-[27px]"}>
           <Text className="font-pretendard-bold text-[14px] leading-[24px] text-text">
             내 옷 찾기
           </Text>
-          <View className="mt-[12px] flex-row gap-[18px]">
+          <View className={`${isCompactHeight ? "mt-[10px]" : "mt-[12px]"} flex-row gap-[18px]`}>
             <SearchCard
               emphasis="색상"
               suffix="으로 찾기"

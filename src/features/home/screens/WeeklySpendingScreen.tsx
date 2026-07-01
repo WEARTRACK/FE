@@ -1,30 +1,34 @@
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Line } from "react-native-svg";
 
 import WeartrackLogo from "../../../../assets/WEARTRACK-logo.svg";
 import { BackButton } from "@/components/common/BackButton";
+import { useCurrentWeeklyFashionConsumption } from "@/features/home/hooks/useCurrentWeeklyFashionConsumption";
+import { groupCategoriesByExpense } from "@/features/report/utils/reportCategory";
 
 type CategorySpending = {
+  category: string;
   label: string;
   amount: number;
+  sourceCategories: string[];
 };
 
-const TOTAL_SPENDING = 89_000;
-
-const categorySpending: CategorySpending[] = [
-  { label: "T-Shirt", amount: TOTAL_SPENDING },
-  { label: "Shirt", amount: 0 },
-  { label: "Hoodie", amount: 0 },
-  { label: "Vest", amount: 0 },
-  { label: "Cardigan", amount: 0 },
-  { label: "Pants", amount: 0 },
-  { label: "Shorts", amount: 0 },
-  { label: "Skirt", amount: 0 },
-  { label: "Dress", amount: 0 },
-  { label: "Jacket", amount: 0 },
-  { label: "Coat", amount: 0 },
-  { label: "Padding", amount: 0 },
+const categoryDefinitions = [
+  { key: "T-SHIRT", label: "T-Shirt" },
+  { key: "SHIRT", label: "Shirt" },
+  { key: "KNIT", label: "Knit" },
+  { key: "HOODIE", label: "Hoodie" },
+  { key: "VEST", label: "Vest" },
+  { key: "CARDIGAN", label: "Cardigan" },
+  { key: "PANTS", label: "Pants" },
+  { key: "SHORTS", label: "Shorts" },
+  { key: "SKIRT", label: "Skirt" },
+  { key: "DRESS", label: "Dress" },
+  { key: "JACKET", label: "Jacket" },
+  { key: "COAT", label: "Coat" },
+  { key: "PADDING", label: "Padding" },
 ];
 
 function formatWon(value: number) {
@@ -49,7 +53,16 @@ function DottedDivider() {
   );
 }
 
-function ReceiptCard() {
+function ReceiptCard({
+  totalSpending,
+  changeRate,
+}: {
+  totalSpending: number;
+  changeRate: number | null;
+}) {
+  const formattedChangeRate =
+    changeRate === null ? "-" : `${changeRate > 0 ? "+" : ""}${changeRate}%`;
+
   return (
     <View className="mx-6 rounded-[4px] bg-bg-dark px-[36px] pb-[19px] pt-[34px]">
       <View className="items-center">
@@ -65,8 +78,12 @@ function ReceiptCard() {
 
       <View className="flex-row items-center justify-between py-[16px]">
         <Text className="font-pretendard text-[15px] leading-[16px] text-white">이번 주 지출</Text>
-        <Text className="text-green-3 font-pretendard text-[14px] leading-[16px]">
-          1주 전 대비 -23%
+        <Text
+          className={`font-pretendard text-[14px] leading-[16px] ${
+            changeRate !== null && changeRate > 0 ? "text-red-3" : "text-green-3"
+          }`}
+        >
+          1주 전 대비 {formattedChangeRate}
         </Text>
       </View>
 
@@ -76,17 +93,31 @@ function ReceiptCard() {
         Total price
       </Text>
       <Text className="mt-[8px] text-center font-pretendard-semibold text-[24px] leading-[28px] text-primary">
-        {formatWon(TOTAL_SPENDING)}
+        {formatWon(totalSpending)}
       </Text>
     </View>
   );
 }
 
-function CategorySpendingRow({ item }: { item: CategorySpending }) {
-  const progress = item.amount / TOTAL_SPENDING;
+function CategorySpendingRow({
+  item,
+  totalSpending,
+  onPress,
+}: {
+  item: CategorySpending;
+  totalSpending: number;
+  onPress: () => void;
+}) {
+  const progress = totalSpending > 0 ? item.amount / totalSpending : 0;
 
   return (
-    <View className="mx-6 mb-2 rounded-[4px] border-[0.5px] border-cool bg-white px-6 pb-[12px] pt-[12px]">
+    <Pressable
+      accessibilityLabel={`${item.label} 구매 내역 보기`}
+      accessibilityRole="button"
+      className="mx-6 mb-2 rounded-[4px] border-[0.5px] border-cool bg-white px-6 pb-[12px] pt-[12px]"
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
       <View className="flex-row items-center justify-between">
         <Text className="font-pretendard text-[14px] leading-[17px] text-text">{item.label}</Text>
         <Text className="font-pretendard text-[14px] leading-[17px] text-text">
@@ -100,12 +131,36 @@ function CategorySpendingRow({ item }: { item: CategorySpending }) {
           style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }}
         />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export function WeeklySpendingScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { data: weeklyConsumption } = useCurrentWeeklyFashionConsumption({ page: 0, size: 13 });
+  const totalSpending = weeklyConsumption?.totalExpenseAmount ?? 0;
+  const changeRate = weeklyConsumption ? weeklyConsumption.expenseChangeRate : null;
+  const groupedCategories = groupCategoriesByExpense(weeklyConsumption?.categories ?? []);
+  const categorySpending = categoryDefinitions
+    .map(({ key, label }, originalIndex) => {
+      const category = groupedCategories.find((item) => item.category === key);
+
+      return {
+        category: key,
+        label,
+        amount: category?.expenseAmount ?? 0,
+        sourceCategories: category?.sourceCategories ?? [key],
+        originalIndex,
+      };
+    })
+    .sort((first, second) => {
+      if (first.amount !== second.amount) {
+        return second.amount - first.amount;
+      }
+
+      return first.originalIndex - second.originalIndex;
+    });
 
   return (
     <View className="flex-1 bg-bg-light" style={{ paddingTop: insets.top }}>
@@ -124,14 +179,28 @@ export function WeeklySpendingScreen() {
         contentContainerStyle={{ paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <ReceiptCard />
+        <ReceiptCard totalSpending={totalSpending} changeRate={changeRate} />
 
         <Text className="mb-[11px] mt-[16px] px-6 font-pretendard-bold text-[14px] leading-[18px] text-bg-dark">
           카테고리 별 지출
         </Text>
 
         {categorySpending.map((item) => (
-          <CategorySpendingRow key={item.label} item={item} />
+          <CategorySpendingRow
+            key={item.label}
+            item={item}
+            totalSpending={totalSpending}
+            onPress={() =>
+              router.push({
+                pathname: "/home/purchase-history",
+                params: {
+                  category: item.category,
+                  currentWeek: "true",
+                  sourceCategories: item.sourceCategories.join(","),
+                },
+              })
+            }
+          />
         ))}
       </ScrollView>
     </View>

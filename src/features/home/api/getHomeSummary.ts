@@ -9,6 +9,11 @@ export type HomeSummary = {
   weeklyClosetUsageRate: number;
 };
 
+export type HomeSummaryQuery = {
+  page?: number;
+  size?: number;
+};
+
 type HomeSummaryResponse = {
   isSuccess: boolean;
   code: string;
@@ -56,8 +61,13 @@ function isHomeSummaryResponse(value: unknown): value is HomeSummaryResponse {
   );
 }
 
-export async function getHomeSummary(): Promise<HomeSummary> {
-  const response = await apiClient.get<HomeSummaryResponse>("/api/home");
+export async function getHomeSummary(query: HomeSummaryQuery = {}): Promise<HomeSummary> {
+  const response = await apiClient.get<HomeSummaryResponse>("/api/home", {
+    params: {
+      page: query.page ?? 0,
+      size: query.size ?? 10,
+    },
+  });
 
   if (!isHomeSummaryResponse(response.data)) {
     throw createInvalidResponseError(response.data);
