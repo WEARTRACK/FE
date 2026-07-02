@@ -1,6 +1,10 @@
 const { withPodfile } = require("expo/config-plugins");
 
 const googleServicesFile = process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist";
+const apsEnvironment =
+  process.env.EAS_BUILD_PROFILE === "production" || process.env.EAS_BUILD_PROFILE === "preview"
+    ? "production"
+    : "development";
 
 const withFirebaseModularHeaders = (config) =>
   withPodfile(config, (config) => {
@@ -36,7 +40,7 @@ module.exports = {
       googleServicesFile,
       bundleIdentifier: "com.anonymous.weartrack",
       entitlements: {
-        "aps-environment": "production",
+        "aps-environment": apsEnvironment,
       },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
