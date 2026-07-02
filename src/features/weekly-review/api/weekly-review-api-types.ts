@@ -11,13 +11,14 @@ export type DailyReviewClothesApi = {
   clothesId: number;
   imageUrl: string;
   color: string;
-  category: string;
-  selected: boolean;
+  category?: string;
+  selected?: boolean;
 };
 
 export type DailyReviewCategoryApi = {
   category: string;
-  selectedCount: number;
+  selectedCount?: number;
+  wornCount?: number;
   clothes: DailyReviewClothesApi[];
 };
 
@@ -33,6 +34,10 @@ export type DailyReviewTodayResultApi = {
 
 export type SaveDailyReviewTodayRequestBody = {
   clothesIds: number[];
+};
+
+export type SaveDailyReviewTodayParams = SaveDailyReviewTodayRequestBody & {
+  reviewDate: string;
 };
 
 export type WeeklyReviewClothesApi = {
@@ -147,8 +152,8 @@ function isDailyReviewClothesApi(value: unknown): value is DailyReviewClothesApi
     typeof value.clothesId === "number" &&
     typeof value.imageUrl === "string" &&
     typeof value.color === "string" &&
-    typeof value.category === "string" &&
-    typeof value.selected === "boolean"
+    (value.category === undefined || typeof value.category === "string") &&
+    (value.selected === undefined || typeof value.selected === "boolean")
   );
 }
 
@@ -157,9 +162,14 @@ function isDailyReviewCategoryApi(value: unknown): value is DailyReviewCategoryA
     return false;
   }
 
+  const selectedCountIsValid =
+    value.selectedCount === undefined || typeof value.selectedCount === "number";
+  const wornCountIsValid = value.wornCount === undefined || typeof value.wornCount === "number";
+
   return (
     typeof value.category === "string" &&
-    typeof value.selectedCount === "number" &&
+    selectedCountIsValid &&
+    wornCountIsValid &&
     Array.isArray(value.clothes) &&
     value.clothes.every(isDailyReviewClothesApi)
   );

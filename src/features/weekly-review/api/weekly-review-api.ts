@@ -10,6 +10,7 @@ import {
   type ApiEnvelope,
   type DailyReviewTodayResultApi,
   type SaveDailyReviewTodayRequestBody,
+  type SaveDailyReviewTodayParams,
   type WeeklyClosetUsageAnalysisResultApi,
   type WeeklyReviewResultApi,
   type WeeklyWornClothesResultApi,
@@ -36,13 +37,16 @@ export async function fetchDailyReviewToday(): Promise<DailyReviewTodayResultApi
   );
 }
 
-export async function saveDailyReviewToday(clothesIds: number[]): Promise<WeeklyReviewResultApi> {
+export async function saveDailyReview({
+  reviewDate,
+  clothesIds,
+}: SaveDailyReviewTodayParams): Promise<WeeklyReviewResultApi> {
   const requestBody: SaveDailyReviewTodayRequestBody = {
     clothesIds,
   };
 
   const response = await apiClient.post<ApiEnvelope<WeeklyReviewResultApi>>(
-    DAILY_REVIEWS_TODAY_ENDPOINT,
+    `/api/daily-reviews/${encodeURIComponent(reviewDate)}`,
     requestBody,
   );
   const envelope = assertApiEnvelope<WeeklyReviewResultApi>(
