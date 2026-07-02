@@ -94,13 +94,23 @@ export function WeeklyReviewSelectionScreen() {
       return;
     }
 
+    const reviewDate = dailyReviewTodayQuery.data?.reviewDate;
+
+    if (!reviewDate) {
+      showToast("저장 날짜를 확인하지 못했어요. 다시 시도해주세요.");
+      return;
+    }
+
     if (selectedIds.size === 0) {
       showToast("이번 주 착용한 옷이 없으신가요?");
     }
 
     void (async () => {
       try {
-        await saveDailyReviewTodayMutation.mutateAsync([...selectedIds]);
+        await saveDailyReviewTodayMutation.mutateAsync({
+          reviewDate,
+          clothesIds: [...selectedIds],
+        });
         router.replace(weeklyReviewRoutes.result);
       } catch {
         showToast("저장에 실패했어요. 다시 시도해주세요.");
@@ -202,7 +212,13 @@ export function WeeklyReviewSelectionScreen() {
               isNoRegisteredClothes
             }
             fullWidth
-            label={saveDailyReviewTodayMutation.isPending ? "저장 중" : "저장하기"}
+            label={
+              saveDailyReviewTodayMutation.isPending
+                ? "저장 중"
+                : dailyReviewTodayQuery.data?.completed
+                  ? "수정하기"
+                  : "저장하기"
+            }
             onPress={handleSave}
           />
         </View>
