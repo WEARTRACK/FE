@@ -1,23 +1,35 @@
-import { Image, Text, View } from "react-native";
-import Carousel from "react-native-reanimated-carousel";
+import { useCallback, useEffect, useMemo } from "react";
+import { useFocusEffect } from "expo-router";
+import { AppState, Image, Platform, Text, View } from "react-native";
 import Animated, {
   Easing,
   Extrapolation,
+  ReduceMotion,
+  cancelAnimation,
   interpolate,
   type SharedValue,
   useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 
+import { env } from "@/config/env";
 import type { WeeklyReceiptReportItem } from "@/features/weekly-review/types/weekly-review";
 import type { WeeklyReceiptTheme } from "@/features/weekly-review/utils/weekly-review-receipt";
+import { useSessionStore } from "@/stores/useSessionStore";
 
 const RECEIPT_CARD_WIDTH = 215;
 const RECEIPT_CARD_HEIGHT = 296;
 const RECEIPT_CARD_SLOT_WIDTH = 234;
-const RECEIPT_CARD_TRAVEL_DURATION = 2600;
+const RECEIPT_CARD_SIDE_SCALE = 0.82;
+const RECEIPT_CARD_SIDE_TRANSLATE_Y = 18;
+const RECEIPT_MARQUEE_SPEED_PX_PER_SECOND = 40;
 const BARCODE_HEIGHT = 50;
 const BARCODE_WIDTHS = [3, 6, 12, 6, 12, 6, 21, 6, 3];
+const DIVIDER_DOT_COUNT = 180;
+const DIVIDER_DOTS = Array.from({ length: DIVIDER_DOT_COUNT }, (_, index) => index);
 
 type ReceiptGradientTextProps = {
   align?: "left" | "center" | "right";
@@ -139,12 +151,24 @@ export function WeeklyReceiptDivider({ color, className }: ReceiptDividerProps) 
     <View
       className={className}
       style={{
-        borderColor: color,
-        borderStyle: "dotted",
-        borderTopWidth: 2,
-        height: 1,
+        flexDirection: "row",
+        height: 4,
+        overflow: "hidden",
       }}
-    />
+    >
+      {DIVIDER_DOTS.map((index) => (
+        <View
+          key={index}
+          style={{
+            backgroundColor: color,
+            borderRadius: 1,
+            height: 2,
+            marginRight: 3,
+            width: 2,
+          }}
+        />
+      ))}
+    </View>
   );
 }
 
@@ -155,19 +179,47 @@ type ReceiptCarouselProps = {
 };
 
 type ReceiptCarouselCardProps = {
-  animationValue: SharedValue<number>;
+  accessToken: string | null;
   item: WeeklyReceiptReportItem;
   theme: WeeklyReceiptTheme;
 };
 
-function WeeklyReceiptCarouselCard({ animationValue, item, theme }: ReceiptCarouselCardProps) {
-  const dimmedOverlayStyle = useAnimatedStyle(() => {
-    const distance = Math.abs(animationValue.value);
+function shouldUseApiAuthorizationHeader(imageUrl: string, accessToken: string | null) {
+  if (!accessToken) {
+    return false;
+  }
 
-    return {
-      opacity: interpolate(distance, [0, 1], [0, 0.5], Extrapolation.CLAMP),
-    };
-  });
+  try {
+    return new URL(imageUrl).origin === new URL(env.apiBaseUrl).origin;
+  } catch {
+    return false;
+  }
+}
+
+function createReceiptImageUri(imageUrl: string) {
+  return encodeURI(imageUrl);
+}
+
+function createReceiptImageSource(uri: string, accessToken: string | null) {
+  if (Platform.OS === "web" || !shouldUseApiAuthorizationHeader(uri, accessToken)) {
+    return { uri };
+  }
+
+  return {
+    cache: "reload" as const,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    uri,
+  };
+}
+
+function WeeklyReceiptCarouselCard({
+  accessToken,
+  item,
+  theme,
+}: ReceiptCarouselCardProps) {
+  const imageUri = createReceiptImageUri(item.imageUrl);
 
   return (
     <View
@@ -180,95 +232,221 @@ function WeeklyReceiptCarouselCard({ animationValue, item, theme }: ReceiptCarou
         width: RECEIPT_CARD_WIDTH,
       }}
     >
-      <Image
-        onError={(event) => {
-          console.warn("Failed to load weekly receipt image", {
-            clothesId: item.clothesId,
-            error: event.nativeEvent.error,
-            imageUrl: item.imageUrl,
-          });
-        }}
-        resizeMode="cover"
-        source={{ uri: item.imageUrl }}
-        style={{
+      {Platform.OS === "web" ? (
+        <View
+          style={[
+            {
+              height: RECEIPT_CARD_HEIGHT,
+              width: RECEIPT_CARD_WIDTH,
+            },
+            {
+              backgroundImage: `url("${imageUri}")`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+            } as never,
+          ]}
+        />
+      ) : (
+        <Image
+          onError={(event) => {
+            console.warn("Failed to load weekly receipt image", {
+              clothesId: item.clothesId,
+              error: event.nativeEvent.error,
+              imageUrl: item.imageUrl,
+            });
+          }}
+          resizeMode="cover"
+          source={createReceiptImageSource(imageUri, accessToken)}
+          style={{
+            height: RECEIPT_CARD_HEIGHT,
+            width: RECEIPT_CARD_WIDTH,
+          }}
+        />
+      )}
+    </View>
+  );
+}
+
+type WeeklyReceiptMarqueeCardProps = {
+  accessToken: string | null;
+  item: WeeklyReceiptReportItem;
+  slotIndex: number;
+  theme: WeeklyReceiptTheme;
+  translateX: SharedValue<number>;
+  viewportCenterX: number;
+};
+
+function WeeklyReceiptMarqueeCard({
+  accessToken,
+  item,
+  slotIndex,
+  theme,
+  translateX,
+  viewportCenterX,
+}: WeeklyReceiptMarqueeCardProps) {
+  const depthStyle = useAnimatedStyle(() => {
+    const cardCenterX =
+      translateX.value + slotIndex * RECEIPT_CARD_SLOT_WIDTH + RECEIPT_CARD_SLOT_WIDTH / 2;
+    const distance = Math.abs(cardCenterX - viewportCenterX);
+    const normalizedDistance = Math.min(distance / RECEIPT_CARD_SLOT_WIDTH, 1);
+    const scale = interpolate(
+      normalizedDistance,
+      [0, 1],
+      [1, RECEIPT_CARD_SIDE_SCALE],
+      Extrapolation.CLAMP,
+    );
+    const translateY = interpolate(
+      normalizedDistance,
+      [0, 1],
+      [0, RECEIPT_CARD_SIDE_TRANSLATE_Y],
+      Extrapolation.CLAMP,
+    );
+    const zIndex = Math.round(
+      interpolate(normalizedDistance, [0, 1], [20, 0], Extrapolation.CLAMP),
+    );
+
+    return {
+      elevation: zIndex,
+      transform: [{ translateY }, { scale }],
+      zIndex,
+    };
+  });
+  const dimOverlayStyle = useAnimatedStyle(() => {
+    const cardCenterX =
+      translateX.value + slotIndex * RECEIPT_CARD_SLOT_WIDTH + RECEIPT_CARD_SLOT_WIDTH / 2;
+    const distance = Math.abs(cardCenterX - viewportCenterX);
+    const normalizedDistance = Math.min(distance / RECEIPT_CARD_SLOT_WIDTH, 1);
+
+    return {
+      opacity: interpolate(normalizedDistance, [0, 1], [0, 0.5], Extrapolation.CLAMP),
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        {
+          alignItems: "center",
           height: RECEIPT_CARD_HEIGHT,
-          width: RECEIPT_CARD_WIDTH,
-        }}
-      />
+          width: RECEIPT_CARD_SLOT_WIDTH,
+        },
+        depthStyle,
+      ]}
+    >
+      <WeeklyReceiptCarouselCard accessToken={accessToken} item={item} theme={theme} />
       <Animated.View
         pointerEvents="none"
         style={[
           {
             backgroundColor: "#000000",
-            bottom: 0,
-            left: 0,
+            borderRadius: 12,
+            height: RECEIPT_CARD_HEIGHT,
             position: "absolute",
-            right: 0,
-            top: 0,
+            width: RECEIPT_CARD_WIDTH,
           },
-          dimmedOverlayStyle,
+          dimOverlayStyle,
         ]}
       />
-    </View>
+    </Animated.View>
   );
 }
 
 export function WeeklyReceiptCarousel({ items, screenWidth, theme }: ReceiptCarouselProps) {
+  const accessToken = useSessionStore((state) => state.accessToken);
+  const translateX = useSharedValue(0);
+  const imageUris = useMemo(
+    () => Array.from(new Set(items.map((item) => createReceiptImageUri(item.imageUrl)))),
+    [items],
+  );
+  const repeatedItems = useMemo(() => [...items, ...items, ...items], [items]);
+  const singleSetWidth = items.length * RECEIPT_CARD_SLOT_WIDTH;
+  const viewportCenterX = screenWidth / 2;
+  const initialTranslateX = -singleSetWidth + (screenWidth - RECEIPT_CARD_SLOT_WIDTH) / 2;
+  const marqueeDuration = (singleSetWidth / RECEIPT_MARQUEE_SPEED_PX_PER_SECOND) * 1000;
+  const startMarqueeAnimation = useCallback(() => {
+    cancelAnimation(translateX);
+
+    if (items.length <= 1) {
+      translateX.value = (screenWidth - RECEIPT_CARD_SLOT_WIDTH) / 2;
+      return;
+    }
+
+    translateX.value = initialTranslateX;
+    translateX.value = withRepeat(
+      withTiming(initialTranslateX - singleSetWidth, {
+        duration: marqueeDuration,
+        easing: Easing.linear,
+        reduceMotion: ReduceMotion.Never,
+      }),
+      -1,
+      false,
+      undefined,
+      ReduceMotion.Never,
+    );
+  }, [initialTranslateX, items.length, marqueeDuration, screenWidth, singleSetWidth, translateX]);
+  const marqueeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  useEffect(() => {
+    imageUris.forEach((imageUri) => {
+      void Image.prefetch(imageUri).catch(() => undefined);
+    });
+  }, [imageUris]);
+
+  useFocusEffect(
+    useCallback(() => {
+      startMarqueeAnimation();
+
+      return () => {
+        cancelAnimation(translateX);
+      };
+    }, [startMarqueeAnimation, translateX]),
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        startMarqueeAnimation();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [startMarqueeAnimation]);
+
   return (
-    <Carousel
-      autoPlay={items.length > 1}
-      autoPlayInterval={0}
-      autoFillData={items.length > 1}
-      customAnimation={(value) => {
-        "worklet";
-
-        const distance = Math.abs(value);
-        const scale = interpolate(distance, [0, 1], [1, 0.82], Extrapolation.CLAMP);
-        const zIndex = Math.round(interpolate(distance, [0, 1], [20, 0], Extrapolation.CLAMP));
-        const translateX = interpolate(
-          value,
-          [-1, 0, 1],
-          [-RECEIPT_CARD_SLOT_WIDTH * 0.62, 0, RECEIPT_CARD_SLOT_WIDTH * 0.62],
-          Extrapolation.CLAMP,
-        );
-        const translateY = interpolate(
-          distance,
-          [0, 1],
-          [0, 18],
-          Extrapolation.CLAMP,
-        );
-
-        return {
-          elevation: zIndex,
-          transform: [{ translateX }, { translateY }, { scale }],
-          zIndex,
-        };
-      }}
-      data={items}
-      enabled={false}
-      height={RECEIPT_CARD_HEIGHT}
-      loop={items.length > 1}
-      renderItem={({ animationValue, item }) => (
-        <WeeklyReceiptCarouselCard animationValue={animationValue} item={item} theme={theme} />
-      )}
-      scrollAnimationDuration={RECEIPT_CARD_TRAVEL_DURATION}
+    <View
       style={{
-        alignItems: "center",
         height: RECEIPT_CARD_HEIGHT,
-        justifyContent: "center",
-        overflow: "visible",
+        overflow: "hidden",
         width: screenWidth,
       }}
-      width={RECEIPT_CARD_SLOT_WIDTH}
-      withAnimation={{
-        config: {
-          duration: RECEIPT_CARD_TRAVEL_DURATION,
-          easing: Easing.linear,
-        },
-        type: "timing",
-      }}
-      windowSize={5}
-    />
+    >
+      <Animated.View
+        style={[
+          {
+            flexDirection: "row",
+            height: RECEIPT_CARD_HEIGHT,
+          },
+          marqueeStyle,
+        ]}
+      >
+        {repeatedItems.map((item, index) => (
+          <WeeklyReceiptMarqueeCard
+            key={`${item.clothesId}-${index}`}
+            accessToken={accessToken}
+            item={item}
+            slotIndex={index}
+            theme={theme}
+            translateX={translateX}
+            viewportCenterX={viewportCenterX}
+          />
+        ))}
+      </Animated.View>
+    </View>
   );
 }
 
