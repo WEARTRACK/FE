@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -14,7 +15,10 @@ import Svg, { Path } from "react-native-svg";
 import ReceiptLogo from "../../../../assets/WEARTRACK-logo.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
-import { useWeeklyWornClothes } from "@/features/weekly-review/hooks/use-current-weekly-review";
+import {
+  useCurrentWeeklyReview,
+  useWeeklyWornClothes,
+} from "@/features/weekly-review/hooks/use-current-weekly-review";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 import {
   clampClosetUsageRate,
@@ -42,10 +46,20 @@ export function WeeklyReviewReceiptScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const weeklyWornClothesQuery = useWeeklyWornClothes();
+  const currentWeeklyReviewQuery = useCurrentWeeklyReview();
   const wornClothesResult = weeklyWornClothesQuery.data;
+  const imageUrlByClothesId = useMemo(() => {
+    const entries =
+      currentWeeklyReviewQuery.data?.categories.flatMap((category) =>
+        category.clothes.map((clothes) => [clothes.clothesId, clothes.imageUrl] as const),
+      ) ?? [];
+
+    return new Map(entries);
+  }, [currentWeeklyReviewQuery.data]);
   const usageRate = clampClosetUsageRate(wornClothesResult?.weeklyClosetUsageRate ?? 0);
   const usageProfile = getClosetUsageProfileByTitle(wornClothesResult?.closetUsageType, usageRate);
   const receiptReport = createWeeklyReceiptReport({
+    imageUrlByClothesId,
     profile: usageProfile,
     usageRate,
     wornClothesResult,

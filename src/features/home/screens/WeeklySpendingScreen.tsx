@@ -192,7 +192,7 @@ export function WeeklySpendingScreen() {
             totalSpending={totalSpending}
             onPress={() =>
               router.push({
-                pathname: "/home/purchase-history",
+                pathname: "/report/purchase-history",
                 params: {
                   category: item.category,
                   currentWeek: "true",

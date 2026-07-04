@@ -28,6 +28,7 @@ function updateDailyReviewSelection(
       return {
         ...category,
         selectedCount: clothes.filter((item) => item.selected).length,
+        wornCount: clothes.filter((item) => item.selected).length,
         clothes,
       };
     }),
@@ -40,10 +41,7 @@ export function updateWeeklyReviewCachesAfterSave(
   weeklyReviewResult: WeeklyReviewResultApi,
   selectedClothesIds: number[],
 ) {
-  queryClient.setQueryData(
-    weeklyReviewQueryKeys.currentWeeklyReview(memberId),
-    weeklyReviewResult,
-  );
+  queryClient.setQueryData(weeklyReviewQueryKeys.currentWeeklyReview(memberId), weeklyReviewResult);
   queryClient.setQueryData(
     weeklyReviewQueryKeys.weeklyReviewByStartDate(memberId, weeklyReviewResult.weekStartDate),
     weeklyReviewResult,

@@ -190,7 +190,7 @@ describe("weekly-review-api", () => {
     });
   });
 
-  it("saves daily review clothes ids to the today endpoint", async () => {
+  it("saves daily review clothes ids to the review date endpoint", async () => {
     postMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -201,10 +201,14 @@ describe("weekly-review-api", () => {
       },
     });
 
-    const { saveDailyReviewToday } = await import("./weekly-review-api");
+    const { saveDailyReview } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1, 2])).resolves.toEqual(weeklyReviewResult);
-    expect(postMock).toHaveBeenCalledWith("/api/daily-reviews/today", { clothesIds: [1, 2] });
+    await expect(
+      saveDailyReview({ reviewDate: "2026-06-29", clothesIds: [1, 2] }),
+    ).resolves.toEqual(weeklyReviewResult);
+    expect(postMock).toHaveBeenCalledWith("/api/daily-reviews/2026-06-29", {
+      clothesIds: [1, 2],
+    });
   });
 
   it("throws ApiError when saving daily review returns business failure", async () => {
@@ -213,9 +217,11 @@ describe("weekly-review-api", () => {
       data: businessFailureEnvelope,
     });
 
-    const { saveDailyReviewToday } = await import("./weekly-review-api");
+    const { saveDailyReview } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1])).rejects.toMatchObject({
+    await expect(
+      saveDailyReview({ reviewDate: "2026-06-29", clothesIds: [1] }),
+    ).rejects.toMatchObject({
       code: "WEEKLY_REVIEW_404",
     });
   });
@@ -240,9 +246,11 @@ describe("weekly-review-api", () => {
       },
     });
 
-    const { saveDailyReviewToday } = await import("./weekly-review-api");
+    const { saveDailyReview } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1])).resolves.toEqual(weeklyReviewResult);
+    await expect(saveDailyReview({ reviewDate: "2026-06-29", clothesIds: [1] })).resolves.toEqual(
+      weeklyReviewResult,
+    );
     expect(getMock).toHaveBeenCalledWith("/api/weekly-reviews/current");
   });
 
@@ -266,9 +274,11 @@ describe("weekly-review-api", () => {
       },
     });
 
-    const { saveDailyReviewToday } = await import("./weekly-review-api");
+    const { saveDailyReview } = await import("./weekly-review-api");
 
-    await expect(saveDailyReviewToday([1])).resolves.toEqual(weeklyReviewResult);
+    await expect(saveDailyReview({ reviewDate: "2026-06-29", clothesIds: [1] })).resolves.toEqual(
+      weeklyReviewResult,
+    );
     expect(getMock).toHaveBeenCalledWith("/api/weekly-reviews/current");
   });
 });

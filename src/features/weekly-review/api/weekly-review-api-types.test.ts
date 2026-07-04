@@ -37,6 +37,28 @@ const validDailyReviewTodayResult = {
   ],
 };
 
+const validDailyReviewTodayResultFromDocs = {
+  reviewDate: "2026-07-01",
+  weekStartDate: "2026-07-01",
+  weekEndDate: "2026-07-01",
+  completed: true,
+  previousDayIncomplete: true,
+  noRegisteredClothes: false,
+  categories: [
+    {
+      category: "tshirt",
+      wornCount: 1,
+      clothes: [
+        {
+          clothesId: 1,
+          imageUrl: "https://example.com/a.png",
+          color: "white",
+        },
+      ],
+    },
+  ],
+};
+
 const validWeeklyReviewResult = {
   weekStartDate: "2026-06-22",
   weekEndDate: "2026-06-28",
@@ -116,10 +138,11 @@ describe("weekly-review-api-types", () => {
 
   it("validates daily review today result shape", () => {
     expect(isDailyReviewTodayResultApi(validDailyReviewTodayResult)).toBe(true);
+    expect(isDailyReviewTodayResultApi(validDailyReviewTodayResultFromDocs)).toBe(true);
     expect(
       isDailyReviewTodayResultApi({
         ...validDailyReviewTodayResult,
-        categories: [{ ...validDailyReviewTodayResult.categories[0], selectedCount: "1" }],
+        categories: [{ ...validDailyReviewTodayResult.categories[0], wornCount: "1" }],
       }),
     ).toBe(false);
   });

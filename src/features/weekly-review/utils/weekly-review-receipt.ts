@@ -5,6 +5,7 @@ import type {
   ClosetUsageProfile,
   WeeklyReceiptReport,
 } from "@/features/weekly-review/types/weekly-review";
+import { ApiError } from "@/lib/api/errors";
 
 export type WeeklyReceiptTheme = {
   accent: string;
@@ -43,21 +44,44 @@ export const weeklyReceiptThemeByToken: Record<
   },
 };
 
+function resolveWeeklyReceiptImageUrl(rawImageUrl: string) {
+  try {
+    return resolveClosetImageUrl(rawImageUrl);
+  } catch (error) {
+    if (
+      error instanceof ApiError &&
+      error.code === "INVALID_IMAGE_URL_DOMAIN" &&
+      /^https:\/\//i.test(rawImageUrl.trim())
+    ) {
+      return rawImageUrl.trim();
+    }
+
+    throw error;
+  }
+}
+
 export function createWeeklyReceiptReport({
+  imageUrlByClothesId,
   profile,
   usageRate,
   wornClothesResult,
 }: {
+  imageUrlByClothesId?: Map<number, string>;
   profile: ClosetUsageProfile;
   usageRate: number;
   wornClothesResult: WeeklyWornClothesResultApi | undefined;
 }): WeeklyReceiptReport {
   const reportItems =
-    wornClothesResult?.wornClothes.map((item) => ({
-      clothesId: item.clothesId,
-      imageUrl: resolveClosetImageUrl(item.imageUrl),
-      price: item.price,
-    })) ?? [];
+    wornClothesResult?.wornClothes.map((item) => {
+      const fallbackImageUrl = imageUrlByClothesId?.get(item.clothesId);
+      const imageUrl = fallbackImageUrl ?? item.imageUrl;
+
+      return {
+        clothesId: item.clothesId,
+        imageUrl: resolveWeeklyReceiptImageUrl(imageUrl),
+        price: item.price,
+      };
+    }) ?? [];
 
   return {
     usageProfile: profile,
