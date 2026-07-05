@@ -150,10 +150,12 @@ export function ClosetSectionSelect({
   options,
   selectedOption,
   onSelect,
+  hasError = false,
 }: {
   options: ClosetSectionOption[];
   selectedOption: ClosetSectionOption | null;
   onSelect: (option: ClosetSectionOption) => void;
+  hasError?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -162,7 +164,12 @@ export function ClosetSectionSelect({
       <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
         옷장 보관 칸
       </Text>
-      <View className="mt-[14px] overflow-hidden rounded-lg border-[0.5px] border-disabled bg-white">
+      <View
+        className={[
+          "mt-[14px] overflow-hidden rounded-lg bg-white",
+          hasError ? "border border-error" : "border-[0.5px] border-disabled",
+        ].join(" ")}
+      >
         <Pressable
           className="h-[50px] flex-row items-center justify-between px-[20px]"
           disabled={options.length === 0}

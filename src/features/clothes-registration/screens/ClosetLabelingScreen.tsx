@@ -1,6 +1,14 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, TextInput, TextInputProps, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -15,6 +23,7 @@ import {
   getClosetTemplateSections,
 } from "@/features/clothes-registration/screens/closet-template-data";
 import { invalidateRegistrationQueries } from "@/features/onboarding/utils/invalidateRegistrationQueries";
+import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -179,6 +188,11 @@ export function ClosetLabelingScreen() {
         params: { closetId: String(createdCloset.closetId) },
       });
     } catch (error) {
+      if (error instanceof ApiError && error.code === "CLOSET_4014") {
+        Alert.alert("옷장은 최대 3개까지 등록할 수 있습니다.");
+        return;
+      }
+
       showToast(
         error instanceof Error ? error.message : "옷장 등록에 실패했어요. 다시 시도해주세요.",
       );

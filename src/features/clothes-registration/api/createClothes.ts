@@ -6,6 +6,7 @@ export type CreateClothesPayload = {
   color: string;
   category: string;
   price: number;
+  closetId: number;
   sectionId: number;
 };
 

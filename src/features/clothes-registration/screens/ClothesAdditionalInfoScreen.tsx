@@ -29,7 +29,10 @@ import {
   normalizeColorName,
 } from "@/features/clothes-registration/utils/clothesAnalysisParams";
 import { invalidateRegistrationQueries } from "@/features/onboarding/utils/invalidateRegistrationQueries";
+import { clothesLimitMessage } from "@/features/clothes-registration/utils/clothesLimit";
+import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
+import { useClosetStore } from "@/stores/useClosetStore";
 import { useQuestRegistrationStore } from "@/stores/useQuestRegistrationStore";
 
 function AnalysisResultHeader({
@@ -80,6 +83,7 @@ export function ClothesAdditionalInfoScreen() {
   const completeActiveQuestRegistration = useQuestRegistrationStore(
     (state) => state.completeActiveRegistration,
   );
+  const closetId = useClosetStore((state) => state.closetId);
   const {
     imageUri: imageUriParam,
     imageUrl: imageUrlParam,
@@ -110,6 +114,7 @@ export function ClothesAdditionalInfoScreen() {
   );
   const {
     options: closetSectionOptions,
+    isClosetFull,
     isLoading: isClosetSectionsLoading,
     error: closetSectionsError,
   } = useClothesStorageSections();
@@ -118,6 +123,7 @@ export function ClothesAdditionalInfoScreen() {
   const [price, setPrice] = useState("");
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isServerLimitExceeded, setIsServerLimitExceeded] = useState(false);
   const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const selectedClosetOption = useMemo(
     () =>
@@ -126,6 +132,7 @@ export function ClothesAdditionalInfoScreen() {
       null,
     [closetSectionOptions, selectedClosetSectionId],
   );
+  const isClothesLimitReached = isClosetFull || isServerLimitExceeded;
 
   useEffect(() => {
     if (selectedClosetSectionId !== null || closetSectionOptions.length === 0) {
@@ -136,7 +143,7 @@ export function ClothesAdditionalInfoScreen() {
   }, [closetSectionOptions, selectedClosetSectionId]);
 
   const handleSave = async () => {
-    if (isSaving) {
+    if (isSaving || isClothesLimitReached) {
       return;
     }
 
@@ -159,6 +166,11 @@ export function ClothesAdditionalInfoScreen() {
       return;
     }
 
+    if (closetId === null) {
+      showToast("옷장 정보를 확인할 수 없어요. 다시 시도해주세요.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -173,6 +185,7 @@ export function ClothesAdditionalInfoScreen() {
         color: toClothesColorValue(selectedColor),
         category: toClothesCategoryValue(selectedCategory),
         price: priceValue,
+        closetId,
         sectionId: selectedClosetOption.requestSectionId,
       });
 
@@ -186,6 +199,11 @@ export function ClothesAdditionalInfoScreen() {
 
       router.replace("/clothes/register/complete");
     } catch (error) {
+      if (error instanceof ApiError && error.code === "CLOTHES_4003") {
+        setIsServerLimitExceeded(true);
+        return;
+      }
+
       showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");
     } finally {
       setIsSaving(false);
@@ -236,10 +254,16 @@ export function ClothesAdditionalInfoScreen() {
 
       <View className="mt-[24px]">
         <ClosetSectionSelect
+          hasError={isClothesLimitReached}
           options={closetSectionOptions}
           selectedOption={selectedClosetOption}
           onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
         />
+        {isClothesLimitReached ? (
+          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+            {clothesLimitMessage}
+          </Text>
+        ) : null}
         {isClosetSectionsLoading ? (
           <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
             옷장 보관 칸 정보를 불러오는 중입니다.
@@ -255,7 +279,7 @@ export function ClothesAdditionalInfoScreen() {
       <View className="mt-auto">
         <Button
           label={isSaving ? "저장 중..." : "저장하기"}
-          disabled={isSaving}
+          disabled={isSaving || isClothesLimitReached}
           fullWidth
           className="h-[58px]"
           onPress={handleSave}
