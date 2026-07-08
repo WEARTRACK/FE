@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Path } from "react-native-svg";
 
-import ReceiptLogo from "../../../../assets/WEARTRACK-logo.svg";
+import ReceiptLogo from "../../../../assets/receipt-header.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import {
@@ -130,7 +130,7 @@ export function WeeklyReviewReceiptScreen() {
         }}
       >
         <View className="items-center">
-          <ReceiptLogo height={21} width={163} />
+          <ReceiptLogo color={receiptTheme.barcode} height={21} width={163} />
           <Text
             className="mt-2 font-pretendard"
             style={{
