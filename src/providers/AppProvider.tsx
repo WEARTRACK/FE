@@ -6,8 +6,9 @@ import { env } from "@/config/env";
 import { queryClient } from "@/lib/queryClient";
 import { useClosetStore } from "@/stores/useClosetStore";
 import { useSessionStore } from "@/stores/useSessionStore";
+import { FeedbackProvider } from "@/providers/FeedbackProvider";
 
-export function AppProvider({ children }: PropsWithChildren) {
+function AppBootstrap({ children }: PropsWithChildren) {
   useNotificationSetup();
 
   useEffect(() => {
@@ -56,5 +57,13 @@ export function AppProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return <FeedbackProvider>{children}</FeedbackProvider>;
+}
+
+export function AppProvider({ children }: PropsWithChildren) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppBootstrap>{children}</AppBootstrap>
+    </QueryClientProvider>
+  );
 }

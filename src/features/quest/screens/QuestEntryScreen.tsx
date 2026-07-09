@@ -1,5 +1,5 @@
 import { Redirect } from "expo-router";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
@@ -12,6 +12,7 @@ import {
   getQuestEntryCardAlertMessage,
 } from "@/features/quest/utils/getQuestEntryAlertMessage";
 import { resolveQuestEntryScreenState } from "@/features/quest/utils/resolveQuestEntryScreenState";
+import { showAlert } from "@/lib/ui/showAlert";
 
 function QuestEntryErrorScreen({ onRetry }: { onRetry: () => void }) {
   const insets = useSafeAreaInsets();
@@ -67,7 +68,9 @@ export function QuestEntryScreen() {
 
   if (screenState.kind === "waiting" || screenState.kind === "completed") {
     const handlePressQuestCard = (quest: QuestCardItem) => {
-      Alert.alert(getQuestEntryCardAlertMessage(quest));
+      showAlert({
+        title: getQuestEntryCardAlertMessage(quest),
+      });
     };
 
     return (
@@ -77,7 +80,9 @@ export function QuestEntryScreen() {
         selectableQuestIndexes={[0, 1]}
         onPressQuestCard={handlePressQuestCard}
         onPressStart={() => {
-          Alert.alert(getQuestEntryActionAlertMessage());
+          showAlert({
+            title: getQuestEntryActionAlertMessage(),
+          });
         }}
       />
     );

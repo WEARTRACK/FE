@@ -1,6 +1,6 @@
 import { Href, Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
 
 import ClotheExample from "../../../../assets/clotheExample.svg";
 import CategoryIcon from "../../../../assets/category.svg";
@@ -15,6 +15,7 @@ import {
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { showAlert } from "@/lib/ui/showAlert";
 import { showToast } from "@/lib/ui/showToast";
 import { useHomeSummary } from "@/features/home/hooks/useHomeSummary";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
@@ -199,10 +200,15 @@ function ClothesRegistrationGuideModal({
 }) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-center bg-black/25 px-6" onPress={onClose}>
+      <View className="flex-1 justify-center px-6">
         <Pressable
+          className="absolute inset-0 bg-black/25"
+          onPress={onClose}
+          style={{ zIndex: 0 }}
+        />
+        <View
           className="items-center rounded-xl bg-white px-[38px] pb-[29px] pt-[30px]"
-          onPress={(event) => event.stopPropagation()}
+          style={{ position: "relative", elevation: 2, zIndex: 1 }}
         >
           <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
             옷 등록하기
@@ -251,8 +257,8 @@ function ClothesRegistrationGuideModal({
               쇼핑몰 링크
             </Text>
           </Pressable>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -290,10 +296,14 @@ export function MainHomeScreen() {
     }
 
     if (homeSummary.closetCount === 0) {
-      Alert.alert("옷장 등록이 필요해요", "옷을 등록하려면 먼저 옷장을 등록해주세요.", [
-        { text: "취소", style: "cancel" },
-        { text: "옷장 등록하기", onPress: () => setIsClosetGuideVisible(true) },
-      ]);
+      showAlert({
+        title: "옷장 등록이 필요해요",
+        message: "옷을 등록하려면 먼저\n옷장을 등록해주세요.",
+        confirmText: "옷장 등록하기",
+        cancelText: "취소",
+        dismissible: false,
+        onConfirm: () => setIsClosetGuideVisible(true),
+      });
       return;
     }
 
