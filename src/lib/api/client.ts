@@ -37,6 +37,7 @@ function isAuthRequiredPath(pathname: string) {
     pathname === "/api/members/nickname/check" ||
     pathname === "/api/members/me/nickname" ||
     pathname.startsWith("/api/members/me/") ||
+    pathname.startsWith("/api/notifications") ||
     pathname.startsWith("/api/onboarding/") ||
     pathname.startsWith("/api/closets/") ||
     pathname.startsWith("/api/clothes/")
@@ -57,8 +58,9 @@ apiClient.interceptors.request.use(async (config) => {
   }
 
   const accessToken = useSessionStore.getState().accessToken;
+  const existingAuthorization = headers.get("Authorization");
 
-  if (requiresAuth && !accessToken) {
+  if (requiresAuth && !accessToken && !existingAuthorization) {
     throw new ApiError({
       code: "AUTH_REQUIRED",
       message: "인증이 필요합니다.",
@@ -67,8 +69,6 @@ apiClient.interceptors.request.use(async (config) => {
   }
 
   if (requiresAuth && accessToken) {
-    const existingAuthorization = headers.get("Authorization");
-
     if (!existingAuthorization) {
       headers.set("Authorization", `Bearer ${accessToken}`);
     }
