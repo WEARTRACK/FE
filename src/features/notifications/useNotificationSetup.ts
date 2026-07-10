@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import type { RemoteMessage } from "@react-native-firebase/messaging";
 import {
   getToken,
@@ -26,6 +26,7 @@ import {
 } from "@/features/notifications/data/notification-token-sync-storage";
 import { navigateFromNotificationData } from "@/features/notifications/notification-navigation";
 import { requestNotificationPermission } from "@/features/notifications/notification-permission";
+import { showAlert } from "@/lib/ui/showAlert";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 const messaging = getMessaging();
@@ -40,17 +41,18 @@ function getNotificationDeviceType(): NotificationDeviceType {
 
 function showForegroundNotification(remoteMessage: RemoteMessage) {
   const title = remoteMessage.notification?.title ?? "WEARTRACK";
-  const body = remoteMessage.notification?.body ?? "오늘 입은 옷을 기록해보세요.";
+  const body = remoteMessage.notification?.body ?? "오늘 입은 옷을\n기록해보세요.";
 
-  Alert.alert(title, body, [
-    { text: "나중에", style: "cancel" },
-    {
-      text: "열기",
-      onPress: () => {
-        navigateFromNotificationData(remoteMessage.data);
-      },
+  showAlert({
+    title,
+    message: body,
+    confirmText: "열기",
+    cancelText: "나중에",
+    dismissible: false,
+    onConfirm: () => {
+      navigateFromNotificationData(remoteMessage.data);
     },
-  ]);
+  });
 }
 
 function isSameTokenSyncState(

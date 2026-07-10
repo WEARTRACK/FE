@@ -1,5 +1,15 @@
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
 import { useWeeklyClosetUsageAnalysis } from "@/features/weekly-review/hooks/use-current-weekly-review";
@@ -11,18 +21,59 @@ import {
 import { isWeeklyReviewNotFoundError } from "@/features/weekly-review/utils/weekly-review-error";
 
 import {
+  WeeklyReviewUsageDistributionSection,
   WeeklyReviewUsageDonut,
-  WeeklyReviewUsageProfileCard,
+  WeeklyReviewUsageGuideTooltip,
 } from "./WeeklyReviewAnalysisComponents";
 import { WeeklyReviewRouteScaffold } from "./WeeklyReviewRouteScaffold";
 
+const TOOLTIP_BOX_HEIGHT = 101;
+const TOOLTIP_SIDE_PADDING = 24;
+const TOOLTIP_POINTER_WIDTH = 22;
+const TOOLTIP_POINTER_HALF_WIDTH = TOOLTIP_POINTER_WIDTH / 2;
+
 export function WeeklyReviewAnalysisScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const [isUsageGuideVisible, setIsUsageGuideVisible] = useState(false);
+  const [guideTooltipTop, setGuideTooltipTop] = useState<number | null>(null);
+  const [guideTooltipPointerLeft, setGuideTooltipPointerLeft] = useState<number | null>(null);
+  const guideButtonRef = useRef<View>(null);
   const weeklyClosetUsageAnalysisQuery = useWeeklyClosetUsageAnalysis();
   const analysis = weeklyClosetUsageAnalysisQuery.data;
   const usageRate = clampClosetUsageRate(analysis?.weeklyClosetUsageRate ?? 0);
   const usageProfile = getClosetUsageProfileByTitle(analysis?.closetUsageType, usageRate);
   const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(weeklyClosetUsageAnalysisQuery.error);
+
+  const closeUsageGuide = () => {
+    setIsUsageGuideVisible(false);
+    setGuideTooltipTop(null);
+    setGuideTooltipPointerLeft(null);
+  };
+
+  const openUsageGuide = () => {
+    guideButtonRef.current?.measureInWindow((x, y, width) => {
+      const tooltipWidth = Math.max(screenWidth - TOOLTIP_SIDE_PADDING * 2, 0);
+      const pointerLeft = Math.min(
+        Math.max(x + width / 2 - TOOLTIP_SIDE_PADDING - TOOLTIP_POINTER_HALF_WIDTH, 0),
+        Math.max(tooltipWidth - TOOLTIP_POINTER_WIDTH, 0),
+      );
+
+      setGuideTooltipTop(Math.max(y - TOOLTIP_BOX_HEIGHT, insets.top + 16));
+      setGuideTooltipPointerLeft(pointerLeft);
+      setIsUsageGuideVisible(true);
+    });
+  };
+
+  const handleGuidePress = () => {
+    if (isUsageGuideVisible) {
+      closeUsageGuide();
+      return;
+    }
+
+    openUsageGuide();
+  };
 
   const renderContent = () => {
     if (weeklyClosetUsageAnalysisQuery.isLoading) {
@@ -69,21 +120,26 @@ export function WeeklyReviewAnalysisScreen() {
     }
 
     return (
-      <View className="pt-[52px]">
-        <WeeklyReviewUsageDonut profile={usageProfile} usageRate={usageRate} />
-
-        <Text
-          className="mt-6 font-pretendard-semibold text-headline text-bg-dark"
-          style={{ lineHeight: 28 }}
+      <View className="relative flex-1">
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom, 20) + 24,
+            paddingTop: 52,
+          }}
+          scrollEnabled={!isUsageGuideVisible}
+          showsVerticalScrollIndicator={false}
         >
-          활용도 분포
-        </Text>
+          <WeeklyReviewUsageDonut profile={usageProfile} usageRate={usageRate} />
 
-        <WeeklyReviewUsageProfileCard
-          className="mt-[15px]"
-          profile={usageProfile}
-          unwornClothesCount={analysis.unwornClothesCount}
-        />
+          <WeeklyReviewUsageDistributionSection
+            infoButtonRef={guideButtonRef}
+            isGuideVisible={isUsageGuideVisible}
+            onGuidePress={handleGuidePress}
+            profile={usageProfile}
+            unwornClothesCount={analysis.unwornClothesCount}
+          />
+        </ScrollView>
       </View>
     );
   };
@@ -91,6 +147,30 @@ export function WeeklyReviewAnalysisScreen() {
   return (
     <WeeklyReviewRouteScaffold title="옷장 분석">
       <View className="flex-1">{renderContent()}</View>
+
+      <Modal
+        animationType="none"
+        onRequestClose={closeUsageGuide}
+        statusBarTranslucent
+        transparent
+        visible={isUsageGuideVisible}
+      >
+        <View className="flex-1">
+          <Pressable
+            accessibilityLabel="활용도 분포 안내 닫기"
+            className="absolute inset-0"
+            onPress={closeUsageGuide}
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
+          />
+
+          {guideTooltipTop !== null && guideTooltipPointerLeft !== null ? (
+            <WeeklyReviewUsageGuideTooltip
+              pointerLeft={guideTooltipPointerLeft}
+              top={guideTooltipTop}
+            />
+          ) : null}
+        </View>
+      </Modal>
     </WeeklyReviewRouteScaffold>
   );
 }

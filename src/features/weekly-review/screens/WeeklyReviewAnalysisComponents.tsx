@@ -1,10 +1,13 @@
+import type { Ref } from "react";
 import { Link } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 
+import InfoTooltipIcon from "../../../../assets/info-tooltip.svg";
 import { colors } from "@/constants/colors";
 import { weeklyReviewRoutes } from "@/features/weekly-review/routes";
 import type { ClosetUsageProfile } from "@/features/weekly-review/types/weekly-review";
+import { CLOSET_USAGE_PROFILES } from "@/features/weekly-review/utils/closet-usage";
 
 const DONUT_SIZE = 220;
 const DONUT_STROKE_WIDTH = 40;
@@ -174,5 +177,145 @@ export function WeeklyReviewUsageProfileCard({
         </View>
       </Pressable>
     </Link>
+  );
+}
+
+type WeeklyReviewUsageDistributionSectionProps = {
+  infoButtonRef?: Ref<View>;
+  isGuideVisible: boolean;
+  onGuidePress: () => void;
+  profile: ClosetUsageProfile;
+  unwornClothesCount: number | null;
+};
+
+const usageProfilesInOrder = [
+  CLOSET_USAGE_PROFILES.neglected,
+  CLOSET_USAGE_PROFILES.potential,
+  CLOSET_USAGE_PROFILES.active,
+  CLOSET_USAGE_PROFILES.master,
+] satisfies ClosetUsageProfile[];
+
+export function WeeklyReviewUsageDistributionSection({
+  infoButtonRef,
+  isGuideVisible,
+  onGuidePress,
+  profile,
+  unwornClothesCount,
+}: WeeklyReviewUsageDistributionSectionProps) {
+  return (
+    <View className="mt-[33px]">
+      <View className="flex-row items-center">
+        <Text
+          className="font-pretendard-semibold text-headline text-bg-dark"
+          style={{ lineHeight: 24 }}
+        >
+          활용도 분포
+        </Text>
+
+        <View className="ml-[5px] h-6 w-6" collapsable={false} ref={infoButtonRef}>
+          <WeeklyReviewUsageInfoButton isGuideVisible={isGuideVisible} onPress={onGuidePress} />
+        </View>
+      </View>
+
+      <WeeklyReviewUsageProfileCard
+        className="mt-[15px]"
+        profile={profile}
+        unwornClothesCount={unwornClothesCount}
+      />
+
+      <WeeklyReviewUsageProfileLegendCard className="mt-[34px]" profile={profile} />
+    </View>
+  );
+}
+
+type WeeklyReviewUsageProfileLegendCardProps = {
+  className?: string;
+  profile: ClosetUsageProfile;
+};
+
+function WeeklyReviewUsageProfileLegendCard({
+  className,
+  profile,
+}: WeeklyReviewUsageProfileLegendCardProps) {
+  const classNames = ["h-[201px] rounded-xl border border-cool bg-white px-8 py-8", className]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <View className={classNames}>
+      {usageProfilesInOrder.map((usageProfile, index) => {
+        const isSelected = usageProfile.type === profile.type;
+        const titleClassName = isSelected
+          ? "font-pretendard-semibold text-heading text-text"
+          : "font-pretendard text-heading text-text-subdued";
+        const rangeClassName = isSelected
+          ? "font-pretendard text-heading text-text"
+          : "font-pretendard text-body text-text-subdued";
+
+        return (
+          <View
+            className="flex-row items-center"
+            key={usageProfile.type}
+            style={index === 0 ? undefined : { marginTop: 20 }}
+          >
+            <View className="w-[97px]">
+              <Text className={titleClassName}>{usageProfile.title}</Text>
+            </View>
+
+            <Text className={rangeClassName}>
+              {usageProfile.range.min}-{usageProfile.range.max}% 활용
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+type WeeklyReviewUsageInfoButtonProps = {
+  isGuideVisible: boolean;
+  onPress: () => void;
+};
+
+function WeeklyReviewUsageInfoButton({
+  isGuideVisible,
+  onPress,
+}: WeeklyReviewUsageInfoButtonProps) {
+  return (
+    <Pressable
+      accessibilityLabel={isGuideVisible ? "활용도 분포 안내 닫기" : "활용도 분포 안내 보기"}
+      accessibilityRole="button"
+      className="h-6 w-6 items-center justify-center"
+      onPress={onPress}
+      hitSlop={12}
+    >
+      <InfoTooltipIcon height={24} width={24} />
+    </Pressable>
+  );
+}
+
+type WeeklyReviewUsageGuideTooltipProps = {
+  pointerLeft: number;
+  top: number;
+};
+
+export function WeeklyReviewUsageGuideTooltip({
+  pointerLeft,
+  top,
+}: WeeklyReviewUsageGuideTooltipProps) {
+  return (
+    <View className="absolute left-6 right-6 z-30 h-[101px]" style={{ top }}>
+      <View className="h-[85px] items-center justify-center rounded-xl bg-white px-[30px]">
+        <Text className="w-[278px] text-center font-pretendard text-body text-black">
+          주간 회고에서 선택한 이번주 입은 옷을 기준으로{"\n"}이번주 옷장 활용도가 결정돼요!
+        </Text>
+      </View>
+
+      <View style={{ marginLeft: pointerLeft, marginTop: -1 }}>
+        <Svg height={16} viewBox="0 0 22 16" width={22}>
+          <Path d="M11 16L0 0H22L11 16Z" fill={colors.white} />
+        </Svg>
+      </View>
+    </View>
   );
 }
