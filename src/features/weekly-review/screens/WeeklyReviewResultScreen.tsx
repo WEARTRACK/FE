@@ -94,7 +94,7 @@ export function WeeklyReviewResultScreen() {
       </View>
 
       <Text className="mt-[24px] font-pretendard-semibold text-headline text-text">
-        이번 주 인사이트
+        이번 주 입은 옷
       </Text>
 
       <Pressable
