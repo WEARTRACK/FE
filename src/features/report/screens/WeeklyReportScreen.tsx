@@ -61,11 +61,11 @@ function getMonthNumber(date: string) {
 }
 
 function formatWeeklyRange(startDate: string, endDate: string) {
-  return `${startDate.slice(5).replace("-", "/")} ~ ${endDate.slice(5).replace("-", "/")}`;
+  return `${startDate.slice(5).replace("-", "/")} - ${endDate.slice(5).replace("-", "/")}`;
 }
 
 function formatWeeklyReceiptLabel(startDate: string, endDate: string) {
-  return `${startDate.slice(5).replace("-", "/")} ~ ${endDate.slice(5).replace("-", "/")} 지출`;
+  return `${startDate.slice(5).replace("-", "/")} - ${endDate.slice(5).replace("-", "/")} 지출`;
 }
 
 function formatMonthlyTitle(date: string) {
@@ -445,7 +445,7 @@ export function WeeklyReportScreen() {
             }
           }}
         />
-        <Text className="min-w-[58px] text-center font-pretendard text-[16px] leading-[20px] text-text">
+        <Text className="w-[110px] text-center font-pretendard text-[16px] leading-[20px] text-text">
           {isWeekly
             ? formatWeeklyRange(
                 report?.weekStartDate ?? selectedWeekStartDate,

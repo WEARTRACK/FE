@@ -2,6 +2,7 @@ import { deleteClothes } from "@/features/closet/api/clothes-delete-api";
 import { fetchClothesDetail } from "@/features/closet/api/clothes-detail-api";
 import { fetchClothesByFilter } from "@/features/closet/api/clothes-filter-api";
 import { mapServerCategoryToClosetCategory } from "@/features/closet/api/closet-api-mappers";
+import { fetchClosetList } from "@/features/closet/api/closet-list-api";
 import { fetchClosetSectionItems } from "@/features/closet/api/closet-section-api";
 import { fetchClosetStatistics } from "@/features/closet/api/closet-statistics-api";
 import { fetchClosetSummary } from "@/features/closet/api/closet-summary-api";
@@ -10,24 +11,37 @@ import type { ClosetDeleteResultApi, ClosetDetailResult, ClosetUpdateRequestBody
 import type { ClosetItem } from "@/features/closet/types/closet-item";
 import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import type { ClosetSearchPage, ClosetSearchParams } from "@/features/closet/types/closet-search";
+import { isValidClosetId } from "@/features/closet/utils/closet-id";
 import { ApiError } from "@/lib/api/errors";
 import { useClosetStore } from "@/stores/useClosetStore";
 
-async function resolveClosetId() {
+async function resolveClosetId(preferredClosetId?: number | null) {
+  if (isValidClosetId(preferredClosetId)) {
+    useClosetStore.getState().setClosetId(preferredClosetId);
+    return preferredClosetId;
+  }
+
   if (!useClosetStore.persist.hasHydrated()) {
     await useClosetStore.persist.rehydrate();
   }
 
   const closetId = useClosetStore.getState().closetId;
-  if (closetId === null) {
-    throw new ApiError({
-      code: "CLOSET_ID_REQUIRED",
-      message: "옷장 정보가 없습니다. 옷장 등록 후 다시 시도해주세요.",
-      status: 400,
-    });
+  if (isValidClosetId(closetId)) {
+    return closetId;
   }
 
-  return closetId;
+  const closets = await fetchClosetList();
+  const fallbackClosetId = closets[0]?.closetId ?? null;
+  if (isValidClosetId(fallbackClosetId)) {
+    useClosetStore.getState().setClosetId(fallbackClosetId);
+    return fallbackClosetId;
+  }
+
+  throw new ApiError({
+    code: "CLOSET_ID_REQUIRED",
+    message: "옷장 정보가 없습니다. 옷장 등록 후 다시 시도해주세요.",
+    status: 400,
+  });
 }
 
 function toDisplayLabel(value: string) {
@@ -55,24 +69,24 @@ async function resolveApiSectionId(params: { closetId: number; uiSectionId: Clos
 }
 
 export type ClosetDataRepository = {
-  getTemplate: () => Promise<ClosetTemplate>;
-  getAllItems: () => Promise<ClosetItem[]>;
-  getItemsBySectionId: (sectionId: ClosetSectionId) => Promise<ClosetItem[]>;
-  getItemById: (sectionId: ClosetSectionId, itemId: string) => Promise<ClosetItem | null>;
+  getTemplate: (closetId?: number | null) => Promise<ClosetTemplate>;
+  getAllItems: (closetId?: number | null) => Promise<ClosetItem[]>;
+  getItemsBySectionId: (sectionId: ClosetSectionId, closetId?: number | null) => Promise<ClosetItem[]>;
+  getItemById: (sectionId: ClosetSectionId, itemId: string, closetId?: number | null) => Promise<ClosetItem | null>;
   searchClothes: (params: {
     searchParams: ClosetSearchParams;
     page: number;
     size: number;
   }) => Promise<ClosetSearchPage>;
   getClothesDetail: (clothesId: number) => Promise<ClosetDetailResult>;
-  updateClothes: (clothesId: number, payload: ClosetUpdateRequestBody) => Promise<ClosetDetailResult>;
+  updateClothes: (clothesId: number, payload: ClosetUpdateRequestBody, closetId?: number | null) => Promise<ClosetDetailResult>;
   deleteClothes: (clothesId: number) => Promise<ClosetDeleteResultApi>;
 };
 
 export const apiClosetRepository: ClosetDataRepository = {
-  getTemplate: async () => fetchClosetSummary(await resolveClosetId()),
-  getAllItems: async () => {
-    const result = await fetchClosetStatistics(await resolveClosetId());
+  getTemplate: async (closetId) => fetchClosetSummary(await resolveClosetId(closetId)),
+  getAllItems: async (closetId) => {
+    const result = await fetchClosetStatistics(await resolveClosetId(closetId));
     const items: ClosetItem[] = [];
     let cursor = 1;
 
@@ -97,9 +111,9 @@ export const apiClosetRepository: ClosetDataRepository = {
 
     return items;
   },
-  getItemsBySectionId: async (sectionId) =>
+  getItemsBySectionId: async (sectionId, requestedClosetId) =>
     {
-      const closetId = await resolveClosetId();
+      const closetId = await resolveClosetId(requestedClosetId);
       const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
 
       return fetchClosetSectionItems({
@@ -110,8 +124,8 @@ export const apiClosetRepository: ClosetDataRepository = {
         size: 12,
       });
     },
-  getItemById: async (sectionId, itemId) => {
-    const closetId = await resolveClosetId();
+  getItemById: async (sectionId, itemId, requestedClosetId) => {
+    const closetId = await resolveClosetId(requestedClosetId);
     const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
     const items = await fetchClosetSectionItems({
       closetId,
@@ -149,8 +163,8 @@ export const apiClosetRepository: ClosetDataRepository = {
     };
   },
   getClothesDetail: fetchClothesDetail,
-  updateClothes: async (clothesId, payload) => {
-    const closetId = await resolveClosetId();
+  updateClothes: async (clothesId, payload, requestedClosetId) => {
+    const closetId = await resolveClosetId(requestedClosetId);
     const nextSectionId =
       payload.sectionId === null
         ? null
