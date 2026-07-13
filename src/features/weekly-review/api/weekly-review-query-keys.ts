@@ -17,4 +17,6 @@ export const weeklyReviewQueryKeys = {
     [...weeklyReviewQueryKeys.weeklyClosetUsage(memberId), "analysis"] as const,
   weeklyWornClothes: (memberId: number) =>
     [...weeklyReviewQueryKeys.weeklyClosetUsage(memberId), "worn-clothes"] as const,
+  longUnwornClothes: (memberId: number) =>
+    [...weeklyReviewQueryKeys.weeklyReviews(memberId), "long-unworn-clothes"] as const,
 };

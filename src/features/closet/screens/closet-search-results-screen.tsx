@@ -39,10 +39,12 @@ import { useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
 import { parseClosetSearchParams } from "@/features/closet/types/closet-search";
 import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-tag-icons";
+import { weeklyReviewQueryKeys } from "@/features/weekly-review/api/weekly-review-query-keys";
 import { ApiError } from "@/lib/api/errors";
 import { queryClient } from "@/lib/queryClient";
 import { showAlert } from "@/lib/ui/showAlert";
 import { showToast } from "@/lib/ui/showToast";
+import { useSessionStore } from "@/stores/useSessionStore";
 
 const PAGINATION_BOTTOM_OFFSET_FROM_TAB_TOP = 13;
 const SEARCH_PAGE_GAP = 24;
@@ -50,6 +52,7 @@ const SEARCH_PAGE_GAP = 24;
 export function ClosetSearchResultsScreen() {
   const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
+  const memberId = useSessionStore((state) => state.memberId);
   const { template } = useClosetTemplate();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
@@ -259,7 +262,19 @@ export function ClosetSearchResultsScreen() {
       setDraftSectionName(updated.sectionName);
       setIsEditing(false);
       setIsSectionDropdownOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+        memberId == null
+          ? Promise.resolve()
+          : queryClient.invalidateQueries({
+              queryKey: weeklyReviewQueryKeys.currentWeeklyReview(memberId),
+            }),
+        memberId == null
+          ? Promise.resolve()
+          : queryClient.invalidateQueries({
+              queryKey: weeklyReviewQueryKeys.longUnwornClothes(memberId),
+            }),
+      ]);
       showToast("수정이 완료됐어요.");
     } catch (error) {
       showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
@@ -281,7 +296,19 @@ export function ClosetSearchResultsScreen() {
           await repository.deleteClothes(selectedItem.clothesId);
           removeItemOptimistic(selectedItem.clothesId);
           handleCloseDetailModal();
-          await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+            memberId == null
+              ? Promise.resolve()
+              : queryClient.invalidateQueries({
+                  queryKey: weeklyReviewQueryKeys.currentWeeklyReview(memberId),
+                }),
+            memberId == null
+              ? Promise.resolve()
+              : queryClient.invalidateQueries({
+                  queryKey: weeklyReviewQueryKeys.longUnwornClothes(memberId),
+                }),
+          ]);
           showToast("옷 삭제에 성공하였습니다.");
         } catch (error) {
           await refetch();

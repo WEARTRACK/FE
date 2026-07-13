@@ -72,9 +72,31 @@ export type WeeklyReviewResult = {
   weekEndDate: string;
   wornClothesCount: number;
   totalClothesCount?: number;
+  longUnwornClothesCount: number;
   weeklyClosetUsageRate: number;
   weeklyInsight: string;
   categories: WeeklyReviewResultCategory[];
+};
+
+export type WeeklyLongUnwornClothesItem = {
+  clothesId: number;
+  imageUrl: string;
+  color: string;
+  category: string;
+};
+
+export type WeeklyLongUnwornClothesCategory = {
+  category: string;
+  unwornCount: number;
+  clothes: WeeklyLongUnwornClothesItem[];
+};
+
+export type WeeklyLongUnwornClothesResult = {
+  periodStartDate: string;
+  periodEndDate: string;
+  longUnwornClothesCount: number;
+  categories: WeeklyLongUnwornClothesCategory[];
+  clothes: WeeklyLongUnwornClothesItem[];
 };
 
 export type ClosetUsageType = "neglected" | "potential" | "active" | "master";
