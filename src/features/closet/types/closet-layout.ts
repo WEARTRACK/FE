@@ -40,11 +40,9 @@ export type ClosetSection = {
   id: ClosetSectionId;
   apiSectionId?: number;
   sectionName?: string;
-  clothesCount?: number;
 };
 
 export type ClosetTemplate = {
-  closetName?: string;
   templateId: ClosetTemplateId;
   sections: ClosetSection[];
 };

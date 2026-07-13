@@ -6,13 +6,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/common/Button";
 import { createClothesFromLink } from "@/features/clothes-registration/api/create-clothes-from-link-api";
 import {
-  ClosetSelect,
   ClosetSectionSelect,
   PriceField,
   PurchaseDateField,
 } from "@/features/clothes-registration/components/AdditionalInfoFields";
-import { useClosetList } from "@/features/closet/hooks/use-closet-list";
-import { toClosetSectionOptions } from "@/features/closet/utils/closet-section-options";
+import { useClothesStorageSections } from "@/features/clothes-registration/hooks/use-clothes-storage-sections";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import {
@@ -154,40 +152,22 @@ export function ShoppingMallLinkDetailsScreen() {
     color,
     category,
     purchaseDate,
-    closetId,
     sectionId,
     setDraft,
     resetDraft,
   } = useShoppingMallRegistrationStore();
-  const { data: closets = [], isLoading: isClosetsLoading, error: closetsError } = useClosetList();
+  const {
+    options: closetSectionOptions,
+    isLoading: isClosetSectionsLoading,
+    error: closetSectionsError,
+  } = useClothesStorageSections();
   const [selectedPurchaseDate, setSelectedPurchaseDate] = useState(
     () => purchaseDate ?? new Date(),
   );
   const [priceInput, setPriceInput] = useState(() => (price === null ? "" : String(price)));
-  const [selectedClosetId, setSelectedClosetId] = useState<number | null>(closetId);
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(sectionId);
   const [isSaving, setIsSaving] = useState(false);
-  const closetOptions = useMemo(
-    () =>
-      closets.map((closet, index) => ({
-        closetId: closet.closetId,
-        label: closet.closetName.trim() || `내 옷장 ${index + 1}`,
-      })),
-    [closets],
-  );
-  const selectedCloset = useMemo(
-    () => closets.find((closet) => closet.closetId === selectedClosetId) ?? closets[0] ?? null,
-    [closets, selectedClosetId],
-  );
   const selectedClosetOption = useMemo(
-    () => closetOptions.find((option) => option.closetId === selectedCloset?.closetId) ?? null,
-    [closetOptions, selectedCloset?.closetId],
-  );
-  const closetSectionOptions = useMemo(
-    () => (selectedCloset ? toClosetSectionOptions(selectedCloset) : []),
-    [selectedCloset],
-  );
-  const selectedSectionOption = useMemo(
     () =>
       closetSectionOptions.find((option) => option.requestSectionId === selectedClosetSectionId) ??
       closetSectionOptions[0] ??
@@ -196,23 +176,11 @@ export function ShoppingMallLinkDetailsScreen() {
   );
 
   useEffect(() => {
-    if (!selectedCloset || selectedCloset.closetId === selectedClosetId) {
+    if (selectedClosetSectionId !== null || closetSectionOptions.length === 0) {
       return;
     }
 
-    setSelectedClosetId(selectedCloset.closetId);
-    setSelectedClosetSectionId(null);
-  }, [selectedCloset, selectedClosetId]);
-
-  useEffect(() => {
-    const isCurrentSectionValid = closetSectionOptions.some(
-      (option) => option.requestSectionId === selectedClosetSectionId,
-    );
-    if (isCurrentSectionValid) {
-      return;
-    }
-
-    setSelectedClosetSectionId(closetSectionOptions[0]?.requestSectionId ?? null);
+    setSelectedClosetSectionId(closetSectionOptions[0].requestSectionId);
   }, [closetSectionOptions, selectedClosetSectionId]);
 
   const handleSave = async () => {
@@ -225,11 +193,10 @@ export function ShoppingMallLinkDetailsScreen() {
       !productName ||
       !color ||
       !category ||
-      !selectedCloset ||
-      !selectedSectionOption
+      !selectedClosetOption
     ) {
       if (!isSaving) {
-        showToast("상품 정보와 보관 옷장 및 칸을 확인해주세요.");
+        showToast("상품 정보와 옷장 보관 칸을 확인해주세요.");
       }
       return;
     }
@@ -239,7 +206,7 @@ export function ShoppingMallLinkDetailsScreen() {
       return;
     }
 
-    const nextStorageLocation = selectedSectionOption.label;
+    const nextStorageLocation = selectedClosetOption.label;
     const payload = {
       sourceUrl,
       productName,
@@ -250,7 +217,7 @@ export function ShoppingMallLinkDetailsScreen() {
       category,
       purchaseDate: formatDateForRequest(selectedPurchaseDate),
       storageLocation: nextStorageLocation,
-      sectionId: selectedSectionOption.requestSectionId,
+      sectionId: selectedClosetOption.requestSectionId,
     };
 
     setIsSaving(true);
@@ -260,8 +227,7 @@ export function ShoppingMallLinkDetailsScreen() {
         price: parsedPrice,
         purchaseDate: selectedPurchaseDate,
         storageLocation: nextStorageLocation,
-        closetId: selectedCloset.closetId,
-        sectionId: selectedSectionOption.requestSectionId,
+        sectionId: selectedClosetOption.requestSectionId,
       });
       await createClothesFromLink(payload);
       await Promise.all([
@@ -306,49 +272,22 @@ export function ShoppingMallLinkDetailsScreen() {
         <ScrollView className="mt-[34px]" showsVerticalScrollIndicator={false}>
           <PurchaseDateField onChange={setSelectedPurchaseDate} value={selectedPurchaseDate} />
 
-          <View className="mt-[24px]">
+          <View className="mt-[34px]">
             <PriceField onChange={setPriceInput} value={priceInput} />
-          </View>
-
-          <View className="mt-[24px]">
-            <ClosetSelect
-              options={closetOptions}
-              selectedOption={selectedClosetOption}
-              onSelect={(option) => {
-                setSelectedClosetId(option.closetId);
-                setSelectedClosetSectionId(null);
-              }}
-              placeholder={
-                isClosetsLoading ? "보관 옷장을 불러오는 중" : "등록된 옷장이 없습니다."
-              }
-              hasError={Boolean(closetsError)}
-            />
-            {isClosetsLoading ? (
-              <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
-                보관 옷장을 불러오는 중입니다.
-              </Text>
-            ) : null}
-            {closetsError ? (
-              <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
-                보관 옷장을 불러오지 못했어요.
-              </Text>
-            ) : null}
           </View>
 
           <View className="mt-[24px] pb-[24px]">
             <ClosetSectionSelect
-              key={selectedCloset?.closetId ?? "no-closet"}
               options={closetSectionOptions}
-              selectedOption={selectedSectionOption}
+              selectedOption={selectedClosetOption}
               onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
-              hasError={Boolean(closetsError)}
             />
-            {isClosetsLoading ? (
+            {isClosetSectionsLoading ? (
               <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
                 옷장 보관 칸 정보를 불러오는 중입니다.
               </Text>
             ) : null}
-            {closetsError ? (
+            {closetSectionsError ? (
               <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
                 옷장 보관 칸 정보를 불러오지 못했어요.
               </Text>
@@ -358,7 +297,7 @@ export function ShoppingMallLinkDetailsScreen() {
 
         <Button
           label={isSaving ? "저장 중..." : "저장하기"}
-          disabled={isSaving || !selectedCloset || !selectedSectionOption}
+          disabled={isSaving || !selectedClosetOption}
           fullWidth
           className="h-[58px]"
           textClassName="font-pretendard-semibold text-[18px] leading-[20px]"

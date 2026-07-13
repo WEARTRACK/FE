@@ -8,7 +8,6 @@ export type CreateClosetSectionPayload = {
 
 export type CreateClosetPayload = {
   templateId: number;
-  closetName: string;
   imageUrl: string | null;
   sections: CreateClosetSectionPayload[];
 };
@@ -16,7 +15,6 @@ export type CreateClosetPayload = {
 export type CreateClosetResult = {
   closetId: number;
   templateId: number;
-  closetName: string;
   imageUrl: string | null;
   sections: {
     sectionId: number;

@@ -25,7 +25,6 @@ const payload = {
 
 const result = {
   clothesId: 12,
-  closetId: 56,
   photoId: 34,
   imageUrl: payload.imageUrl,
   productName: payload.productName,

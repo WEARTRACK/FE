@@ -16,7 +16,6 @@ export type CreateClothesFromLinkPayload = {
 
 export type CreateClothesFromLinkResult = {
   clothesId: number;
-  closetId: number;
   photoId: number;
   imageUrl: string;
   productName: string;
@@ -54,7 +53,6 @@ function isCreateClothesFromLinkResult(value: unknown): value is CreateClothesFr
 
   return (
     typeof candidate.clothesId === "number" &&
-    typeof candidate.closetId === "number" &&
     typeof candidate.photoId === "number" &&
     typeof candidate.imageUrl === "string" &&
     typeof candidate.productName === "string" &&
