@@ -1,6 +1,6 @@
 import { Href, Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { Alert, Modal, Pressable, Text, useWindowDimensions, View } from "react-native";
 
 import ClotheExample from "../../../../assets/clotheExample.svg";
 import CategoryIcon from "../../../../assets/category.svg";
@@ -41,6 +41,8 @@ const defaultWeeklyFashionStats: WeeklyFashionStats = {
   totalSpending: 0,
   closetUsageRate: 0,
 };
+
+const maxClosetCount = 3;
 
 function formatWon(value: number) {
   return `${value.toLocaleString("ko-KR")}원`;
@@ -289,6 +291,20 @@ export function MainHomeScreen() {
       homeSummary?.weeklyClosetUsageRate ?? defaultWeeklyFashionStats.closetUsageRate,
   };
 
+  const handlePressClosetRegistration = () => {
+    if (!homeSummary) {
+      showToast("옷장 정보를 불러오는 중입니다.");
+      return;
+    }
+
+    if (homeSummary.closetCount >= maxClosetCount) {
+      Alert.alert("옷장은 최대 3개까지 등록할 수 있습니다.");
+      return;
+    }
+
+    setIsClosetGuideVisible(true);
+  };
+
   const handlePressClothesRegistration = () => {
     if (!homeSummary) {
       showToast("옷장 정보를 불러오는 중입니다.");
@@ -411,7 +427,7 @@ export function MainHomeScreen() {
 
         <View className={`${isCompactHeight ? "mt-[26px]" : "mt-[34px]"} flex-row gap-[18px]`}>
           <QuickActionButton
-            onPress={() => setIsClosetGuideVisible(true)}
+            onPress={handlePressClosetRegistration}
             icon={<HangerIcon width={75} height={47} />}
             emphasis="옷장"
           />

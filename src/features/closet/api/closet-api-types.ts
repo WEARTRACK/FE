@@ -97,6 +97,7 @@ export type ClosetSummarySectionApi = {
 };
 
 export type ClosetSummaryResultApi = {
+  closetName: string;
   templateId: number;
   sectionCount: number;
   sections: ClosetSummarySectionApi[];
@@ -224,6 +225,7 @@ export function isClosetSummaryResultApi(value: unknown): value is ClosetSummary
 
   const candidate = value as Record<string, unknown>;
   return (
+    typeof candidate.closetName === "string" &&
     typeof candidate.templateId === "number" &&
     typeof candidate.sectionCount === "number" &&
     Array.isArray(candidate.sections) &&

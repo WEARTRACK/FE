@@ -274,6 +274,7 @@ export function ClosetSearchResultsScreen() {
           : queryClient.invalidateQueries({
               queryKey: weeklyReviewQueryKeys.longUnwornClothes(memberId),
             }),
+        queryClient.invalidateQueries({ queryKey: ["closet"] }),
       ]);
       showToast("수정이 완료됐어요.");
     } catch (error) {
@@ -298,6 +299,7 @@ export function ClosetSearchResultsScreen() {
           handleCloseDetailModal();
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+            queryClient.invalidateQueries({ queryKey: ["closet"] }),
             memberId == null
               ? Promise.resolve()
               : queryClient.invalidateQueries({
