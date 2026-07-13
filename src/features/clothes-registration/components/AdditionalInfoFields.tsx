@@ -15,11 +15,6 @@ import CalendarIcon from "../../../../assets/calendar.svg";
 import { colors } from "@/constants/colors";
 import type { ClosetSectionOption } from "@/features/closet/utils/closet-section-options";
 
-export type ClosetSelectOption = {
-  closetId: number;
-  label: string;
-};
-
 function formatPrice(value: string) {
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -155,12 +150,10 @@ export function ClosetSectionSelect({
   options,
   selectedOption,
   onSelect,
-  hasError = false,
 }: {
   options: ClosetSectionOption[];
   selectedOption: ClosetSectionOption | null;
   onSelect: (option: ClosetSectionOption) => void;
-  hasError?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -169,12 +162,7 @@ export function ClosetSectionSelect({
       <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
         옷장 보관 칸
       </Text>
-      <View
-        className={[
-          "mt-[14px] overflow-hidden rounded-lg bg-white",
-          hasError ? "border border-error" : "border-[0.5px] border-disabled",
-        ].join(" ")}
-      >
+      <View className="mt-[14px] overflow-hidden rounded-lg border-[0.5px] border-disabled bg-white">
         <Pressable
           className="h-[50px] flex-row items-center justify-between px-[20px]"
           disabled={options.length === 0}
@@ -191,66 +179,6 @@ export function ClosetSectionSelect({
             {options.map((option) => (
               <Pressable
                 key={option.templateSectionId}
-                className="h-[40px] justify-center border-t-[0.5px] border-disabled"
-                onPress={() => {
-                  onSelect(option);
-                  setOpen(false);
-                }}
-              >
-                <Text className="font-pretendard text-[13px] leading-[20px] text-text-subdued">
-                  {option.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-export function ClosetSelect({
-  options,
-  selectedOption,
-  onSelect,
-  placeholder = "보관 옷장을 불러오는 중",
-  hasError = false,
-}: {
-  options: ClosetSelectOption[];
-  selectedOption: ClosetSelectOption | null;
-  onSelect: (option: ClosetSelectOption) => void;
-  placeholder?: string;
-  hasError?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <View>
-      <Text className="font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        보관 옷장
-      </Text>
-      <View
-        className={[
-          "mt-[14px] overflow-hidden rounded-lg bg-white",
-          hasError ? "border border-error" : "border-[0.5px] border-disabled",
-        ].join(" ")}
-      >
-        <Pressable
-          className="h-[50px] flex-row items-center justify-between px-[20px]"
-          disabled={options.length === 0}
-          onPress={() => setOpen((current) => !current)}
-        >
-          <Text className="font-pretendard text-[14px] leading-[20px] text-text">
-            {selectedOption?.label ?? placeholder}
-          </Text>
-          <Text className="font-pretendard text-[20px] leading-[20px] text-disabled">⌄</Text>
-        </Pressable>
-
-        {open && options.length > 0 ? (
-          <ScrollView className="max-h-[180px]" contentContainerClassName="px-[20px] pb-[8px]">
-            {options.map((option) => (
-              <Pressable
-                key={option.closetId}
                 className="h-[40px] justify-center border-t-[0.5px] border-disabled"
                 onPress={() => {
                   onSelect(option);

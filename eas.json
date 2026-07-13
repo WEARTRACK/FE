@@ -6,7 +6,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "credentialsSource": "remote",
+      "credentialsSource": "local",
       "environment": "development"
     },
     "preview": {

@@ -6,36 +6,12 @@ import type { ClosetStatisticsSummary } from "@/features/closet/types/closet-sta
 import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import { buildClosetStatistics } from "@/features/closet/utils/closet-statistics";
 
-type ClosetDataHookOptions = {
-  closetId?: number | null;
-  repository?: ClosetDataRepository;
-};
-
 const EMPTY_CLOSET_TEMPLATE: ClosetTemplate = {
   templateId: "LAYOUT_1",
   sections: [],
 };
 
-function isClosetRepository(value: ClosetDataHookOptions | ClosetDataRepository | undefined): value is ClosetDataRepository {
-  return Boolean(value && "getTemplate" in value && typeof value.getTemplate === "function");
-}
-
-function resolveHookOptions(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
-  if (isClosetRepository(optionsOrRepository)) {
-    return {
-      closetId: null,
-      repository: optionsOrRepository,
-    };
-  }
-
-  return {
-    closetId: optionsOrRepository?.closetId ?? null,
-    repository: optionsOrRepository?.repository ?? getClosetRepository(),
-  };
-}
-
-export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
-  const { closetId, repository } = resolveHookOptions(optionsOrRepository);
+export function useClosetTemplate(repository: ClosetDataRepository = getClosetRepository()) {
   const [revision, setRevision] = useState(0);
   const [template, setTemplate] = useState<Awaited<ReturnType<ClosetDataRepository["getTemplate"]>>>(
     EMPTY_CLOSET_TEMPLATE,
@@ -53,7 +29,7 @@ export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | 
       try {
         setIsLoading(true);
         setError(null);
-        const data = await repository.getTemplate(closetId);
+        const data = await repository.getTemplate();
         if (!isActive) {
           return;
         }
@@ -74,16 +50,15 @@ export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | 
     return () => {
       isActive = false;
     };
-  }, [closetId, repository, revision]);
+  }, [repository, revision]);
 
   return { template, isLoading, error, refetch };
 }
 
 export function useClosetItemsBySection(
   sectionId: ClosetSectionId,
-  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+  repository: ClosetDataRepository = getClosetRepository(),
 ) {
-  const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
   const [items, setItems] = useState<Awaited<ReturnType<ClosetDataRepository["getItemsBySectionId"]>>>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +74,7 @@ export function useClosetItemsBySection(
       try {
         setIsLoading(true);
         setError(null);
-        const data = await repository.getItemsBySectionId(sectionId, closetId);
+        const data = await repository.getItemsBySectionId(sectionId);
         if (!isActive) {
           return;
         }
@@ -120,7 +95,7 @@ export function useClosetItemsBySection(
     return () => {
       isActive = false;
     };
-  }, [closetId, repository, revision, sectionId]);
+  }, [repository, revision, sectionId]);
 
   return { items, isLoading, error, refetch };
 }
@@ -128,9 +103,8 @@ export function useClosetItemsBySection(
 export function useClosetItem(
   sectionId: ClosetSectionId,
   itemId: string | null,
-  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+  repository: ClosetDataRepository = getClosetRepository(),
 ) {
-  const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
   const [item, setItem] = useState<Awaited<ReturnType<ClosetDataRepository["getItemById"]>>>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +128,7 @@ export function useClosetItem(
       try {
         setIsLoading(true);
         setError(null);
-        const data = await repository.getItemById(sectionId, currentItemId, closetId);
+        const data = await repository.getItemById(sectionId, currentItemId);
         if (!isActive) {
           return;
         }
@@ -175,13 +149,12 @@ export function useClosetItem(
     return () => {
       isActive = false;
     };
-  }, [closetId, itemId, repository, revision, sectionId]);
+  }, [itemId, repository, revision, sectionId]);
 
   return { item, isLoading, error, refetch };
 }
 
-export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
-  const { closetId, repository } = resolveHookOptions(optionsOrRepository);
+export function useClosetStatistics(repository: ClosetDataRepository = getClosetRepository()) {
   const [revision, setRevision] = useState(0);
   const [statistics, setStatistics] = useState<ClosetStatisticsSummary>({
     totalCount: 0,
@@ -200,7 +173,7 @@ export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions 
       try {
         setIsLoading(true);
         setError(null);
-        const items = await repository.getAllItems(closetId);
+        const items = await repository.getAllItems();
         if (!isActive) {
           return;
         }
@@ -221,7 +194,7 @@ export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions 
     return () => {
       isActive = false;
     };
-  }, [closetId, repository, revision]);
+  }, [repository, revision]);
 
   return { statistics, isLoading, error, refetch };
 }

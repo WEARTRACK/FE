@@ -259,10 +259,7 @@ export function ClosetSearchResultsScreen() {
       setDraftSectionName(updated.sectionName);
       setIsEditing(false);
       setIsSectionDropdownOpen(false);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
-        queryClient.invalidateQueries({ queryKey: ["closet"] }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
       showToast("수정이 완료됐어요.");
     } catch (error) {
       showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
@@ -284,19 +281,12 @@ export function ClosetSearchResultsScreen() {
           await repository.deleteClothes(selectedItem.clothesId);
           removeItemOptimistic(selectedItem.clothesId);
           handleCloseDetailModal();
-
-          try {
-            await repository.deleteClothes(selectedItem.clothesId);
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["closet"] }),
-            ]);
-            showToast("옷 삭제에 성공하였습니다.");
-          } catch (error) {
-            await refetch();
-            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
-          }
-        },
+          await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+          showToast("옷 삭제에 성공하였습니다.");
+        } catch (error) {
+          await refetch();
+          showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+        }
       },
     });
   };

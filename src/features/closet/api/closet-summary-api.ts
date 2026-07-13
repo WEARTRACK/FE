@@ -33,11 +33,9 @@ export async function fetchClosetSummary(closetId: number): Promise<ClosetTempla
       id: mapSectionOrderToClosetSectionId(section.sectionOrder),
       apiSectionId: section.sectionId,
       sectionName: section.sectionName,
-      clothesCount: section.clothesCount,
     }));
 
   return {
-    closetName: result.closetName,
     templateId: mapApiTemplateIdToClosetTemplateId(result.templateId),
     sections,
   };
