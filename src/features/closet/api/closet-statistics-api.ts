@@ -21,7 +21,10 @@ export async function fetchClosetStatistics(closetId: number): Promise<ClosetSta
   const result = assertApiEnvelopeSuccess(response.data, response.status);
 
   if (!isClosetStatisticsResultApi(result)) {
-    throw createInvalidResponseError("옷장 통계 조회 result 형식이 올바르지 않아요.", response.data);
+    throw createInvalidResponseError(
+      "옷장 통계 조회 result 형식이 올바르지 않아요.",
+      response.data,
+    );
   }
 
   return result;

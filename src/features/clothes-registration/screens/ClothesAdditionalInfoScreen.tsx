@@ -206,62 +206,62 @@ export function ClothesAdditionalInfoScreen() {
       >
         <ClothesRegistrationHeader />
 
-      <Text
-        className={[
-          "font-pretendard-semibold text-[20px] leading-[24px] text-text",
-          isManualEntry ? "mt-[24px]" : "mt-[34px]",
-        ].join(" ")}
-      >
-        추가정보를 입력해주세요.
-      </Text>
+        <Text
+          className={[
+            "font-pretendard-semibold text-[20px] leading-[24px] text-text",
+            isManualEntry ? "mt-[24px]" : "mt-[34px]",
+          ].join(" ")}
+        >
+          추가정보를 입력해주세요.
+        </Text>
 
-      <AnalysisResultHeader
-        category={selectedCategory}
-        color={selectedColor}
-        imageSource={imageUrl || imageUri}
-        showAnalysis={!isManualEntry}
-      />
-
-      <View className="mt-[34px]">
-        <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
-      </View>
-
-      <View className="mt-[34px]">
-        <PriceField
-          inputProps={keyboardAccessory.getInputAccessoryProps(0)}
-          onChange={setPrice}
-          value={price}
+        <AnalysisResultHeader
+          category={selectedCategory}
+          color={selectedColor}
+          imageSource={imageUrl || imageUri}
+          showAnalysis={!isManualEntry}
         />
-      </View>
 
-      <View className="mt-[24px]">
-        <ClosetSectionSelect
-          options={closetSectionOptions}
-          selectedOption={selectedClosetOption}
-          onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
-        />
-        {isClosetSectionsLoading ? (
-          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
-            옷장 보관 칸 정보를 불러오는 중입니다.
-          </Text>
-        ) : null}
-        {closetSectionsError ? (
-          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
-            옷장 보관 칸 정보를 불러오지 못했어요. 임시 데이터 또는 API 연결 상태를 확인해주세요.
-          </Text>
-        ) : null}
-      </View>
+        <View className="mt-[34px]">
+          <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
+        </View>
 
-      <View className="mt-auto">
-        <Button
-          label={isSaving ? "저장 중..." : "저장하기"}
-          disabled={isSaving}
-          fullWidth
-          className="h-[58px]"
-          onPress={handleSave}
-          textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
-        />
-      </View>
+        <View className="mt-[34px]">
+          <PriceField
+            inputProps={keyboardAccessory.getInputAccessoryProps(0)}
+            onChange={setPrice}
+            value={price}
+          />
+        </View>
+
+        <View className="mt-[24px]">
+          <ClosetSectionSelect
+            options={closetSectionOptions}
+            selectedOption={selectedClosetOption}
+            onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
+          />
+          {isClosetSectionsLoading ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
+              옷장 보관 칸 정보를 불러오는 중입니다.
+            </Text>
+          ) : null}
+          {closetSectionsError ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+              옷장 보관 칸 정보를 불러오지 못했어요. 임시 데이터 또는 API 연결 상태를 확인해주세요.
+            </Text>
+          ) : null}
+        </View>
+
+        <View className="mt-auto">
+          <Button
+            label={isSaving ? "저장 중..." : "저장하기"}
+            disabled={isSaving}
+            fullWidth
+            className="h-[58px]"
+            onPress={handleSave}
+            textClassName="font-pretendard-semibold text-[18px] leading-[20px]"
+          />
+        </View>
       </View>
       {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>

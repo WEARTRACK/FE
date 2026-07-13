@@ -113,9 +113,7 @@ export function WeeklyReviewResultScreen() {
       >
         <View className={insightCardPaddingClassName}>
           <Text className="font-pretendard text-heading text-text">이번 주 인사이트</Text>
-          <Text
-            className="mt-[8px] font-pretendard text-subhead text-text-subdued"
-          >
+          <Text className="mt-[8px] font-pretendard text-subhead text-text-subdued">
             {weeklyReview?.weeklyInsight ?? ""}
           </Text>
         </View>

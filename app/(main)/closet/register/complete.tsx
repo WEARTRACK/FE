@@ -3,4 +3,3 @@ import { ClosetRegistrationCompleteScreen } from "@/features/clothes-registratio
 export default function ClosetRegistrationCompleteRoute() {
   return <ClosetRegistrationCompleteScreen />;
 }
-

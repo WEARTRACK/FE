@@ -8,7 +8,10 @@ import {
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
 import { getClosetRepository } from "@/features/closet/data/closet-repository-provider";
-import { useClosetItemsBySection, useClosetTemplate } from "@/features/closet/hooks/use-closet-data";
+import {
+  useClosetItemsBySection,
+  useClosetTemplate,
+} from "@/features/closet/hooks/use-closet-data";
 import { ClosetItemBrowserScreen } from "@/features/closet/components/ClosetItemBrowserScreen";
 import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
 import type { ClosetItem } from "@/features/closet/types/closet-item";

@@ -6,7 +6,11 @@ import { fetchClosetSectionItems } from "@/features/closet/api/closet-section-ap
 import { fetchClosetStatistics } from "@/features/closet/api/closet-statistics-api";
 import { fetchClosetSummary } from "@/features/closet/api/closet-summary-api";
 import { updateClothes as updateClothesApi } from "@/features/closet/api/clothes-update-api";
-import type { ClosetDeleteResultApi, ClosetDetailResult, ClosetUpdateRequestBody } from "@/features/closet/api/closet-api-types";
+import type {
+  ClosetDeleteResultApi,
+  ClosetDetailResult,
+  ClosetUpdateRequestBody,
+} from "@/features/closet/api/closet-api-types";
 import type { ClosetItem } from "@/features/closet/types/closet-item";
 import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import type { ClosetSearchPage, ClosetSearchParams } from "@/features/closet/types/closet-search";
@@ -65,7 +69,10 @@ export type ClosetDataRepository = {
     size: number;
   }) => Promise<ClosetSearchPage>;
   getClothesDetail: (clothesId: number) => Promise<ClosetDetailResult>;
-  updateClothes: (clothesId: number, payload: ClosetUpdateRequestBody) => Promise<ClosetDetailResult>;
+  updateClothes: (
+    clothesId: number,
+    payload: ClosetUpdateRequestBody,
+  ) => Promise<ClosetDetailResult>;
   deleteClothes: (clothesId: number) => Promise<ClosetDeleteResultApi>;
 };
 
@@ -97,19 +104,18 @@ export const apiClosetRepository: ClosetDataRepository = {
 
     return items;
   },
-  getItemsBySectionId: async (sectionId) =>
-    {
-      const closetId = await resolveClosetId();
-      const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
+  getItemsBySectionId: async (sectionId) => {
+    const closetId = await resolveClosetId();
+    const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
 
-      return fetchClosetSectionItems({
-        closetId,
-        sectionId: apiSectionId,
-        uiSectionId: sectionId,
-        page: 0,
-        size: 12,
-      });
-    },
+    return fetchClosetSectionItems({
+      closetId,
+      sectionId: apiSectionId,
+      uiSectionId: sectionId,
+      page: 0,
+      size: 12,
+    });
+  },
   getItemById: async (sectionId, itemId) => {
     const closetId = await resolveClosetId();
     const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });

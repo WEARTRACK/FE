@@ -124,54 +124,54 @@ export function ShoppingMallManualDetailsScreen() {
       >
         <ManualHeader />
 
-      <Text className="mt-[24px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        추가정보를 입력해주세요.
-      </Text>
+        <Text className="mt-[24px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+          추가정보를 입력해주세요.
+        </Text>
 
-      <View className="mt-[24px]">
-        <ProductThumb />
-      </View>
+        <View className="mt-[24px]">
+          <ProductThumb />
+        </View>
 
-      <View className="mt-[34px]">
-        <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
-      </View>
+        <View className="mt-[34px]">
+          <PurchaseDateField onChange={setPurchaseDate} value={purchaseDate} />
+        </View>
 
-      <View className="mt-[34px]">
-        <PriceField
-          inputProps={keyboardAccessory.getInputAccessoryProps(0)}
-          onChange={setPrice}
-          value={price}
-        />
-      </View>
+        <View className="mt-[34px]">
+          <PriceField
+            inputProps={keyboardAccessory.getInputAccessoryProps(0)}
+            onChange={setPrice}
+            value={price}
+          />
+        </View>
 
-      <View className="mt-[24px]">
-        <ClosetSectionSelect
-          options={closetSectionOptions}
-          selectedOption={selectedClosetOption}
-          onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
-        />
-        {isClosetSectionsLoading ? (
-          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
-            옷장 보관 칸 정보를 불러오는 중입니다.
-          </Text>
-        ) : null}
-        {closetSectionsError ? (
-          <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
-            옷장 보관 칸 정보를 불러오지 못했어요.
-          </Text>
-        ) : null}
-      </View>
+        <View className="mt-[24px]">
+          <ClosetSectionSelect
+            options={closetSectionOptions}
+            selectedOption={selectedClosetOption}
+            onSelect={(option) => setSelectedClosetSectionId(option.requestSectionId)}
+          />
+          {isClosetSectionsLoading ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-text-subdued">
+              옷장 보관 칸 정보를 불러오는 중입니다.
+            </Text>
+          ) : null}
+          {closetSectionsError ? (
+            <Text className="mt-[8px] font-pretendard text-[11px] leading-[16px] text-error">
+              옷장 보관 칸 정보를 불러오지 못했어요.
+            </Text>
+          ) : null}
+        </View>
 
-      <View className="mt-auto">
-        <Button
-          label="저장하기"
-          disabled={!canGoNext}
-          fullWidth
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-          onPress={() => router.replace("/clothes/register/complete")}
-        />
-      </View>
+        <View className="mt-auto">
+          <Button
+            label="저장하기"
+            disabled={!canGoNext}
+            fullWidth
+            className="h-[58px]"
+            textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
+            onPress={() => router.replace("/clothes/register/complete")}
+          />
+        </View>
       </View>
       {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>

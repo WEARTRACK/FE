@@ -3,4 +3,3 @@ import { ClosetAnalysisResultScreen } from "@/features/clothes-registration/scre
 export default function ClosetAnalysisResultRoute() {
   return <ClosetAnalysisResultScreen />;
 }
-

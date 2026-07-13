@@ -26,7 +26,9 @@ export function ClosetMainScreen() {
   const frameHeight = (frameWidth * 517) / 345;
   const frameTop = insets.top + 96;
 
-  const sectionNameById = new Map(template.sections.map((section) => [section.id, section.sectionName]));
+  const sectionNameById = new Map(
+    template.sections.map((section) => [section.id, section.sectionName]),
+  );
   const availableSectionIds = new Set(template.sections.map((section) => section.id));
 
   useEffect(() => {
@@ -79,11 +81,10 @@ export function ClosetMainScreen() {
 
   return (
     <View className="flex-1 bg-bg-light">
-      <View
-        className="absolute left-0 right-0 z-10"
-        style={{ top: insets.top + 15 }}
-      >
-        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">내 옷장</Text>
+      <View className="absolute left-0 right-0 z-10" style={{ top: insets.top + 15 }}>
+        <Text className="text-center font-pretendard-semibold text-headline text-text-subdued">
+          내 옷장
+        </Text>
       </View>
 
       <View className="absolute left-0 right-0 items-center" style={{ top: frameTop }}>
@@ -91,7 +92,9 @@ export function ClosetMainScreen() {
           <ClosetFrame width={frameWidth} height={frameHeight} />
           {isLoading ? (
             <View className="absolute inset-0 items-center justify-center">
-              <Text className="font-pretendard text-body text-text-subdued">불러오는 중입니다.</Text>
+              <Text className="font-pretendard text-body text-text-subdued">
+                불러오는 중입니다.
+              </Text>
             </View>
           ) : (
             <View className="absolute inset-0">
@@ -122,7 +125,9 @@ export function ClosetMainScreen() {
                     }}
                   >
                     {sectionName ? (
-                      <Text className="font-pretendard text-body text-text-subdued">{sectionName}</Text>
+                      <Text className="font-pretendard text-body text-text-subdued">
+                        {sectionName}
+                      </Text>
                     ) : null}
                   </TouchableOpacity>
                 );

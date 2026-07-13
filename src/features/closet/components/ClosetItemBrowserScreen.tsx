@@ -34,7 +34,10 @@ import { ApiError } from "@/lib/api/errors";
 import { showAlert } from "@/lib/ui/showAlert";
 import { showToast } from "@/lib/ui/showToast";
 import type { ClosetSectionId } from "@/features/closet/types/closet-layout";
-import type { ClosetDetailResult, ClosetUpdateRequestBody } from "@/features/closet/api/closet-api-types";
+import type {
+  ClosetDetailResult,
+  ClosetUpdateRequestBody,
+} from "@/features/closet/api/closet-api-types";
 
 type ViewMode = "grid" | "list";
 
@@ -73,7 +76,10 @@ type ClosetItemBrowserScreenProps = {
   showViewToggle?: boolean;
   sectionOptions: ClosetBrowserSectionOption[];
   onLoadDetail: (clothesId: number) => Promise<ClosetDetailResult>;
-  onUpdateItem: (clothesId: number, payload: ClosetUpdateRequestBody) => Promise<ClosetDetailResult>;
+  onUpdateItem: (
+    clothesId: number,
+    payload: ClosetUpdateRequestBody,
+  ) => Promise<ClosetDetailResult>;
   onDeleteItem: (clothesId: number) => Promise<void>;
   onMutationSuccess?: () => Promise<void> | void;
   getActionErrorMessage?: (error: unknown, fallback: string) => string;
@@ -137,9 +143,8 @@ export function ClosetItemBrowserScreen({
   const [page, setPage] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedItemDetailPrice, setSelectedItemDetailPrice] = useState<number | null>(null);
-  const [selectedItemDetailSectionId, setSelectedItemDetailSectionId] = useState<
-    ClosetSectionId | null
-  >(null);
+  const [selectedItemDetailSectionId, setSelectedItemDetailSectionId] =
+    useState<ClosetSectionId | null>(null);
   const [selectedItemDetailSectionName, setSelectedItemDetailSectionName] = useState<string | null>(
     null,
   );
@@ -173,9 +178,7 @@ export function ClosetItemBrowserScreen({
           };
         })
         .filter((item) => !deletedItemIds.includes(item.id))
-        .filter((item) =>
-          currentSectionId ? item.sectionId === currentSectionId : true,
-        ),
+        .filter((item) => (currentSectionId ? item.sectionId === currentSectionId : true)),
     [currentSectionId, deletedItemIds, items, updatedItemsById],
   );
 
@@ -203,7 +206,8 @@ export function ClosetItemBrowserScreen({
   );
 
   const getPageItems = useCallback(
-    (targetPage: number) => visibleItems.slice(targetPage * pageSize, targetPage * pageSize + pageSize),
+    (targetPage: number) =>
+      visibleItems.slice(targetPage * pageSize, targetPage * pageSize + pageSize),
     [pageSize, visibleItems],
   );
 
@@ -331,9 +335,10 @@ export function ClosetItemBrowserScreen({
       return;
     }
 
-    const detail = selectedItemDetailPrice === null && selectedItemDetailSectionName === null
-      ? null
-      : selectedItem;
+    const detail =
+      selectedItemDetailPrice === null && selectedItemDetailSectionName === null
+        ? null
+        : selectedItem;
     if (!detail) {
       showToast("상세 정보가 준비되면 다시 시도해주세요.");
       return;
@@ -657,7 +662,11 @@ export function ClosetItemBrowserScreen({
           </View>
         ) : null}
 
-        {!isLoading && !error && visibleItems.length === 0 && emptyActionLabel && onEmptyActionPress ? (
+        {!isLoading &&
+        !error &&
+        visibleItems.length === 0 &&
+        emptyActionLabel &&
+        onEmptyActionPress ? (
           <View className="absolute left-6 right-6" style={{ bottom: 8 }}>
             <Button
               fullWidth
@@ -821,7 +830,9 @@ export function ClosetItemBrowserScreen({
                         ) : (
                           <Text className="font-pretendard text-body text-text-subdued">
                             {(
-                              selectedItemDetailPrice ?? selectedItemOverride?.price ?? selectedItem.price
+                              selectedItemDetailPrice ??
+                              selectedItemOverride?.price ??
+                              selectedItem.price
                             ).toLocaleString("ko-KR")}
                             원
                           </Text>
@@ -843,9 +854,7 @@ export function ClosetItemBrowserScreen({
                           setIsEditing(true);
                           setIsSectionDropdownOpen(false);
                           setDraftPriceInput(String(selectedItemDetailPrice ?? selectedItem.price));
-                          setDraftSectionId(
-                            selectedItemDetailSectionId ?? selectedItem.sectionId,
-                          );
+                          setDraftSectionId(selectedItemDetailSectionId ?? selectedItem.sectionId);
                           setDraftSectionName(
                             selectedItemDetailSectionName ?? selectedItem.sectionName ?? null,
                           );

@@ -1,6 +1,13 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, TextInput, TextInputProps, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -201,65 +208,65 @@ export function ClosetLabelingScreen() {
       >
         <ClosetRegistrationHeader />
 
-      <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}
-      </Text>
+        <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
+          {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}
+        </Text>
 
-      <View className="mt-[26px] gap-[8px]">
-        {detectedClosetSections.map((section, index) => {
-          const value = sectionNames[index] ?? "";
-          const completed = value.trim().length > 0;
-          const isTouched = touchedSectionIds.includes(section.id);
-          const showInputError = !completed && (shouldShowError || isTouched);
+        <View className="mt-[26px] gap-[8px]">
+          {detectedClosetSections.map((section, index) => {
+            const value = sectionNames[index] ?? "";
+            const completed = value.trim().length > 0;
+            const isTouched = touchedSectionIds.includes(section.id);
+            const showInputError = !completed && (shouldShowError || isTouched);
 
-          return (
-            <View key={section.id} className="h-[44px] flex-row items-center">
-              <SectionNumberBadge completed={completed} index={index} />
+            return (
+              <View key={section.id} className="h-[44px] flex-row items-center">
+                <SectionNumberBadge completed={completed} index={index} />
 
-              <View className="ml-[16px]">
-                <SectionNameInput
-                  inputProps={keyboardAccessory.getInputAccessoryProps(index)}
-                  index={index}
-                  isLast={index === detectedClosetSections.length - 1}
-                  onBlur={() => markSectionTouched(section.id)}
-                  onChangeText={(nextValue) => updateSectionName(index, nextValue)}
-                  showError={showInputError}
-                  value={value}
-                />
+                <View className="ml-[16px]">
+                  <SectionNameInput
+                    inputProps={keyboardAccessory.getInputAccessoryProps(index)}
+                    index={index}
+                    isLast={index === detectedClosetSections.length - 1}
+                    onBlur={() => markSectionTouched(section.id)}
+                    onChangeText={(nextValue) => updateSectionName(index, nextValue)}
+                    showError={showInputError}
+                    value={value}
+                  />
+                </View>
+
+                <View className={completed ? "ml-[16px] w-[28px] items-center" : "w-0"}>
+                  {completed ? <CheckActiveIcon width={28} height={28} /> : null}
+                </View>
               </View>
+            );
+          })}
+        </View>
 
-              <View className={completed ? "ml-[16px] w-[28px] items-center" : "w-0"}>
-                {completed ? <CheckActiveIcon width={28} height={28} /> : null}
-              </View>
-            </View>
-          );
-        })}
-      </View>
+        <View className="mt-auto">
+          {shouldShowError ? (
+            <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
+              모든 칸 이름이 입력돼야 합니다.
+            </Text>
+          ) : null}
 
-      <View className="mt-auto">
-        {shouldShowError ? (
-          <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
-            모든 칸 이름이 입력돼야 합니다.
-          </Text>
-        ) : null}
-
-        <Button
-          disabled={!isComplete || isSaving}
-          fullWidth
-          onPress={handleSave}
-          label={
-            isSaving
-              ? "저장 중..."
-              : isComplete
-                ? "저장하기"
-                : detectedSectionCount > 0
-                  ? `저장하기(${completedSectionCount}/${detectedSectionCount})`
-                  : "템플릿을 다시 선택해주세요"
-          }
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
-        />
-      </View>
+          <Button
+            disabled={!isComplete || isSaving}
+            fullWidth
+            onPress={handleSave}
+            label={
+              isSaving
+                ? "저장 중..."
+                : isComplete
+                  ? "저장하기"
+                  : detectedSectionCount > 0
+                    ? `저장하기(${completedSectionCount}/${detectedSectionCount})`
+                    : "템플릿을 다시 선택해주세요"
+            }
+            className="h-[58px]"
+            textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
+          />
+        </View>
       </View>
       {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>

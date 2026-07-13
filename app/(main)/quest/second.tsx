@@ -1,9 +1,6 @@
 import type { Href } from "expo-router";
 
-import {
-  QuestCardItem,
-  QuestTemplateScreen,
-} from "@/features/quest/screens/QuestTemplateScreen";
+import { QuestCardItem, QuestTemplateScreen } from "@/features/quest/screens/QuestTemplateScreen";
 
 const secondQuestProgressRoute = "/quest/second/progress" as Href;
 
@@ -19,10 +16,5 @@ const secondQuestCards: QuestCardItem[] = [
 ];
 
 export default function SecondQuestRoute() {
-  return (
-    <QuestTemplateScreen
-      quests={secondQuestCards}
-      startHref={secondQuestProgressRoute}
-    />
-  );
+  return <QuestTemplateScreen quests={secondQuestCards} startHref={secondQuestProgressRoute} />;
 }

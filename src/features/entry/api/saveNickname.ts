@@ -44,7 +44,8 @@ function isSaveNicknameResponse(value: unknown): value is SaveNicknameResponse {
   }
 
   const result = candidate.result as Record<string, unknown>;
-  const hasValidMemberId = typeof result.memberId === "number" || typeof result.memberId === "string";
+  const hasValidMemberId =
+    typeof result.memberId === "number" || typeof result.memberId === "string";
 
   return (
     hasValidMemberId &&

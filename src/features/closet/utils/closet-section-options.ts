@@ -1,4 +1,8 @@
-import type { ClosetSection, ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
+import type {
+  ClosetSection,
+  ClosetSectionId,
+  ClosetTemplate,
+} from "@/features/closet/types/closet-layout";
 
 export type ClosetSectionOption = {
   requestSectionId: number;

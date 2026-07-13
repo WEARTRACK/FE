@@ -71,7 +71,9 @@ export function QuestTemplateScreen({
 }: QuestTemplateScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selectedQuestIndex, setSelectedQuestIndex] = useState<number | null>(initialSelectedQuestIndex);
+  const [selectedQuestIndex, setSelectedQuestIndex] = useState<number | null>(
+    initialSelectedQuestIndex,
+  );
 
   const isStartDisabled = selectedQuestIndex === null;
 

@@ -31,7 +31,12 @@ function toDisplayLabel(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function toBrowserItem(item: { clothesId: number; imageUrl: string; color: string; category: string }): ClosetBrowserItem {
+function toBrowserItem(item: {
+  clothesId: number;
+  imageUrl: string;
+  color: string;
+  category: string;
+}): ClosetBrowserItem {
   const color = mapServerColorToClosetColor(item.color);
   const category = mapServerCategoryToClosetCategory(item.category);
 
@@ -65,10 +70,7 @@ export function WeeklyReviewLongUnwornClothesScreen() {
     router.replace(weeklyReviewRoutes.result);
   };
 
-  const browserItems = useMemo(
-    () => (data?.clothes ?? []).map(toBrowserItem),
-    [data?.clothes],
-  );
+  const browserItems = useMemo(() => (data?.clothes ?? []).map(toBrowserItem), [data?.clothes]);
 
   const sectionOptions = useMemo(
     () =>
@@ -101,10 +103,7 @@ export function WeeklyReviewLongUnwornClothesScreen() {
 
   if (isLoading && !data) {
     return (
-      <WeeklyReviewRouteScaffold
-        title="장기 미착용 옷"
-        onBackPress={handleBackPress}
-      >
+      <WeeklyReviewRouteScaffold title="장기 미착용 옷" onBackPress={handleBackPress}>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
           <Text className="mt-3 font-pretendard text-body text-text-subdued">

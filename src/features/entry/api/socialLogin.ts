@@ -49,7 +49,9 @@ function isSocialLoginResult(value: unknown): value is SocialLoginResult {
     typeof candidate.profileCompleted === "boolean" &&
     typeof candidate.accessToken === "string" &&
     typeof candidate.refreshToken === "string" &&
-    (candidate.closetId === undefined || candidate.closetId === null || isValidClosetId(candidate.closetId))
+    (candidate.closetId === undefined ||
+      candidate.closetId === null ||
+      isValidClosetId(candidate.closetId))
   );
 }
 
