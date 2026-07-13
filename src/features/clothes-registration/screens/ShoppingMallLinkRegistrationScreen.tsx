@@ -88,6 +88,7 @@ export function ShoppingMallLinkRegistrationScreen() {
         category: preview.category,
         purchaseDate: null,
         storageLocation: null,
+        closetId: null,
         sectionId: null,
       });
       router.push(clothesRegistrationRoutes.shoppingMallStyle);

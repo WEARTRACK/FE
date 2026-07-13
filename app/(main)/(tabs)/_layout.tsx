@@ -81,7 +81,11 @@ function MainTabBar({
                 canPreventDefault: true,
               });
 
-              if (isCurrentTabRoute && tab.name === "home" && !event.defaultPrevented) {
+              if (
+                isCurrentTabRoute &&
+                (tab.name === "home" || tab.name === "closet") &&
+                !event.defaultPrevented
+              ) {
                 const nestedNavigatorKey = (
                   state.routes[targetIndex]?.state as { key?: string } | undefined
                 )?.key;

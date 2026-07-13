@@ -3,8 +3,11 @@ import { apiClient } from "@/lib/api/client";
 export type CreateClothesPayload = {
   photoId: number;
   imageUrl: string;
+  productName: string;
+  brandName: string;
   color: string;
   category: string;
+  purchaseDate: string;
   price: number;
   closetId: number;
   sectionId: number;
@@ -14,9 +17,13 @@ export type CreateClothesResult = {
   clothesId: number;
   photoId: number;
   imageUrl: string;
+  productName?: string | null;
+  brandName?: string | null;
   color: string;
   category: string;
+  purchaseDate?: string | null;
   price: number;
+  closetId?: number;
   sectionId?: number;
   setionId?: number;
   createdAt: string;

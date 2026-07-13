@@ -4,6 +4,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TextInputProps,
@@ -29,7 +30,8 @@ import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore"
 import { useClosetStore } from "@/stores/useClosetStore";
 import { useQuestRegistrationStore } from "@/stores/useQuestRegistrationStore";
 
-const maxNameLength = 10;
+const maxClosetNameLength = 10;
+const maxSectionNameLength = 10;
 
 function SectionNumberBadge({ index, completed }: { index: number; completed: boolean }) {
   return (
@@ -74,7 +76,7 @@ function SectionNameInput({
       className={[
         [
           "h-[44px] rounded-lg px-[22px] font-pretendard text-[14px] text-bg-dark",
-          completed ? "w-[208px]" : "w-[250px]",
+          completed ? "w-[230px]" : "w-[270px]",
         ].join(" "),
         completed
           ? "border-[0.5px] border-disabled bg-cool"
@@ -82,10 +84,10 @@ function SectionNameInput({
             ? "border-[0.5px] border-dashed border-error bg-white text-text-subdued"
             : "border-[0.5px] border-dashed border-disabled bg-white text-text-subdued",
       ].join(" ")}
-      maxLength={maxNameLength}
+      maxLength={maxSectionNameLength}
       onBlur={onBlur}
       onChangeText={onChangeText}
-      placeholder={`칸 이름을 입력해주세요 (0/${maxNameLength})`}
+      placeholder={`칸 이름을 입력해주세요 (0/${maxSectionNameLength})`}
       placeholderTextColor={colors.disabled}
       returnKeyType={isLast ? "done" : "next"}
       style={{ includeFontPadding: false, lineHeight: 16, paddingBottom: 2, paddingTop: 0 }}
@@ -120,9 +122,11 @@ export function ClosetLabelingScreen() {
   const [sectionNames, setSectionNames] = useState(() =>
     detectedClosetSections.map((section) => section.initialName),
   );
+  const [closetName, setClosetName] = useState("");
+  const [isClosetNameTouched, setIsClosetNameTouched] = useState(false);
   const [touchedSectionIds, setTouchedSectionIds] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const keyboardAccessory = useKeyboardAccessoryNavigation(detectedClosetSections.length);
+  const keyboardAccessory = useKeyboardAccessoryNavigation(detectedClosetSections.length + 1);
 
   useEffect(() => {
     setSectionNames(detectedClosetSections.map((section) => section.initialName));
@@ -134,8 +138,17 @@ export function ClosetLabelingScreen() {
     () => sectionNames.filter((name) => name.trim().length > 0).length,
     [sectionNames],
   );
-  const isComplete = detectedSectionCount > 0 && completedSectionCount === detectedSectionCount;
-  const shouldShowError = !isComplete && touchedSectionIds.length > 0;
+  const isClosetNameComplete = closetName.trim().length > 0;
+  const areSectionsComplete =
+    detectedSectionCount > 0 && completedSectionCount === detectedSectionCount;
+  const isComplete = isClosetNameComplete && areSectionsComplete;
+  const shouldShowClosetNameError = isClosetNameTouched && !isClosetNameComplete;
+  const shouldShowSectionError = !areSectionsComplete && touchedSectionIds.length > 0;
+  const bottomErrorMessage = shouldShowClosetNameError
+    ? "옷장 이름은 필수로 입력돼야 합니다."
+    : shouldShowSectionError
+      ? "모든 칸 이름이 입력돼야 합니다."
+      : null;
 
   const updateSectionName = (index: number, value: string) => {
     setSectionNames((currentNames) =>
@@ -166,6 +179,7 @@ export function ClosetLabelingScreen() {
     try {
       const createdCloset = await createCloset({
         templateId,
+        closetName: closetName.trim(),
         imageUrl: draftImageUrl,
         sections: detectedClosetSections.map((section, index) => ({
           sectionOrder: section.sectionOrder,
@@ -215,65 +229,118 @@ export function ClosetLabelingScreen() {
       >
         <ClosetRegistrationHeader />
 
-      <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[24px] text-text">
-        {isComplete ? "모든 칸 이름이 입력됐습니다." : "칸 이름을 입력해주세요."}
-      </Text>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text className="mt-[30px] font-pretendard-semibold text-[20px] leading-[28px] text-text">
+            옷장 이름을 입력해주세요.
+          </Text>
 
-      <View className="mt-[26px] gap-[8px]">
-        {detectedClosetSections.map((section, index) => {
-          const value = sectionNames[index] ?? "";
-          const completed = value.trim().length > 0;
-          const isTouched = touchedSectionIds.includes(section.id);
-          const showInputError = !completed && (shouldShowError || isTouched);
+          <View className="mt-[24px]">
+            <View className="flex-row items-center">
+              <TextInput
+                className={[
+                  "h-[56px] flex-1 rounded-lg px-[28px] font-pretendard text-[14px] text-bg-dark",
+                  isClosetNameComplete
+                    ? "border-[0.5px] border-disabled bg-white"
+                    : shouldShowClosetNameError
+                      ? "border-[0.5px] border-dashed border-error bg-white text-text-subdued"
+                      : "border-[0.5px] border-disabled bg-white text-text-subdued",
+                ].join(" ")}
+                maxLength={maxClosetNameLength}
+                onBlur={() => setIsClosetNameTouched(true)}
+                onChangeText={(nextValue) => {
+                  setClosetName(nextValue);
+                  if (nextValue.trim().length > 0) {
+                    setIsClosetNameTouched(true);
+                  }
+                }}
+                placeholder="한글, 영문, 숫자 조합만 가능"
+                placeholderTextColor={colors.text.subdued}
+                returnKeyType="next"
+                style={{
+                  includeFontPadding: false,
+                  lineHeight: 17,
+                  paddingBottom: 2,
+                  paddingTop: 0,
+                }}
+                textAlignVertical="center"
+                value={closetName}
+                {...keyboardAccessory.getInputAccessoryProps(0)}
+              />
 
-          return (
-            <View key={section.id} className="h-[44px] flex-row items-center">
-              <SectionNumberBadge completed={completed} index={index} />
-
-              <View className="ml-[16px]">
-                <SectionNameInput
-                  inputProps={keyboardAccessory.getInputAccessoryProps(index)}
-                  index={index}
-                  isLast={index === detectedClosetSections.length - 1}
-                  onBlur={() => markSectionTouched(section.id)}
-                  onChangeText={(nextValue) => updateSectionName(index, nextValue)}
-                  showError={showInputError}
-                  value={value}
-                />
-              </View>
-
-              <View className={completed ? "ml-[16px] w-[28px] items-center" : "w-0"}>
-                {completed ? <CheckActiveIcon width={28} height={28} /> : null}
+              <View className={isClosetNameComplete ? "ml-[14px] w-[28px] items-center" : "w-0"}>
+                {isClosetNameComplete ? <CheckActiveIcon width={28} height={28} /> : null}
               </View>
             </View>
-          );
-        })}
-      </View>
 
-      <View className="mt-auto">
-        {shouldShowError ? (
-          <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
-            모든 칸 이름이 입력돼야 합니다.
+            <Text className="mt-[10px] font-pretendard text-[12px] leading-[16px] text-text-subdued">
+              {closetName.length}/{maxClosetNameLength}
+            </Text>
+          </View>
+
+          <Text className="mt-[29px] font-pretendard-semibold text-[20px] leading-[28px] text-text">
+            칸 이름을 입력해주세요.
           </Text>
-        ) : null}
+          <View className="mt-[24px] gap-[12px]">
+            {detectedClosetSections.map((section, index) => {
+              const value = sectionNames[index] ?? "";
+              const completed = value.trim().length > 0;
+              const isTouched = touchedSectionIds.includes(section.id);
+              const showInputError = !completed && (shouldShowSectionError || isTouched);
 
-        <Button
-          disabled={!isComplete || isSaving}
-          fullWidth
-          onPress={handleSave}
-          label={
-            isSaving
-              ? "저장 중..."
-              : isComplete
-                ? "저장하기"
-                : detectedSectionCount > 0
-                  ? `저장하기(${completedSectionCount}/${detectedSectionCount})`
-                  : "템플릿을 다시 선택해주세요"
-          }
-          className="h-[58px]"
-          textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
-        />
-      </View>
+              return (
+                <View key={section.id} className="h-[44px] flex-row items-center">
+                  <SectionNumberBadge completed={completed} index={index} />
+
+                  <View className="ml-[16px]">
+                    <SectionNameInput
+                      inputProps={keyboardAccessory.getInputAccessoryProps(index + 1)}
+                      index={index}
+                      isLast={index === detectedClosetSections.length - 1}
+                      onBlur={() => markSectionTouched(section.id)}
+                      onChangeText={(nextValue) => updateSectionName(index, nextValue)}
+                      showError={showInputError}
+                      value={value}
+                    />
+                  </View>
+
+                  <View className={completed ? "ml-[14px] w-[28px] items-center" : "w-0"}>
+                    {completed ? <CheckActiveIcon width={28} height={28} /> : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+
+        <View className="mt-auto">
+          {bottomErrorMessage ? (
+            <Text className="mb-[18px] font-pretendard text-[12px] leading-[20px] text-error">
+              {bottomErrorMessage}
+            </Text>
+          ) : null}
+
+          <Button
+            disabled={!isComplete || isSaving}
+            fullWidth
+            onPress={handleSave}
+            label={
+              isSaving
+                ? "저장 중..."
+                : isComplete
+                  ? "저장하기"
+                  : detectedSectionCount > 0
+                    ? `저장하기(${completedSectionCount}/${detectedSectionCount})`
+                    : "템플릿을 다시 선택해주세요"
+            }
+            className="h-[58px]"
+            textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
+          />
+        </View>
       </View>
       {keyboardAccessory.toolbar}
     </KeyboardAvoidingView>

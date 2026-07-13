@@ -259,7 +259,10 @@ export function ClosetSearchResultsScreen() {
       setDraftSectionName(updated.sectionName);
       setIsEditing(false);
       setIsSectionDropdownOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["closet"] }),
+      ]);
       showToast("수정이 완료됐어요.");
     } catch (error) {
       showToast(getActionErrorMessage(error, "수정에 실패했어요. 다시 시도해주세요."));
@@ -281,7 +284,10 @@ export function ClosetSearchResultsScreen() {
 
           try {
             await repository.deleteClothes(selectedItem.clothesId);
-            await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+              queryClient.invalidateQueries({ queryKey: ["closet"] }),
+            ]);
             showToast("옷 삭제에 성공하였습니다.");
           } catch (error) {
             await refetch();

@@ -44,6 +44,7 @@ export type ClosetSection = {
 };
 
 export type ClosetTemplate = {
+  closetName?: string;
   templateId: ClosetTemplateId;
   sections: ClosetSection[];
 };

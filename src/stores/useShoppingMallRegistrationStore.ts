@@ -9,6 +9,7 @@ type ShoppingMallRegistrationDraft = {
   category: string | null;
   purchaseDate: Date | null;
   storageLocation: string | null;
+  closetId: number | null;
   sectionId: number | null;
 };
 
@@ -26,6 +27,7 @@ const initialState: ShoppingMallRegistrationDraft = {
   category: null,
   purchaseDate: null,
   storageLocation: null,
+  closetId: null,
   sectionId: null,
 };
 
