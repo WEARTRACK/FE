@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,6 +8,7 @@ import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
 import { useClosetStatistics } from "@/features/closet/hooks/use-closet-data";
+import { parseClosetId } from "@/features/closet/utils/closet-id";
 import { showToast } from "@/lib/ui/showToast";
 
 const DONUT_SIZE = 220;
@@ -29,9 +30,13 @@ const rankColorByRank: Record<number, string> = {
 
 export function ClosetStatsScreen() {
   const router = useRouter();
+  const { closetId } = useLocalSearchParams<{ closetId?: string }>();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const { statistics, isLoading, error, refetch } = useClosetStatistics();
+  const requestedClosetId = parseClosetId(closetId);
+  const { statistics, isLoading, error, refetch } = useClosetStatistics({
+    closetId: requestedClosetId,
+  });
   const lastToastMessageRef = useRef<string | null>(null);
 
   const summaryWidth = screenWidth - 48;

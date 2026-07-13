@@ -12,6 +12,7 @@ import { useClosetItemsBySection, useClosetTemplate } from "@/features/closet/ho
 import { ClosetItemBrowserScreen } from "@/features/closet/components/ClosetItemBrowserScreen";
 import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
 import type { ClosetItem } from "@/features/closet/types/closet-item";
+import { parseClosetId } from "@/features/closet/utils/closet-id";
 import { queryClient } from "@/lib/queryClient";
 import { showToast } from "@/lib/ui/showToast";
 import { ApiError } from "@/lib/api/errors";
@@ -39,19 +40,25 @@ export function ClosetSectionScreen() {
   const router = useRouter();
   const repository = useMemo(() => getClosetRepository(), []);
   const memberId = useSessionStore((state) => state.memberId);
-  const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
+  const { sectionId, closetId } = useLocalSearchParams<{
+  sectionId?: string;
+  closetId?: string;
+  }>();  
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
   const currentSectionId: ClosetSectionId =
     sectionId && isClosetSectionId(sectionId) ? sectionId : "section-1";
+  const requestedClosetId = parseClosetId(closetId);
 
-  const { template } = useClosetTemplate();
+  const { template } = useClosetTemplate({ closetId: requestedClosetId });
   const {
-    items: sectionItems,
-    isLoading,
-    error,
-    refetch,
-  } = useClosetItemsBySection(currentSectionId);
+  items: sectionItems,
+  isLoading,
+  error,
+  refetch,
+} = useClosetItemsBySection(currentSectionId, {
+  closetId: requestedClosetId,
+});
 
   const sectionName = useMemo(() => {
     const found = template.sections.find((section) => section.id === currentSectionId);
@@ -153,24 +160,37 @@ export function ClosetSectionScreen() {
         onEmptyActionPress={() => setIsClothesGuideVisible(true)}
         sectionOptions={sectionOptions}
         onLoadDetail={repository.getClothesDetail}
-        onUpdateItem={repository.updateClothes}
+        onUpdateItem={(clothesId, payload) => 
+          repository.updateClothes(
+            clothesId,
+            payload,
+            requestedClosetId,
+          )
+        }
         onDeleteItem={async (clothesId) => {
           await repository.deleteClothes(clothesId);
         }}
         onMutationSuccess={async () => {
-          refetch();
+          await refetch();
 
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+            queryClient.invalidateQueries({
+              queryKey: ["home-summary"],
+            }),
+            queryClient.invalidateQueries({
+              queryKey: ["closet"],
+            }),
             memberId == null
               ? Promise.resolve()
               : queryClient.invalidateQueries({
-                  queryKey: weeklyReviewQueryKeys.currentWeeklyReview(memberId),
+                queryKey:
+                  weeklyReviewQueryKeys.currentWeeklyReview(memberId),
                 }),
             memberId == null
               ? Promise.resolve()
               : queryClient.invalidateQueries({
-                  queryKey: weeklyReviewQueryKeys.longUnwornClothes(memberId),
+                queryKey:
+                  weeklyReviewQueryKeys.longUnwornClothes(memberId),
                 }),
           ]);
         }}

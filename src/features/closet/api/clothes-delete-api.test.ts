@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "@/lib/api/errors";
+
 const deleteMock = vi.fn();
 
 vi.mock("@/lib/api/client", () => ({
@@ -22,5 +24,18 @@ describe("deleteClothes", () => {
     const { deleteClothes } = await import("./clothes-delete-api");
 
     await expect(deleteClothes(1)).resolves.toBeNull();
+  });
+
+  it("throws when the delete request fails with 404", async () => {
+    const notFoundError = new ApiError({
+      code: "CLOTHES_404",
+      message: "옷을 찾을 수 없습니다.",
+      status: 404,
+    });
+    deleteMock.mockRejectedValueOnce(notFoundError);
+
+    const { deleteClothes } = await import("./clothes-delete-api");
+
+    await expect(deleteClothes(999)).rejects.toBe(notFoundError);
   });
 });
