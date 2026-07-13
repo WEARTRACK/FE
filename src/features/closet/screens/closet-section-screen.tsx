@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -47,6 +46,7 @@ import { parseClosetId } from "@/features/closet/utils/closet-id";
 import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-tag-icons";
 import { ApiError } from "@/lib/api/errors";
 import { queryClient } from "@/lib/queryClient";
+import { showAlert } from "@/lib/ui/showAlert";
 import { showToast } from "@/lib/ui/showToast";
 
 type ViewMode = "grid" | "list";
@@ -482,12 +482,15 @@ export function ClosetSectionScreen() {
       return;
     }
 
-    Alert.alert("옷 삭제", "정말 삭제하시겠습니까? 삭제된 정보는 복구할 수 없습니다.", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제",
-        style: "destructive",
-        onPress: async () => {
+    showAlert({
+      title: "옷 삭제",
+      message: "정말 삭제하시겠습니까?\n삭제된 정보는 복구할 수 없습니다.",
+      confirmText: "삭제하기",
+      cancelText: "취소",
+      dismissible: false,
+      onConfirm: async () => {
+        try {
+          await repository.deleteClothes(clothesId);
           setDeletedItemIds((current) => [...current, selectedItem.id]);
           handleCloseDetailModal();
           try {
@@ -503,7 +506,7 @@ export function ClosetSectionScreen() {
           }
         },
       },
-    ]);
+    });
   };
 
   const handlePressClothesCapture = async () => {
@@ -722,13 +725,14 @@ export function ClosetSectionScreen() {
                 accessibilityRole="button"
                 className="absolute inset-0 bg-black/20"
                 onPress={handleCloseDetailModal}
+                style={{ zIndex: 0 }}
               />
 
               {selectedItem ? (
                 <View
                   accessibilityViewIsModal
-                  className="w-[344px] rounded-2xl bg-white p-5"
-                  style={{ maxHeight: "90%" }}
+                  className="w-[344px] rounded-2xl bg-white px-5 pb-5 pt-[22px]"
+                  style={{ position: "relative", maxHeight: "90%", elevation: 2, zIndex: 1 }}
                 >
                   <View className="flex-row items-center justify-between">
                     <Text className="font-pretendard-semibold text-headline text-bg-dark">
@@ -746,7 +750,7 @@ export function ClosetSectionScreen() {
                   </View>
 
                   <ScrollView
-                    className="mt-6"
+                    className="mt-[22px]"
                     contentContainerStyle={{ paddingBottom: 8 }}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}

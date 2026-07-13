@@ -69,6 +69,25 @@ describe("apiClient auth interceptor", () => {
     expect(config.headers.get("Authorization")).toBe("Bearer token-123");
   });
 
+  it("adds authorization header for notification endpoints", async () => {
+    const { apiClient } = await import("./client");
+    const requestHandler = (
+      apiClient.interceptors.request as unknown as {
+        handlers: { fulfilled: (value: unknown) => Promise<unknown> }[];
+      }
+    ).handlers[0].fulfilled;
+
+    const config = (await requestHandler({
+      url: "/api/notifications/settings",
+      baseURL: "https://example.com",
+      headers: {},
+    })) as {
+      headers: { get: (name: string) => string | undefined };
+    };
+
+    expect(config.headers.get("Authorization")).toBe("Bearer token-123");
+  });
+
   it("does not add authorization header for public endpoints", async () => {
     const { apiClient } = await import("./client");
     const requestHandler = (

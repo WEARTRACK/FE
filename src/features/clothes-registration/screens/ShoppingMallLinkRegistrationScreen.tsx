@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,6 +19,7 @@ import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAcce
 import { colors } from "@/constants/colors";
 import { fetchProductLinkPreview } from "@/features/clothes-registration/api/link-preview-api";
 import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
+import { showAlert } from "@/lib/ui/showAlert";
 import { useShoppingMallRegistrationStore } from "@/stores/useShoppingMallRegistrationStore";
 
 type FetchState = "idle" | "loading" | "error";
@@ -69,7 +69,9 @@ export function ShoppingMallLinkRegistrationScreen() {
 
   const handleFetchProductInfo = async () => {
     if (!url.trim()) {
-      Alert.alert("상품 페이지 링크를 입력해주세요");
+      showAlert({
+        title: "상품 페이지 링크를 입력해주세요",
+      });
       return;
     }
 

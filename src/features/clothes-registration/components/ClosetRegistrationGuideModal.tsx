@@ -17,10 +17,11 @@ export function ClosetRegistrationGuideModal({
 }: ClosetRegistrationGuideModalProps) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-center bg-black/25 px-6" onPress={onClose}>
-        <Pressable
+      <View className="flex-1 justify-center px-6">
+        <Pressable className="absolute inset-0 bg-black/25" onPress={onClose} style={{ zIndex: 0 }} />
+        <View
           className="items-center rounded-xl bg-white px-[38px] pb-[29px] pt-[27px]"
-          onPress={(event) => event.stopPropagation()}
+          style={{ position: "relative", elevation: 2, zIndex: 1 }}
         >
           <Text className="font-pretendard-bold text-[20px] leading-[24px] text-text">
             옷장 등록하기
@@ -57,8 +58,8 @@ export function ClosetRegistrationGuideModal({
               앨범에서 선택
             </Text>
           </Pressable>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
