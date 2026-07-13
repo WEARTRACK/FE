@@ -42,6 +42,7 @@ import {
   useClosetTemplate,
 } from "@/features/closet/hooks/use-closet-data";
 import { isClosetSectionId, type ClosetSectionId } from "@/features/closet/types/closet-layout";
+import { parseClosetId } from "@/features/closet/utils/closet-id";
 import { getCategoryIcon, getColorIcon } from "@/features/closet/utils/closet-tag-icons";
 import { ApiError } from "@/lib/api/errors";
 import { queryClient } from "@/lib/queryClient";
@@ -65,10 +66,11 @@ export function ClosetSectionScreen() {
   const repository = useMemo(() => getClosetRepository(), []);
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const { sectionId } = useLocalSearchParams<{ sectionId?: string }>();
+  const { sectionId, closetId } = useLocalSearchParams<{ sectionId?: string; closetId?: string }>();
 
   const currentSectionId: ClosetSectionId =
     sectionId && isClosetSectionId(sectionId) ? sectionId : "section-1";
+  const requestedClosetId = parseClosetId(closetId);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [page, setPage] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -90,13 +92,13 @@ export function ClosetSectionScreen() {
   const lastToastMessageRef = useRef<string | null>(null);
   const pageListRef = useRef<FlatList<number>>(null);
 
-  const { template } = useClosetTemplate();
+  const { template } = useClosetTemplate({ closetId: requestedClosetId });
   const {
     items: sectionItems,
     isLoading,
     error,
     refetch,
-  } = useClosetItemsBySection(currentSectionId);
+  } = useClosetItemsBySection(currentSectionId, { closetId: requestedClosetId });
   const visibleSectionItems = useMemo(() => {
     const patched = sectionItems
       .map((item) => {
@@ -432,12 +434,16 @@ export function ClosetSectionScreen() {
 
     try {
       const detail = await repository.getClothesDetail(clothesId);
-      const updated = await repository.updateClothes(clothesId, {
-        color: detail.color,
-        category: detail.category,
-        price: nextPrice,
-        sectionId: nextSectionId,
-      });
+      const updated = await repository.updateClothes(
+        clothesId,
+        {
+          color: detail.color,
+          category: detail.category,
+          price: nextPrice,
+          sectionId: nextSectionId,
+        },
+        requestedClosetId,
+      );
       setSelectedItemDetailPrice(updated.price);
       setSelectedItemDetailSectionName(updated.sectionName);
       setDraftSectionId(updated.sectionId);
@@ -452,7 +458,10 @@ export function ClosetSectionScreen() {
       }));
       setIsEditing(false);
       setIsSectionDropdownOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["closet"] }),
+      ]);
       if (updated.sectionId !== currentSectionId) {
         handleCloseDetailModal();
       }
@@ -484,11 +493,18 @@ export function ClosetSectionScreen() {
           await repository.deleteClothes(clothesId);
           setDeletedItemIds((current) => [...current, selectedItem.id]);
           handleCloseDetailModal();
-          await queryClient.invalidateQueries({ queryKey: ["home-summary"] });
-          showToast("옷 삭제에 성공하였습니다.");
-        } catch (error) {
-          showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
-        }
+          try {
+            await repository.deleteClothes(clothesId);
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+              queryClient.invalidateQueries({ queryKey: ["closet"] }),
+            ]);
+            showToast("옷 삭제에 성공하였습니다.");
+          } catch (error) {
+            setDeletedItemIds((current) => current.filter((itemId) => itemId !== selectedItem.id));
+            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+          }
+        },
       },
     });
   };

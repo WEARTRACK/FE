@@ -1,5 +1,4 @@
 import { apiClient } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/errors";
 
 import {
   assertApiEnvelopeSuccess,
@@ -10,17 +9,7 @@ import {
 } from "./closet-api-types";
 
 export async function deleteClothes(clothesId: number): Promise<ClosetDeleteResultApi> {
-  let response;
-  try {
-    response = await apiClient.delete<ApiEnvelope<unknown>>(`/api/clothes/${clothesId}`);
-  } catch (error) {
-    // Deleting an already-removed item is effectively successful for the UI.
-    if (error instanceof ApiError && error.status === 404) {
-      return null;
-    }
-
-    throw error;
-  }
+  const response = await apiClient.delete<ApiEnvelope<unknown>>(`/api/clothes/${clothesId}`);
 
   const responseData = response.data as unknown;
 
