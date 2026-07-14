@@ -40,11 +40,7 @@ export function resolvePostLoginRoute({
     };
   }
 
-  if (
-    intentSuccessHref === SIGN_UP_SUCCESS_INTENT_ROUTE &&
-    !requiredTermsAgreed &&
-    !profileCompleted
-  ) {
+  if (intentSuccessHref === SIGN_UP_SUCCESS_INTENT_ROUTE && !requiredTermsAgreed) {
     return {
       isValid: true,
       route: SIGN_UP_SUCCESS_ROUTE,

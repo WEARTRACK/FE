@@ -5,7 +5,7 @@ type SaveTermsAgreementResponse = {
   isSuccess: boolean;
   code: string;
   message: string;
-  result: null;
+  result?: null;
 };
 
 function isSaveTermsAgreementResponse(value: unknown): value is SaveTermsAgreementResponse {
@@ -19,7 +19,7 @@ function isSaveTermsAgreementResponse(value: unknown): value is SaveTermsAgreeme
     typeof candidate.isSuccess === "boolean" &&
     typeof candidate.code === "string" &&
     typeof candidate.message === "string" &&
-    candidate.result === null
+    (candidate.result === undefined || candidate.result === null)
   );
 }
 
@@ -44,7 +44,7 @@ export async function saveTermsAgreement() {
     throw new ApiError({
       code: response.data.code,
       message: response.data.message,
-      status: 200,
+      status: response.status,
       details: response.data.result,
     });
   }
