@@ -300,6 +300,8 @@ export function MainHomeScreen() {
     if (homeSummary.closetCount >= maxClosetCount) {
       showAlert({
         title: "옷장은 최대 3개까지 등록할 수 있습니다.",
+        confirmText: "확인",
+        dismissible: false,
       });
       return;
     }
