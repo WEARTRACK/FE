@@ -1,16 +1,16 @@
-import { Href, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { socialLogin, type SocialLoginPayload } from "@/features/entry/api/socialLogin";
-import { isValidClosetId } from "@/features/closet/utils/closet-id";
-import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
+import { completePostLoginTransition } from "@/features/entry/utils/completePostLoginTransition";
+import type { PostLoginIntentSuccessHref } from "@/features/entry/utils/resolvePostLoginRoute";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetStore } from "@/stores/useClosetStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 type UseSocialLoginMutationOptions = {
-  successHref?: Href;
+  successHref?: PostLoginIntentSuccessHref;
 };
 
 function getSocialLoginErrorMessage(error: unknown) {
@@ -32,24 +32,17 @@ export function useSocialLoginMutation({ successHref }: UseSocialLoginMutationOp
   return useMutation({
     mutationFn: (payload: SocialLoginPayload) => socialLogin(payload),
     onSuccess: async (result) => {
-      setSession(result);
-      if (isValidClosetId(result.closetId) || result.closetId === null) {
-        setClosetId(result.closetId);
-      }
-
-      let nextHref = successHref ?? (result.profileCompleted ? "/home" : "/auth/set-nickname");
-
-      if (result.profileCompleted && nextHref === "/home") {
-        const entryResolution = await fetchOnboardingEntryResolution(queryClient);
-
-        if (entryResolution.shouldShowFetchFailureToast) {
-          showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요.");
-        }
-
-        nextHref = entryResolution.route;
-      }
-
-      router.replace(nextHref as Href);
+      await completePostLoginTransition({
+        intentSuccessHref: successHref,
+        queryClient,
+        result,
+        setSession,
+        setClosetId,
+        showLoginFailureToast: () => showToast("로그인에 실패했어요. 다시 시도해주세요."),
+        showOnboardingFetchFailureToast: () =>
+          showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요."),
+        navigate: (href) => router.replace(href),
+      });
     },
     onError: (error) => {
       showToast(getSocialLoginErrorMessage(error));

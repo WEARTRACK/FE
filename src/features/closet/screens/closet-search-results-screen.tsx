@@ -284,19 +284,21 @@ export function ClosetSearchResultsScreen() {
           await repository.deleteClothes(selectedItem.clothesId);
           removeItemOptimistic(selectedItem.clothesId);
           handleCloseDetailModal();
+          showToast("옷 삭제에 성공하였습니다.");
+        } catch (error) {
+          await refetch();
+          showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+          return;
+        }
 
-          try {
-            await repository.deleteClothes(selectedItem.clothesId);
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["closet"] }),
-            ]);
-            showToast("옷 삭제에 성공하였습니다.");
-          } catch (error) {
-            await refetch();
-            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
-          }
-        },
+        try {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+            queryClient.invalidateQueries({ queryKey: ["closet"] }),
+          ]);
+        } catch {
+          await refetch();
+        }
       },
     });
   };

@@ -20,7 +20,11 @@ export function ClothesRegistrationGuideModal({
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <View className="flex-1 justify-center px-6">
-        <Pressable className="absolute inset-0 bg-black/25" onPress={onClose} style={{ zIndex: 0 }} />
+        <Pressable
+          className="absolute inset-0 bg-black/25"
+          onPress={onClose}
+          style={{ zIndex: 0 }}
+        />
         <View
           className="items-center rounded-xl bg-white px-[38px] pb-[29px] pt-[30px]"
           style={{ position: "relative", elevation: 2, zIndex: 1 }}

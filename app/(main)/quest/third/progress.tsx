@@ -27,8 +27,7 @@ export default function ThirdQuestProgressRoute() {
   const registeredBottomItems = useQuestRegistrationStore(
     (state) => state.registeredItemsByKind.bottom,
   );
-  const isLoading =
-    onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
+  const isLoading = onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
   const hasError = onboardingState.statusQuery.isError || onboardingState.questsQuery.isError;
   const quest = onboardingState.quest;
   const displayedBottomCount = Math.max(quest?.currentCount ?? 0, registeredBottomItems.length);
@@ -78,14 +77,16 @@ export default function ThirdQuestProgressRoute() {
         onPressAction={handlePressAction}
         progressCardState={isQuestComplete ? "complete" : "default"}
         gridContent={[
-          ...registeredBottomItems.slice(0, quest.requiredCount).map((item, index) => (
-            <RegisteredQuestItemTile
-              key={item.id}
-              accessibilityLabel={`등록된 하의 ${index + 1}`}
-              imageSource={{ uri: item.imageUri }}
-              isComplete={isQuestComplete}
-            />
-          )),
+          ...registeredBottomItems
+            .slice(0, quest.requiredCount)
+            .map((item, index) => (
+              <RegisteredQuestItemTile
+                key={item.id}
+                accessibilityLabel={`등록된 하의 ${index + 1}`}
+                imageSource={{ uri: item.imageUri }}
+                isComplete={isQuestComplete}
+              />
+            )),
           !isQuestComplete ? (
             <AddQuestItemTile
               key="add-registered-bottom"

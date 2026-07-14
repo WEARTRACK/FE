@@ -1,6 +1,8 @@
 import axios, { AxiosError, AxiosHeaders } from "axios";
 
 import { env } from "@/config/env";
+import { resolveApiAuthPolicy } from "@/lib/api/authPolicy";
+import { createBearerAuthorizationHeader, normalizeAccessToken } from "@/lib/api/authToken";
 import { ApiError, createApiError, isApiErrorResponse } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
 
@@ -25,28 +27,13 @@ function resolveRequestPathname(url: string | undefined, baseURL: string | undef
   }
 }
 
-function isAuthRequiredPath(pathname: string) {
-  return (
-    pathname === "/api/home" ||
-    pathname.startsWith("/api/fashion-consumption/") ||
-    pathname.startsWith("/api/home/") ||
-    pathname.startsWith("/api/clothes") ||
-    pathname.startsWith("/api/daily-reviews") ||
-    pathname.startsWith("/api/weekly-reviews") ||
-    pathname === "/api/closets" ||
-    pathname === "/api/members/nickname/check" ||
-    pathname === "/api/members/me/nickname" ||
-    pathname.startsWith("/api/members/me/") ||
-    pathname.startsWith("/api/notifications") ||
-    pathname.startsWith("/api/onboarding/") ||
-    pathname.startsWith("/api/closets/") ||
-    pathname.startsWith("/api/clothes/")
-  );
-}
-
 apiClient.interceptors.request.use(async (config) => {
   const pathname = resolveRequestPathname(config.url, config.baseURL);
-  const requiresAuth = isAuthRequiredPath(pathname);
+  const authPolicy = resolveApiAuthPolicy({
+    pathname,
+    method: config.method,
+  });
+  const requiresAuth = authPolicy.requiresAccessToken;
   const headers = AxiosHeaders.from(config.headers);
 
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
@@ -57,7 +44,8 @@ apiClient.interceptors.request.use(async (config) => {
     await useSessionStore.persist.rehydrate();
   }
 
-  const accessToken = useSessionStore.getState().accessToken;
+  const storedAccessToken = useSessionStore.getState().accessToken;
+  const accessToken = storedAccessToken ? normalizeAccessToken(storedAccessToken) : null;
   const existingAuthorization = headers.get("Authorization");
 
   if (requiresAuth && !accessToken && !existingAuthorization) {
@@ -70,7 +58,7 @@ apiClient.interceptors.request.use(async (config) => {
 
   if (requiresAuth && accessToken) {
     if (!existingAuthorization) {
-      headers.set("Authorization", `Bearer ${accessToken}`);
+      headers.set("Authorization", createBearerAuthorizationHeader(accessToken));
     }
   }
 

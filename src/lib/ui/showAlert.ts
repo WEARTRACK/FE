@@ -1,3 +1,13 @@
+export type AlertActionOptions = {
+  label: string;
+  onPress?: () => void | Promise<void>;
+  beforePress?: () => boolean;
+};
+
+export type AlertResolvedAction = Omit<AlertActionOptions, "onPress"> & {
+  onPress: () => void | Promise<void>;
+};
+
 export type AlertOptions = {
   title: string;
   message?: string;
@@ -6,20 +16,15 @@ export type AlertOptions = {
   dismissible?: boolean;
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void | Promise<void>;
+  confirmAction?: AlertActionOptions;
+  cancelAction?: AlertActionOptions;
 };
 
 export type AlertRequest = {
-  id: number;
   title: string;
   message?: string;
-  confirmAction: {
-    label: string;
-    onPress: () => void | Promise<void>;
-  };
-  cancelAction?: {
-    label: string;
-    onPress: () => void | Promise<void>;
-  };
+  confirmAction: AlertResolvedAction;
+  cancelAction?: AlertResolvedAction;
   dismissible: boolean;
 };
 
@@ -28,8 +33,21 @@ type AlertListener = (alert: AlertRequest) => void;
 const DEFAULT_CONFIRM_TEXT = "확인";
 const DEFAULT_CANCEL_TEXT = "취소";
 
-let nextAlertId = 1;
 const alertListeners = new Set<AlertListener>();
+
+function createAlertAction(
+  action: AlertActionOptions | undefined,
+  fallbackLabel: string,
+  fallbackOnPress?: () => void | Promise<void>,
+): AlertResolvedAction {
+  const onPress = action?.onPress ?? fallbackOnPress ?? (() => undefined);
+
+  return {
+    label: action?.label ?? fallbackLabel,
+    onPress,
+    beforePress: action?.beforePress,
+  };
+}
 
 export function subscribeAlert(listener: AlertListener) {
   alertListeners.add(listener);
@@ -40,26 +58,23 @@ export function subscribeAlert(listener: AlertListener) {
 }
 
 export function showAlert(options: AlertOptions) {
-  const hasCancelAction = Boolean(options.cancelText || options.onCancel);
+  const hasCancelAction = Boolean(options.cancelAction || options.cancelText || options.onCancel);
 
   const alert: AlertRequest = {
-    id: nextAlertId++,
     title: options.title,
     message: options.message,
     dismissible: options.dismissible ?? true,
-    confirmAction: {
-      label: options.confirmText ?? DEFAULT_CONFIRM_TEXT,
-      onPress: async () => {
-        await options.onConfirm?.();
-      },
-    },
+    confirmAction: createAlertAction(
+      options.confirmAction,
+      options.confirmText ?? DEFAULT_CONFIRM_TEXT,
+      options.onConfirm,
+    ),
     cancelAction: hasCancelAction
-      ? {
-          label: options.cancelText ?? DEFAULT_CANCEL_TEXT,
-          onPress: async () => {
-            await options.onCancel?.();
-          },
-        }
+      ? createAlertAction(
+          options.cancelAction,
+          options.cancelText ?? DEFAULT_CANCEL_TEXT,
+          options.onCancel,
+        )
       : undefined,
   };
 

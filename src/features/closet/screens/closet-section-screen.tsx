@@ -493,18 +493,21 @@ export function ClosetSectionScreen() {
           await repository.deleteClothes(clothesId);
           setDeletedItemIds((current) => [...current, selectedItem.id]);
           handleCloseDetailModal();
-          try {
-            await repository.deleteClothes(clothesId);
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
-              queryClient.invalidateQueries({ queryKey: ["closet"] }),
-            ]);
-            showToast("옷 삭제에 성공하였습니다.");
-          } catch (error) {
-            setDeletedItemIds((current) => current.filter((itemId) => itemId !== selectedItem.id));
-            showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
-          }
-        },
+          showToast("옷 삭제에 성공하였습니다.");
+        } catch (error) {
+          await refetch();
+          showToast(getActionErrorMessage(error, "삭제에 실패했습니다. 다시 시도해주세요."));
+          return;
+        }
+
+        try {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
+            queryClient.invalidateQueries({ queryKey: ["closet"] }),
+          ]);
+        } catch {
+          await refetch();
+        }
       },
     });
   };

@@ -8,7 +8,9 @@ export function ClosetStatsPlaceholderScreen() {
 
   return (
     <View className="flex-1 bg-bg-light px-6 pb-8 pt-20">
-      <Text className="font-pretendard-semibold text-headline text-text-subdued">옷장 전체 정보</Text>
+      <Text className="font-pretendard-semibold text-headline text-text-subdued">
+        옷장 전체 정보
+      </Text>
 
       <View className="mt-6 rounded-2xl bg-white p-5">
         <Text className="font-pretendard text-body text-text-subdued">

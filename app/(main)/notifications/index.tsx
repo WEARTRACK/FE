@@ -22,7 +22,7 @@ function NotificationCard({ notification }: { notification: NotificationItem }) 
   const timeText = formatNotificationTime(notification.sentAt);
 
   return (
-    <View className="border-gray h-[98px] justify-center rounded-lg border bg-white px-8">
+    <View className="h-[98px] justify-center rounded-lg border border-gray bg-white px-8">
       <Text className="font-pretendard text-heading text-text" numberOfLines={1}>
         {notification.title}
       </Text>

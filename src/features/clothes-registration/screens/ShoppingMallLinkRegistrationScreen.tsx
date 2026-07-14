@@ -1,13 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClosetIcon from "../../../../assets/closet-icon.svg";
@@ -95,7 +88,9 @@ export function ShoppingMallLinkRegistrationScreen() {
       });
       router.push(clothesRegistrationRoutes.shoppingMallStyle);
     } catch {
-      setErrorMessage("상품 정보를 불러올 수 없습니다. 상품 페이지를 확인하거나 직접 입력해 주세요.");
+      setErrorMessage(
+        "상품 정보를 불러올 수 없습니다. 상품 페이지를 확인하거나 직접 입력해 주세요.",
+      );
       setFetchState("error");
     }
   };
@@ -190,9 +185,7 @@ export function ShoppingMallLinkRegistrationScreen() {
               fullWidth
               className="h-[58px] rounded-[4px] border-[0.5px] border-text-subdued"
               textClassName="font-pretendard-semibold text-[18px] leading-[22px]"
-              onPress={() =>
-                router.push(clothesRegistrationRoutes.shoppingMallManualStyle)
-              }
+              onPress={() => router.push(clothesRegistrationRoutes.shoppingMallManualStyle)}
             />
             <Button
               label="다시 시도"

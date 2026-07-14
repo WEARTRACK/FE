@@ -18,7 +18,9 @@ import {
 } from "./closet-api-mappers";
 
 export async function fetchClothesDetail(clothesId: number): Promise<ClosetDetailResult> {
-  const response = await apiClient.get<ApiEnvelope<ClosetDetailResultApi>>(`/api/clothes/${clothesId}`);
+  const response = await apiClient.get<ApiEnvelope<ClosetDetailResultApi>>(
+    `/api/clothes/${clothesId}`,
+  );
 
   if (!isApiEnvelope(response.data)) {
     throw createInvalidResponseError("옷 상세 조회 응답 형식이 올바르지 않아요.", response.data);

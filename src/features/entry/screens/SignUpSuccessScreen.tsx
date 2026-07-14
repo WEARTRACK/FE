@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
+import { termsRoutes } from "@/features/terms/routes";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 
 export function SignUpSuccessScreen() {
@@ -33,7 +34,7 @@ export function SignUpSuccessScreen() {
           size="lg"
           fullWidth
           onPress={() => {
-            router.replace("/auth/set-nickname");
+            router.replace(termsRoutes.authAgreement);
           }}
         />
       </View>

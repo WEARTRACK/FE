@@ -3,4 +3,3 @@ import { ClosetCaptureGuideScreen } from "@/features/clothes-registration/screen
 export default function ClosetRegisterRoute() {
   return <ClosetCaptureGuideScreen />;
 }
-

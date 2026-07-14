@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { Platform } from "react-native";
+import { useEffect, useRef, useState } from "react";
 import type { RemoteMessage } from "@react-native-firebase/messaging";
 import {
   getToken,
@@ -15,15 +14,23 @@ import {
   deleteNotificationFcmToken,
   registerNotificationFcmToken,
 } from "@/features/notifications/api/notification-api";
-import type {
-  NotificationDeviceType,
-  NotificationTokenSyncState,
-} from "@/features/notifications/api/notification-api-types";
+import type { NotificationTokenSyncState } from "@/features/notifications/api/notification-api-types";
 import {
-  clearNotificationTokenSyncState,
   getNotificationTokenSyncState,
   setNotificationTokenSyncState,
 } from "@/features/notifications/data/notification-token-sync-storage";
+import {
+  clearForcedNotificationTokenSync,
+  clearPendingNotificationTokenDeletionIfMatches,
+  deleteNotificationTokenSnapshot,
+  deleteStoredNotificationTokenForMember,
+  getNotificationTokenSyncRevision,
+  getNotificationDeviceType,
+  isNotificationTokenSyncPaused,
+  resolvePendingNotificationTokenDeletion,
+  shouldForceNotificationTokenSync,
+  subscribeNotificationTokenSyncRevision,
+} from "@/features/notifications/utils/notification-token-sync";
 import { navigateFromNotificationData } from "@/features/notifications/notification-navigation";
 import { requestNotificationPermission } from "@/features/notifications/notification-permission";
 import { showAlert } from "@/lib/ui/showAlert";
@@ -34,10 +41,6 @@ const messaging = getMessaging();
 setBackgroundMessageHandler(messaging, async (remoteMessage) => {
   void remoteMessage;
 });
-
-function getNotificationDeviceType(): NotificationDeviceType {
-  return Platform.OS === "ios" ? "IOS" : "ANDROID";
-}
 
 function showForegroundNotification(remoteMessage: RemoteMessage) {
   const title = remoteMessage.notification?.title ?? "WEARTRACK";
@@ -55,51 +58,6 @@ function showForegroundNotification(remoteMessage: RemoteMessage) {
   });
 }
 
-function isSameTokenSyncState(
-  a: NotificationTokenSyncState | null,
-  b: NotificationTokenSyncState | null,
-) {
-  if (!a || !b) {
-    return false;
-  }
-
-  return (
-    a.memberId === b.memberId &&
-    a.registeredToken === b.registeredToken &&
-    a.deviceType === b.deviceType
-  );
-}
-
-async function deleteNotificationTokenSnapshot(
-  accessToken: string,
-  targetState: NotificationTokenSyncState | null,
-) {
-  if (!targetState) {
-    return;
-  }
-
-  await deleteNotificationFcmToken({ token: targetState.registeredToken }, accessToken);
-
-  const latestState = await getNotificationTokenSyncState();
-
-  if (isSameTokenSyncState(latestState, targetState)) {
-    await clearNotificationTokenSyncState();
-  }
-}
-
-async function deleteStoredNotificationTokenForMember(accessToken: string, memberId: number) {
-  const storedState = await getNotificationTokenSyncState();
-
-  if (
-    storedState?.memberId !== memberId ||
-    storedState.deviceType !== getNotificationDeviceType()
-  ) {
-    return;
-  }
-
-  await deleteNotificationTokenSnapshot(accessToken, storedState);
-}
-
 async function registerNotificationToken({
   accessToken,
   memberId,
@@ -113,8 +71,13 @@ async function registerNotificationToken({
   shouldContinue?: () => boolean;
   token: string;
 }) {
+  if (isNotificationTokenSyncPaused()) {
+    return null;
+  }
+
   const deviceType = getNotificationDeviceType();
   const storedState = await getNotificationTokenSyncState();
+  const shouldForceSync = shouldForceNotificationTokenSync();
   const nextState: NotificationTokenSyncState = {
     memberId,
     registeredToken: token,
@@ -123,16 +86,18 @@ async function registerNotificationToken({
   };
 
   if (
+    !shouldForceSync &&
     storedState?.memberId === memberId &&
     storedState.registeredToken === token &&
     storedState.deviceType === deviceType
   ) {
+    await clearPendingNotificationTokenDeletionIfMatches(memberId, token);
     return storedState;
   }
 
   await registerNotificationFcmToken({ token, deviceType }, accessToken);
 
-  if (!shouldContinue()) {
+  if (!shouldContinue() || isNotificationTokenSyncPaused()) {
     try {
       await deleteNotificationFcmToken({ token }, accessToken);
     } catch (error) {
@@ -144,6 +109,8 @@ async function registerNotificationToken({
 
   onRegistered?.(nextState);
   await setNotificationTokenSyncState(nextState);
+  await clearPendingNotificationTokenDeletionIfMatches(memberId, token);
+  clearForcedNotificationTokenSync();
 
   if (storedState?.memberId === memberId && storedState.registeredToken !== token) {
     try {
@@ -180,11 +147,18 @@ export function useNotificationSetup() {
   const memberIdRef = useRef(memberId);
   const lastSyncedTokenStateRef = useRef<NotificationTokenSyncState | null>(null);
   const tokenRefreshUnsubscribeRef = useRef<null | (() => void)>(null);
+  const [syncRevision, setSyncRevision] = useState(getNotificationTokenSyncRevision);
 
   useEffect(() => {
     accessTokenRef.current = accessToken;
     memberIdRef.current = memberId;
   }, [accessToken, memberId]);
+
+  useEffect(() => {
+    return subscribeNotificationTokenSyncRevision(() => {
+      setSyncRevision(getNotificationTokenSyncRevision());
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribeForeground = onMessage(messaging, (remoteMessage) => {
@@ -213,6 +187,14 @@ export function useNotificationSetup() {
     const cleanupAccessToken = accessTokenRef.current;
 
     if (!cleanupAccessToken || !memberId) {
+      tokenRefreshUnsubscribeRef.current?.();
+      tokenRefreshUnsubscribeRef.current = null;
+      return undefined;
+    }
+
+    if (isNotificationTokenSyncPaused()) {
+      tokenRefreshUnsubscribeRef.current?.();
+      tokenRefreshUnsubscribeRef.current = null;
       return undefined;
     }
 
@@ -235,7 +217,12 @@ export function useNotificationSetup() {
         .then(() => {
           const latestAccessToken = accessTokenRef.current;
 
-          if (!active || memberIdRef.current !== memberId || !latestAccessToken) {
+          if (
+            !active ||
+            memberIdRef.current !== memberId ||
+            !latestAccessToken ||
+            isNotificationTokenSyncPaused()
+          ) {
             return null;
           }
 
@@ -251,7 +238,12 @@ export function useNotificationSetup() {
       return registrationQueue;
     };
 
-    getNotificationTokenSyncState()
+    resolvePendingNotificationTokenDeletion(cleanupAccessToken, memberId)
+      .catch((error) => {
+        console.warn("[FCM] Failed to delete pending notification token", error);
+        return false;
+      })
+      .then(() => getNotificationTokenSyncState())
       .then((storedState) => {
         if (
           active &&
@@ -264,7 +256,7 @@ export function useNotificationSetup() {
         return getCurrentNotificationToken();
       })
       .then((token) => {
-        if (!active || !token) {
+        if (!active || !token || isNotificationTokenSyncPaused()) {
           return null;
         }
 
@@ -281,7 +273,7 @@ export function useNotificationSetup() {
 
     tokenRefreshUnsubscribeRef.current?.();
     tokenRefreshUnsubscribeRef.current = onTokenRefresh(messaging, (token) => {
-      if (!active) {
+      if (!active || isNotificationTokenSyncPaused()) {
         return;
       }
 
@@ -301,6 +293,10 @@ export function useNotificationSetup() {
       tokenRefreshUnsubscribeRef.current?.();
       tokenRefreshUnsubscribeRef.current = null;
 
+      if (isNotificationTokenSyncPaused()) {
+        return;
+      }
+
       const cleanupTask = tokenStateForCleanup
         ? deleteNotificationTokenSnapshot(cleanupAccessToken, tokenStateForCleanup)
         : deleteStoredNotificationTokenForMember(cleanupAccessToken, memberId);
@@ -309,5 +305,5 @@ export function useNotificationSetup() {
         console.warn("[FCM] Failed to delete notification token", error);
       });
     };
-  }, [hasAccessToken, memberId]);
+  }, [hasAccessToken, memberId, syncRevision]);
 }

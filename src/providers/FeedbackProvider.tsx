@@ -6,11 +6,13 @@ import { AlertDialog } from "@/components/common/AlertDialog";
 import type { AlertDialogAction } from "@/components/common/AlertDialog";
 import { ToastHost } from "@/components/common/ToastHost";
 import { subscribeAlert } from "@/lib/ui/showAlert";
-import type { AlertRequest } from "@/lib/ui/showAlert";
+import type { AlertRequest, AlertResolvedAction } from "@/lib/ui/showAlert";
 
 type AlertState = AlertRequest & {
   visible: boolean;
 };
+
+const ALERT_DISMISS_DELAY_MS = 160;
 
 export function FeedbackProvider({ children }: PropsWithChildren) {
   const usesFullWindowOverlay = Platform.OS === "ios";
@@ -61,7 +63,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     });
   }, [showNextAlert]);
 
-  const runPendingAction = useCallback(() => {
+  const runPendingAction = useCallback(async () => {
     const action = pendingActionRef.current;
     pendingActionRef.current = null;
 
@@ -69,7 +71,6 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    // Run after dismissing the dialog to avoid presenting nested native modals.
     void Promise.resolve()
       .then(action)
       .catch((error) => {
@@ -79,9 +80,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
 
   const handleDismiss = useCallback(
     (nextAction?: AlertDialogAction["onPress"]) => {
-      if (nextAction) {
-        pendingActionRef.current = nextAction;
-      }
+      pendingActionRef.current = nextAction ?? null;
 
       if (dismissTimerRef.current) {
         clearTimeout(dismissTimerRef.current);
@@ -93,15 +92,19 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
         setAlert(null);
         alertRef.current = null;
         dismissTimerRef.current = null;
-        runPendingAction();
+        void runPendingAction();
         showNextAlert();
-      }, 160);
+      }, ALERT_DISMISS_DELAY_MS);
     },
     [runPendingAction, showNextAlert],
   );
 
   const handleAlertActionPress = useCallback(
-    (action: AlertDialogAction) => {
+    (action: AlertResolvedAction) => {
+      if (action.beforePress && !action.beforePress()) {
+        return;
+      }
+
       handleDismiss(action.onPress);
     },
     [handleDismiss],

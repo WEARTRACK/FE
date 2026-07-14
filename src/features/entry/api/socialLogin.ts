@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import { isValidClosetId } from "@/features/closet/utils/closet-id";
+import { normalizeAccessToken, normalizeRefreshToken } from "@/lib/api/authToken";
 import { ApiError } from "@/lib/api/errors";
 
 export type SocialAuthProvider = "GOOGLE" | "KAKAO" | "NAVER";
@@ -14,6 +15,7 @@ export type SocialLoginPayload = {
 export type SocialLoginResult = {
   memberId: number;
   nickname: string | null;
+  requiredTermsAgreed: boolean;
   profileCompleted: boolean;
   accessToken: string;
   refreshToken: string;
@@ -24,7 +26,7 @@ type SocialLoginResponse = {
   isSuccess: boolean;
   code: string;
   message: string;
-  result: SocialLoginResult | null;
+  result?: SocialLoginResult | null;
 };
 
 function createInvalidResponseError(details: unknown) {
@@ -36,21 +38,48 @@ function createInvalidResponseError(details: unknown) {
   });
 }
 
-function isSocialLoginResult(value: unknown): value is SocialLoginResult {
+function resolveRequiredTermsAgreed(candidate: Record<string, unknown>) {
+  if (typeof candidate.requiredTermsAgreed === "boolean") {
+    return candidate.requiredTermsAgreed;
+  }
+
+  // Older login responses did not include terms state. Preserve the previous
+  // completed-profile path until the backend sends an explicit value.
+  return candidate.profileCompleted === true;
+}
+
+function parseSocialLoginResult(value: unknown): SocialLoginResult | null {
   if (!value || typeof value !== "object") {
-    return false;
+    return null;
   }
 
   const candidate = value as Record<string, unknown>;
+  const closetId = candidate.closetId;
+  const accessToken =
+    typeof candidate.accessToken === "string" ? normalizeAccessToken(candidate.accessToken) : "";
+  const refreshToken =
+    typeof candidate.refreshToken === "string" ? normalizeRefreshToken(candidate.refreshToken) : "";
 
-  return (
+  if (
     typeof candidate.memberId === "number" &&
     (typeof candidate.nickname === "string" || candidate.nickname === null) &&
     typeof candidate.profileCompleted === "boolean" &&
-    typeof candidate.accessToken === "string" &&
-    typeof candidate.refreshToken === "string" &&
-    (candidate.closetId === undefined || candidate.closetId === null || isValidClosetId(candidate.closetId))
-  );
+    accessToken.length > 0 &&
+    refreshToken.length > 0 &&
+    (closetId === undefined || closetId === null || isValidClosetId(closetId))
+  ) {
+    return {
+      memberId: candidate.memberId,
+      nickname: candidate.nickname,
+      requiredTermsAgreed: resolveRequiredTermsAgreed(candidate),
+      profileCompleted: candidate.profileCompleted,
+      accessToken,
+      refreshToken,
+      closetId,
+    };
+  }
+
+  return null;
 }
 
 function isSocialLoginResponse(value: unknown): value is SocialLoginResponse {
@@ -63,8 +92,7 @@ function isSocialLoginResponse(value: unknown): value is SocialLoginResponse {
   return (
     typeof candidate.isSuccess === "boolean" &&
     typeof candidate.code === "string" &&
-    typeof candidate.message === "string" &&
-    (candidate.result === null || isSocialLoginResult(candidate.result))
+    typeof candidate.message === "string"
   );
 }
 
@@ -85,14 +113,20 @@ export async function socialLogin({
     throw createInvalidResponseError(response.data);
   }
 
-  if (!response.data.isSuccess || !response.data.result) {
+  if (!response.data.isSuccess) {
     throw new ApiError({
       code: response.data.code,
       message: response.data.message,
-      status: 200,
+      status: response.status,
       details: response.data.result,
     });
   }
 
-  return response.data.result;
+  const result = parseSocialLoginResult(response.data.result);
+
+  if (!result) {
+    throw createInvalidResponseError(response.data);
+  }
+
+  return result;
 }

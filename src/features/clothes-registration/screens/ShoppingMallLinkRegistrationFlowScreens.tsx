@@ -318,9 +318,7 @@ export function ShoppingMallLinkDetailsScreen() {
                 setSelectedClosetId(option.closetId);
                 setSelectedClosetSectionId(null);
               }}
-              placeholder={
-                isClosetsLoading ? "보관 옷장을 불러오는 중" : "등록된 옷장이 없습니다."
-              }
+              placeholder={isClosetsLoading ? "보관 옷장을 불러오는 중" : "등록된 옷장이 없습니다."}
               hasError={Boolean(closetsError)}
             />
             {isClosetsLoading ? (

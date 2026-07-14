@@ -1,8 +1,8 @@
-const { withDangerousMod } = require('@expo/config-plugins');
-const fs = require('fs');
-const path = require('path');
+const { withDangerousMod } = require("@expo/config-plugins");
+const fs = require("fs");
+const path = require("path");
 
-const FMT_CONSTEVAL_DEFINITION = 'FMT_USE_CONSTEVAL=0';
+const FMT_CONSTEVAL_DEFINITION = "FMT_USE_CONSTEVAL=0";
 
 const fmtTargetPatch = `    installer.pods_project.targets.each do |target|
       if target.name == 'fmt'
@@ -41,7 +41,7 @@ function patchPodfile(contents) {
   if (contents.includes(reactNativePostInstallCall)) {
     return contents.replace(
       reactNativePostInstallCall,
-      `${reactNativePostInstallCall}${fmtTargetPatchWithSpacing}`
+      `${reactNativePostInstallCall}${fmtTargetPatchWithSpacing}`,
     );
   }
 
@@ -56,10 +56,10 @@ function patchPodfile(contents) {
 
 module.exports = function withFmtConstevalFix(config) {
   return withDangerousMod(config, [
-    'ios',
+    "ios",
     async (config) => {
-      const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
-      const contents = await fs.promises.readFile(podfilePath, 'utf8');
+      const podfilePath = path.join(config.modRequest.platformProjectRoot, "Podfile");
+      const contents = await fs.promises.readFile(podfilePath, "utf8");
       await fs.promises.writeFile(podfilePath, patchPodfile(contents));
       return config;
     },
