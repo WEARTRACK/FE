@@ -293,10 +293,11 @@ export function ClosetSearchResultsScreen() {
       cancelText: "취소",
       dismissible: false,
       onConfirm: async () => {
+        removeItemOptimistic(selectedItem.clothesId);
+        handleCloseDetailModal();
+
         try {
           await repository.deleteClothes(selectedItem.clothesId);
-          removeItemOptimistic(selectedItem.clothesId);
-          handleCloseDetailModal();
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ["home-summary"] }),
             queryClient.invalidateQueries({ queryKey: ["closet"] }),

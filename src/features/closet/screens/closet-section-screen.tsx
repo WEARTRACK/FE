@@ -44,9 +44,9 @@ export function ClosetSectionScreen() {
   const repository = useMemo(() => getClosetRepository(), []);
   const memberId = useSessionStore((state) => state.memberId);
   const { sectionId, closetId } = useLocalSearchParams<{
-  sectionId?: string;
-  closetId?: string;
-  }>();  
+    sectionId?: string;
+    closetId?: string;
+  }>();
   const [isClothesGuideVisible, setIsClothesGuideVisible] = useState(false);
 
   const currentSectionId: ClosetSectionId =
@@ -55,13 +55,13 @@ export function ClosetSectionScreen() {
 
   const { template } = useClosetTemplate({ closetId: requestedClosetId });
   const {
-  items: sectionItems,
-  isLoading,
-  error,
-  refetch,
-} = useClosetItemsBySection(currentSectionId, {
-  closetId: requestedClosetId,
-});
+    items: sectionItems,
+    isLoading,
+    error,
+    refetch,
+  } = useClosetItemsBySection(currentSectionId, {
+    closetId: requestedClosetId,
+  });
 
   const sectionName = useMemo(() => {
     const found = template.sections.find((section) => section.id === currentSectionId);
@@ -163,12 +163,8 @@ export function ClosetSectionScreen() {
         onEmptyActionPress={() => setIsClothesGuideVisible(true)}
         sectionOptions={sectionOptions}
         onLoadDetail={repository.getClothesDetail}
-        onUpdateItem={(clothesId, payload) => 
-          repository.updateClothes(
-            clothesId,
-            payload,
-            requestedClosetId,
-          )
+        onUpdateItem={(clothesId, payload) =>
+          repository.updateClothes(clothesId, payload, requestedClosetId)
         }
         onDeleteItem={async (clothesId) => {
           await repository.deleteClothes(clothesId);
@@ -186,14 +182,12 @@ export function ClosetSectionScreen() {
             memberId == null
               ? Promise.resolve()
               : queryClient.invalidateQueries({
-                queryKey:
-                  weeklyReviewQueryKeys.currentWeeklyReview(memberId),
+                  queryKey: weeklyReviewQueryKeys.currentWeeklyReview(memberId),
                 }),
             memberId == null
               ? Promise.resolve()
               : queryClient.invalidateQueries({
-                queryKey:
-                  weeklyReviewQueryKeys.longUnwornClothes(memberId),
+                  queryKey: weeklyReviewQueryKeys.longUnwornClothes(memberId),
                 }),
           ]);
         }}
