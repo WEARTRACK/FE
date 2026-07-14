@@ -34,6 +34,31 @@ function resolveTabScreenName(tab: TabRouteName): string {
   return `${tab}/index`;
 }
 
+type NestedNavigationState = {
+  index?: number;
+  routes?: {
+    name?: string;
+    state?: NestedNavigationState;
+  }[];
+};
+
+function getDeepestActiveRouteName(route: { name?: string; state?: unknown } | undefined) {
+  let activeRoute: { name?: string; state?: unknown } | undefined = route;
+
+  while (activeRoute?.state && typeof activeRoute.state === "object") {
+    const nestedState = activeRoute.state as NestedNavigationState;
+    const nestedRoutes = nestedState.routes;
+
+    if (!nestedRoutes?.length) {
+      break;
+    }
+
+    activeRoute = nestedRoutes[nestedState.index ?? 0];
+  }
+
+  return activeRoute?.name;
+}
+
 function MainTabBar({
   state,
   navigation,
@@ -41,6 +66,11 @@ function MainTabBar({
 }: BottomTabBarProps & { insetsBottom: number }) {
   const tabBarBottomSpacing = insetsBottom + 20;
   const activeTab = resolveActiveTab(state.routeNames[state.index] ?? "");
+  const activeRouteName = getDeepestActiveRouteName(state.routes[state.index]);
+
+  if (activeRouteName === "pre-purchase-check") {
+    return null;
+  }
 
   return (
     <View

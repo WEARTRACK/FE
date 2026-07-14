@@ -7,6 +7,7 @@ import CategoryIcon from "../../../../assets/category.svg";
 import ClosetIcon from "../../../../assets/closet-icon.svg";
 import ClothesIcon from "../../../../assets/clothes-icon.svg";
 import ColorIcon from "../../../../assets/color.svg";
+import DotsIcon from "../../../../assets/dots.svg";
 import HangerIcon from "../../../../assets/hanger-icon.svg";
 import { colors } from "@/constants/colors";
 import { ClosetRegistrationGuideModal } from "@/features/clothes-registration/components/ClosetRegistrationGuideModal";
@@ -182,6 +183,49 @@ function SearchCard({
             {suffix}
           </Text>
         </View>
+      </Pressable>
+    </View>
+  );
+}
+
+function PurchaseCheckBubble({ onPress }: { onPress: () => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handlePress = () => {
+    if (!isExpanded) {
+      setIsExpanded(true);
+      return;
+    }
+
+    onPress();
+  };
+
+  return (
+    <View
+      className="h-[26px]"
+      style={{
+        elevation: 4,
+        shadowColor: colors.blue[3],
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.5,
+        shadowRadius: 3,
+        width: isExpanded ? 173 : 49,
+      }}
+    >
+      <Pressable
+        accessibilityLabel="구매 전 확인하기로 이동"
+        accessibilityRole="button"
+        className="h-full items-center justify-center rounded-[8px] rounded-br-none bg-text px-[14px]"
+        onPress={handlePress}
+        style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1 })}
+      >
+        {isExpanded ? (
+          <Text className="font-pretendard text-[12px] leading-[16px] text-blue-0">
+            구매를 고민하는 옷이 있나요?
+          </Text>
+        ) : (
+          <DotsIcon height={5} width={21} />
+        )}
       </Pressable>
     </View>
   );
@@ -461,9 +505,12 @@ export function MainHomeScreen() {
         </View>
 
         <View className={isCompactHeight ? "mt-[20px]" : "mt-[27px]"}>
-          <Text className="font-pretendard-bold text-[14px] leading-[24px] text-text">
-            내 옷 찾기
-          </Text>
+          <View className="h-[26px] flex-row items-center justify-between">
+            <Text className="font-pretendard-bold text-[14px] leading-[24px] text-text">
+              내 옷 찾기
+            </Text>
+            <PurchaseCheckBubble onPress={() => router.push("/home/pre-purchase-check")} />
+          </View>
           <View className={`${isCompactHeight ? "mt-[10px]" : "mt-[12px]"} flex-row gap-[18px]`}>
             <SearchCard
               emphasis="색상"
