@@ -80,5 +80,6 @@ export async function getMemberProfile(): Promise<MemberProfile> {
     });
   }
 
-  return response.data.result;
+  const { memberId, nickname, email } = response.data.result;
+  return { memberId, nickname, email };
 }

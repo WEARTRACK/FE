@@ -6,8 +6,8 @@ import {
   resolvePostLoginRoute,
   type PostLoginIntentSuccessHref,
 } from "@/features/entry/utils/resolvePostLoginRoute";
-import { resetAuthenticatedClientState } from "@/features/entry/utils/resetAuthenticatedClientState";
 import { isValidClosetId } from "@/features/closet/utils/closet-id";
+import { cleanupCurrentMemberData } from "@/features/mypage/utils/cleanupCurrentMemberData";
 import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
 
 type CompletePostLoginTransitionParams = {
@@ -50,7 +50,11 @@ export async function completePostLoginTransition({
     return false;
   }
 
-  resetAuthenticatedClientState(queryClient);
+  await cleanupCurrentMemberData({
+    memberId: null,
+    queryClient,
+    skipNotificationTokenClear: true,
+  });
   setSession(result);
   setClosetId(isValidClosetId(result.closetId) ? result.closetId : null);
 

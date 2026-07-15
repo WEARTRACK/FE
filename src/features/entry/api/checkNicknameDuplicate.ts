@@ -54,7 +54,7 @@ function isCheckNicknameDuplicateApiResponse(
     typeof candidate.isSuccess === "boolean" &&
     typeof candidate.code === "string" &&
     typeof candidate.message === "string" &&
-    (candidate.result === null || typeof candidate.result === "object")
+    (!candidate.isSuccess || candidate.result === null || typeof candidate.result === "object")
   );
 }
 

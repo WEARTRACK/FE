@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChevronRightIcon from "../../../../assets/chevron_right.svg";
 import { Button } from "@/components/common/Button";
 import { saveTermsAgreement } from "@/features/entry/api/saveTermsAgreement";
-import { resetAuthenticatedClientState } from "@/features/entry/utils/resetAuthenticatedClientState";
+import { cleanupCurrentMemberData } from "@/features/mypage/utils/cleanupCurrentMemberData";
 import { preservePendingNotificationTokenDeletionForMember } from "@/features/notifications/utils/notification-token-sync";
 import { resolvePostLoginRoute } from "@/features/entry/utils/resolvePostLoginRoute";
 import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
@@ -71,7 +71,6 @@ export function TermsAgreementScreen() {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const submitLockRef = useRef(false);
-  const clearSession = useSessionStore((state) => state.clearSession);
   const memberId = useSessionStore((state) => state.memberId);
   const profileCompleted = useSessionStore((state) => state.profileCompleted);
   const persistedAgreement = useSessionStore((state) => state.requiredTermsAgreed);
@@ -91,8 +90,11 @@ export function TermsAgreementScreen() {
       console.warn("[Auth] Failed to preserve pending notification token deletion", error);
     }
 
-    resetAuthenticatedClientState(queryClient);
-    clearSession();
+    await cleanupCurrentMemberData({
+      memberId,
+      queryClient,
+      skipNotificationTokenClear: true,
+    });
     showToast("로그인 정보를 확인할 수 없어요. 다시 로그인해주세요.");
     resetToAuth();
   };

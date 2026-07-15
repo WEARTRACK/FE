@@ -9,7 +9,6 @@ import ChevronRightIcon from "../../../../assets/chevron_right.svg";
 import MyEditIcon from "../../../../assets/my-edit.svg";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
-import { resetAuthenticatedClientState } from "@/features/entry/utils/resetAuthenticatedClientState";
 import { logoutMemberSession } from "@/features/mypage/api/memberSessionActions";
 import {
   getMemberProfileErrorMessage,
@@ -98,7 +97,6 @@ export function MyPageScreen() {
   const insets = useSafeAreaInsets();
   const memberId = useSessionStore((state) => state.memberId);
   const accessToken = useSessionStore((state) => state.accessToken);
-  const clearSession = useSessionStore((state) => state.clearSession);
   const updateProfile = useSessionStore((state) => state.updateProfile);
   const { data: member, error, errorUpdatedAt, isError, isPending, refetch } = useMemberProfile();
   const hasHandledErrorAtRef = useRef(0);
@@ -122,12 +120,15 @@ export function MyPageScreen() {
         console.warn("[Auth] Failed to preserve pending notification token deletion", error);
       }
 
-      resetAuthenticatedClientState(queryClient);
-      clearSession();
+      await cleanupCurrentMemberData({
+        memberId,
+        queryClient,
+        skipNotificationTokenClear: true,
+      });
       showToast("로그인 정보를 확인할 수 없어요. 다시 로그인해주세요.");
       resetToAuth();
     })();
-  }, [clearSession, memberId, queryClient, resetToAuth]);
+  }, [memberId, queryClient, resetToAuth]);
 
   useEffect(() => {
     if (!member) {

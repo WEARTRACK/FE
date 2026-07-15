@@ -12,6 +12,7 @@ import { useShoppingMallRegistrationStore } from "@/stores/useShoppingMallRegist
 type CleanupCurrentMemberDataParams = {
   memberId: number | null;
   queryClient: QueryClient;
+  skipNotificationTokenClear?: boolean;
 };
 
 async function runCleanupStep(label: string, task: () => unknown | Promise<unknown>) {
@@ -25,6 +26,7 @@ async function runCleanupStep(label: string, task: () => unknown | Promise<unkno
 export async function cleanupCurrentMemberData({
   memberId,
   queryClient,
+  skipNotificationTokenClear = false,
 }: CleanupCurrentMemberDataParams) {
   await runCleanupStep("query cache", () => {
     queryClient.clear();
@@ -42,9 +44,12 @@ export async function cleanupCurrentMemberData({
     useQuestRegistrationStore.getState().resetState();
   });
   await runCleanupStep("social auth intent", clearSocialAuthIntent);
-  await runCleanupStep("notification token sync state", () =>
-    clearNotificationTokenSyncStateForMember(memberId),
-  );
+
+  if (!skipNotificationTokenClear) {
+    await runCleanupStep("notification token sync state", () =>
+      clearNotificationTokenSyncStateForMember(memberId),
+    );
+  }
 
   if (memberId !== null) {
     await runCleanupStep("shopping mall terms agreement", () =>

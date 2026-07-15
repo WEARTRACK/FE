@@ -11,8 +11,8 @@ import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAcce
 import SignupInput from "@/components/common/SignupInput";
 import { saveNickname } from "@/features/entry/api/saveNickname";
 import { useNicknameFieldState } from "@/features/entry/hooks/useNicknameFieldState";
-import { resetAuthenticatedClientState } from "@/features/entry/utils/resetAuthenticatedClientState";
 import type { MemberProfile } from "@/features/mypage/api/getMemberProfile";
+import { cleanupCurrentMemberData } from "@/features/mypage/utils/cleanupCurrentMemberData";
 import {
   getMemberProfileErrorMessage,
   isMemberProfileAuthError,
@@ -31,7 +31,6 @@ export function EditNicknameScreen() {
   const insets = useSafeAreaInsets();
   const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const memberId = useSessionStore((state) => state.memberId);
-  const clearSession = useSessionStore((state) => state.clearSession);
   const updateProfile = useSessionStore((state) => state.updateProfile);
   const { data: member, error, errorUpdatedAt, isError, isPending, refetch } = useMemberProfile();
   const [nickname, setNickname] = useState("");
@@ -54,11 +53,14 @@ export function EditNicknameScreen() {
       console.warn("[Auth] Failed to preserve pending notification token deletion", error);
     }
 
-    resetAuthenticatedClientState(queryClient);
-    clearSession();
+    await cleanupCurrentMemberData({
+      memberId,
+      queryClient,
+      skipNotificationTokenClear: true,
+    });
     showToast("로그인 정보를 확인할 수 없어요. 다시 로그인해주세요.");
     resetToAuth();
-  }, [clearSession, memberId, queryClient, resetToAuth]);
+  }, [memberId, queryClient, resetToAuth]);
 
   useEffect(() => {
     if (!isError || errorUpdatedAt === 0 || hasHandledErrorAtRef.current === errorUpdatedAt) {

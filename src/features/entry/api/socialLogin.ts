@@ -29,12 +29,28 @@ type SocialLoginResponse = {
   result?: SocialLoginResult | null;
 };
 
+function redactSocialLoginTokens(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(redactSocialLoginTokens);
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => key !== "accessToken" && key !== "refreshToken")
+      .map(([key, nestedValue]) => [key, redactSocialLoginTokens(nestedValue)]),
+  );
+}
+
 function createInvalidResponseError(details: unknown) {
   return new ApiError({
     code: "INVALID_RESPONSE",
     message: "소셜 로그인 응답 형식이 올바르지 않아요.",
     status: null,
-    details,
+    details: redactSocialLoginTokens(details),
   });
 }
 
@@ -118,7 +134,7 @@ export async function socialLogin({
       code: response.data.code,
       message: response.data.message,
       status: response.status,
-      details: response.data.result,
+      details: redactSocialLoginTokens(response.data.result),
     });
   }
 

@@ -32,17 +32,22 @@ export function useSocialLoginMutation({ successHref }: UseSocialLoginMutationOp
   return useMutation({
     mutationFn: (payload: SocialLoginPayload) => socialLogin(payload),
     onSuccess: async (result) => {
-      await completePostLoginTransition({
-        intentSuccessHref: successHref,
-        queryClient,
-        result,
-        setSession,
-        setClosetId,
-        showLoginFailureToast: () => showToast("로그인에 실패했어요. 다시 시도해주세요."),
-        showOnboardingFetchFailureToast: () =>
-          showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요."),
-        navigate: (href) => router.replace(href),
-      });
+      try {
+        await completePostLoginTransition({
+          intentSuccessHref: successHref,
+          queryClient,
+          result,
+          setSession,
+          setClosetId,
+          showLoginFailureToast: () => showToast("로그인에 실패했어요. 다시 시도해주세요."),
+          showOnboardingFetchFailureToast: () =>
+            showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요."),
+          navigate: (href) => router.replace(href),
+        });
+      } catch (error) {
+        showToast(getSocialLoginErrorMessage(error));
+        router.replace("/auth");
+      }
     },
     onError: (error) => {
       showToast(getSocialLoginErrorMessage(error));

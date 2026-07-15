@@ -76,14 +76,30 @@ describe("socialLogin", () => {
           accessToken: "a",
           refreshToken: "r",
           closetId: 0,
+          providerEmail: "user@example.com",
         },
       },
     });
 
     const { socialLogin } = await import("./socialLogin");
 
-    await expect(socialLogin({ provider: "KAKAO", handoffToken: "token" })).rejects.toMatchObject({
-      code: "INVALID_RESPONSE",
+    const error = await socialLogin({ provider: "KAKAO", handoffToken: "token" }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toMatchObject({ code: "INVALID_RESPONSE" });
+    expect((error as { details: unknown }).details).toEqual({
+      isSuccess: true,
+      code: "COMMON_200",
+      message: "ok",
+      result: {
+        memberId: 1,
+        nickname: "user",
+        requiredTermsAgreed: true,
+        profileCompleted: true,
+        closetId: 0,
+        providerEmail: "user@example.com",
+      },
     });
   });
 
@@ -127,5 +143,49 @@ describe("socialLogin", () => {
       message: "Invalid OAuth handoff token.",
       status: 200,
     });
+  });
+
+  it("redacts tokens from unsuccessful response details", async () => {
+    postMock.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        isSuccess: false,
+        code: "AUTH_400_4",
+        message: "Invalid OAuth handoff token.",
+        result: {
+          accessToken: "access-secret",
+          refreshToken: "refresh-secret",
+          providerEmail: "user@example.com",
+        },
+      },
+    });
+
+    const { socialLogin } = await import("./socialLogin");
+    const error = await socialLogin({ provider: "KAKAO", handoffToken: "token" }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect((error as { details: unknown }).details).toEqual({
+      providerEmail: "user@example.com",
+    });
+  });
+
+  it("redacts tokens from invalid envelope details", async () => {
+    postMock.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        accessToken: "access-secret",
+        refreshToken: "refresh-secret",
+        traceId: "trace-123",
+      },
+    });
+
+    const { socialLogin } = await import("./socialLogin");
+    const error = await socialLogin({ provider: "KAKAO", handoffToken: "token" }).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(error).toMatchObject({ code: "INVALID_RESPONSE" });
+    expect((error as { details: unknown }).details).toEqual({ traceId: "trace-123" });
   });
 });

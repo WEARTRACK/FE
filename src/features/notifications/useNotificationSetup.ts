@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RemoteMessage } from "@react-native-firebase/messaging";
 import {
   getToken,
@@ -149,7 +149,7 @@ export function useNotificationSetup() {
   const tokenRefreshUnsubscribeRef = useRef<null | (() => void)>(null);
   const [syncRevision, setSyncRevision] = useState(getNotificationTokenSyncRevision);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     accessTokenRef.current = accessToken;
     memberIdRef.current = memberId;
   }, [accessToken, memberId]);
@@ -294,6 +294,10 @@ export function useNotificationSetup() {
       tokenRefreshUnsubscribeRef.current = null;
 
       if (isNotificationTokenSyncPaused()) {
+        return;
+      }
+
+      if (memberIdRef.current === memberId) {
         return;
       }
 

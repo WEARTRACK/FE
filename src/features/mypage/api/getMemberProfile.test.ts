@@ -15,7 +15,7 @@ describe("getMemberProfile", () => {
     getMock.mockReset();
   });
 
-  it("requests and returns the documented member profile", async () => {
+  it("requests and returns only documented member profile fields", async () => {
     getMock.mockResolvedValueOnce({
       status: 200,
       data: {
@@ -26,6 +26,7 @@ describe("getMemberProfile", () => {
           memberId: 1,
           nickname: "웨어",
           email: "wear@example.com",
+          providerEmail: "provider@example.com",
         },
       },
     });
