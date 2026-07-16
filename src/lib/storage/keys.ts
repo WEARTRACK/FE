@@ -4,4 +4,5 @@ export const storageKeys = {
   closet: "weartrack-closet",
   shoppingMallTermsAgreement: "weartrack-shopping-mall-terms-agreement",
   notificationTokenSync: "weartrack-notification-token-sync",
+  notificationTokenPendingDelete: "weartrack-notification-token-pending-delete",
 } as const;

@@ -19,6 +19,7 @@ type QuestRegistrationState = {
   startRegistration: (registration: ActiveQuestRegistration) => void;
   completeActiveRegistration: (imageUri?: string | null) => Href | null;
   clearActiveRegistration: () => void;
+  resetState: () => void;
 };
 
 const emptyRegisteredItems = {
@@ -68,5 +69,10 @@ export const useQuestRegistrationStore = create<QuestRegistrationState>()((set, 
   clearActiveRegistration: () =>
     set(() => ({
       activeRegistration: null,
+    })),
+  resetState: () =>
+    set(() => ({
+      activeRegistration: null,
+      registeredItemsByKind: emptyRegisteredItems,
     })),
 }));

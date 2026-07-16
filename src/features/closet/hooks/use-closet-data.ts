@@ -16,7 +16,9 @@ const EMPTY_CLOSET_TEMPLATE: ClosetTemplate = {
   sections: [],
 };
 
-function isClosetRepository(value: ClosetDataHookOptions | ClosetDataRepository | undefined): value is ClosetDataRepository {
+function isClosetRepository(
+  value: ClosetDataHookOptions | ClosetDataRepository | undefined,
+): value is ClosetDataRepository {
   return Boolean(value && "getTemplate" in value && typeof value.getTemplate === "function");
 }
 
@@ -34,7 +36,9 @@ function resolveHookOptions(optionsOrRepository?: ClosetDataHookOptions | Closet
   };
 }
 
-export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
+export function useClosetTemplate(
+  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+) {
   const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
   const [template, setTemplate] =
@@ -187,7 +191,9 @@ export function useClosetItem(
   return { item, isLoading, error, refetch };
 }
 
-export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
+export function useClosetStatistics(
+  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+) {
   const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
   const [statistics, setStatistics] = useState<ClosetStatisticsSummary>({

@@ -36,10 +36,16 @@ function isSaveNicknameResponse(value: unknown): value is SaveNicknameResponse {
   if (
     typeof candidate.isSuccess !== "boolean" ||
     typeof candidate.code !== "string" ||
-    typeof candidate.message !== "string" ||
-    !candidate.result ||
-    typeof candidate.result !== "object"
+    typeof candidate.message !== "string"
   ) {
+    return false;
+  }
+
+  if (!candidate.isSuccess) {
+    return true;
+  }
+
+  if (!candidate.result || typeof candidate.result !== "object") {
     return false;
   }
 

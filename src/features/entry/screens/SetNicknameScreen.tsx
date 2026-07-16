@@ -1,95 +1,83 @@
 import { Href, useRouter } from "expo-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button } from "@/components/common/Button";
 import { useKeyboardAccessoryNavigation } from "@/components/common/KeyboardAccessoryToolbar";
 import SignupInput from "@/components/common/SignupInput";
-import { checkNicknameDuplicate } from "@/features/entry/api/checkNicknameDuplicate";
 import { saveNickname } from "@/features/entry/api/saveNickname";
-import { getNicknameInputState } from "@/features/entry/utils/getNicknameInputState";
+import { useNicknameFieldState } from "@/features/entry/hooks/useNicknameFieldState";
+import type { MemberProfile } from "@/features/mypage/api/getMemberProfile";
+import { cleanupCurrentMemberData } from "@/features/mypage/utils/cleanupCurrentMemberData";
+import { memberQueryKeys } from "@/features/mypage/hooks/memberQueryKeys";
+import { preservePendingNotificationTokenDeletionForMember } from "@/features/notifications/utils/notification-token-sync";
 import { getOnboardingQuests } from "@/features/onboarding/api/getOnboardingQuests";
 import { getOnboardingStatus } from "@/features/onboarding/api/getOnboardingStatus";
 import { onboardingQueryKeys } from "@/features/onboarding/hooks/onboardingQueryKeys";
 import { resolvePostNicknameEntry } from "@/features/onboarding/utils/resolvePostNicknameEntry";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
+import { useSessionStore } from "@/stores/useSessionStore";
 
 export function SetNicknameScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const memberId = useSessionStore((state) => state.memberId);
+  const updateProfile = useSessionStore((state) => state.updateProfile);
+  const submitLockRef = useRef(false);
   const [nickname, setNickname] = useState("");
   const [hasInteracted, setHasInteracted] = useState(false);
-  const debouncedNickname = useDebouncedValue(nickname, 400);
   const keyboardAccessory = useKeyboardAccessoryNavigation(1);
-
-  const baseState = useMemo(
-    () =>
-      getNicknameInputState(nickname, {
-        showRequiredError: hasInteracted,
-      }),
-    [nickname, hasInteracted],
-  );
-
-  const isEligibleForDuplicateCheck = baseState.canSubmit;
-  const isWaitingForDebounce = isEligibleForDuplicateCheck && debouncedNickname !== nickname;
-
-  const {
-    data: duplicateResult,
-    isFetching: isCheckingDuplicate,
-    isError: isDuplicateCheckError,
-  } = useQuery({
-    queryKey: ["nickname-duplicate", debouncedNickname],
-    queryFn: () => checkNicknameDuplicate(debouncedNickname),
-    enabled: isEligibleForDuplicateCheck && debouncedNickname.length > 0,
-    staleTime: 0,
-    gcTime: 0,
-    retry: false,
+  const { trimmedNickname, errorMessage, successMessage, canSubmit } = useNicknameFieldState({
+    nickname,
+    hasInteracted,
   });
+  const resetToAuth = useCallback(() => {
+    if (router.canDismiss()) {
+      router.dismissAll();
+    }
 
-  const duplicateErrorMessage =
-    isEligibleForDuplicateCheck &&
-    !isWaitingForDebounce &&
-    !isCheckingDuplicate &&
-    debouncedNickname === nickname &&
-    duplicateResult?.isDuplicate
-      ? "이미 사용 중인 닉네임이에요."
-      : undefined;
+    router.replace("/auth");
+  }, [router]);
+  const handleAuthFailure = useCallback(async () => {
+    try {
+      await preservePendingNotificationTokenDeletionForMember(memberId);
+    } catch (error) {
+      console.warn("[Auth] Failed to preserve pending notification token deletion", error);
+    }
 
-  const duplicateCheckErrorMessage =
-    isEligibleForDuplicateCheck &&
-    !isWaitingForDebounce &&
-    !isCheckingDuplicate &&
-    debouncedNickname === nickname &&
-    isDuplicateCheckError
-      ? "중복 확인에 실패했어요. 다시 시도해주세요."
-      : undefined;
-
-  const errorMessage =
-    baseState.errorMessage || duplicateErrorMessage || duplicateCheckErrorMessage;
-  const successMessage =
-    !errorMessage &&
-    isEligibleForDuplicateCheck &&
-    !isWaitingForDebounce &&
-    !isCheckingDuplicate &&
-    duplicateResult &&
-    !duplicateResult.isDuplicate
-      ? "사용 가능한 닉네임이에요."
-      : undefined;
-  const canSubmit =
-    isEligibleForDuplicateCheck &&
-    !isWaitingForDebounce &&
-    !isCheckingDuplicate &&
-    !isDuplicateCheckError &&
-    Boolean(duplicateResult) &&
-    !duplicateResult?.isDuplicate;
+    await cleanupCurrentMemberData({
+      memberId,
+      queryClient,
+      skipNotificationTokenClear: true,
+    });
+    showToast("로그인 정보를 확인할 수 없어요. 다시 로그인해주세요.");
+    resetToAuth();
+  }, [memberId, queryClient, resetToAuth]);
   const { mutate: saveNicknameMutate, isPending: isSavingNickname } = useMutation({
     mutationFn: saveNickname,
     onSuccess: async (response) => {
+      if (memberId) {
+        queryClient.setQueryData<MemberProfile | undefined>(
+          memberQueryKeys.detail(memberId),
+          (currentMember) =>
+            currentMember
+              ? {
+                  ...currentMember,
+                  nickname: response.result.nickname,
+                }
+              : currentMember,
+        );
+      }
+
+      updateProfile({
+        nickname: response.result.nickname,
+        profileCompleted: response.result.profileCompleted,
+      });
+
       if (response.result.profileCompleted) {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: onboardingQueryKeys.status() }),
@@ -128,7 +116,7 @@ export function SetNicknameScreen() {
     onError: (error) => {
       if (error instanceof ApiError) {
         if (error.code === "AUTH_REQUIRED" || error.status === 401 || error.status === 403) {
-          showToast("인증이 필요합니다. 다시 로그인해주세요.");
+          void handleAuthFailure();
           return;
         }
 
@@ -150,10 +138,13 @@ export function SetNicknameScreen() {
 
       showToast("저장에 실패했어요. 다시 시도해주세요.");
     },
+    onSettled: () => {
+      submitLockRef.current = false;
+    },
   });
 
   const handleComplete = () => {
-    if (isSavingNickname) {
+    if (isSavingNickname || submitLockRef.current) {
       return;
     }
 
@@ -164,9 +155,8 @@ export function SetNicknameScreen() {
       return;
     }
 
-    saveNicknameMutate({
-      nickname: nickname.trim(),
-    });
+    submitLockRef.current = true;
+    saveNicknameMutate({ nickname: trimmedNickname });
   };
 
   return (

@@ -1,16 +1,15 @@
-import { Href, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { colors } from "@/constants/colors";
-import { isValidClosetId } from "@/features/closet/utils/closet-id";
 import { socialLogin, type SocialAuthProvider } from "@/features/entry/api/socialLogin";
 import {
   clearSocialAuthIntent,
   getSocialAuthIntent,
 } from "@/features/entry/oauth/socialAuthIntentStorage";
-import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
+import { completePostLoginTransition } from "@/features/entry/utils/completePostLoginTransition";
 import { ApiError } from "@/lib/api/errors";
 import { showToast } from "@/lib/ui/showToast";
 import { useClosetStore } from "@/stores/useClosetStore";
@@ -36,20 +35,6 @@ function getSocialLoginErrorMessage(error: unknown) {
   return "로그인에 실패했어요. 다시 시도해주세요.";
 }
 
-function resolveNextHref(params: {
-  intentSuccessHref: Href | null | undefined;
-  profileCompleted: boolean;
-}): Href {
-  const { intentSuccessHref, profileCompleted } = params;
-
-  // Sign-up intent for an already registered user should behave like login flow.
-  if (intentSuccessHref === "/auth/sign-up-success" && profileCompleted) {
-    return "/home";
-  }
-
-  return intentSuccessHref ?? (profileCompleted ? "/home" : "/auth/set-nickname");
-}
-
 export function SocialAuthCallbackScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -64,7 +49,7 @@ export function SocialAuthCallbackScreen() {
     }
 
     const provider = resolveProvider(params.provider);
-    const handoffToken = normalizeValue(params.handoff);
+    const handoffToken = normalizeValue(params.handoff) ?? normalizeValue(params.handoffToken);
 
     if (!provider || !handoffToken) {
       hasHandledCallbackRef.current = true;
@@ -84,29 +69,19 @@ export function SocialAuthCallbackScreen() {
           provider: validProvider,
           handoffToken: validHandoffToken,
         });
-
-        setSession(result);
-        if (isValidClosetId(result.closetId) || result.closetId === null) {
-          setClosetId(result.closetId);
-        }
         await clearSocialAuthIntent();
 
-        let nextHref = resolveNextHref({
+        await completePostLoginTransition({
           intentSuccessHref: intent?.successHref,
-          profileCompleted: result.profileCompleted,
+          queryClient,
+          result,
+          setSession,
+          setClosetId,
+          showLoginFailureToast: () => showToast("로그인에 실패했어요. 다시 시도해주세요."),
+          showOnboardingFetchFailureToast: () =>
+            showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요."),
+          navigate: (href) => router.replace(href),
         });
-
-        if (result.profileCompleted && nextHref === "/home") {
-          const entryResolution = await fetchOnboardingEntryResolution(queryClient);
-
-          if (entryResolution.shouldShowFetchFailureToast) {
-            showToast("퀘스트 정보를 불러오지 못했어요. 다시 시도해주세요.");
-          }
-
-          nextHref = entryResolution.route;
-        }
-
-        router.replace(nextHref);
       } catch (error) {
         await clearSocialAuthIntent();
         showToast(getSocialLoginErrorMessage(error));
@@ -115,7 +90,15 @@ export function SocialAuthCallbackScreen() {
     }
 
     void completeSocialLogin();
-  }, [params.handoff, params.provider, queryClient, router, setClosetId, setSession]);
+  }, [
+    params.handoff,
+    params.handoffToken,
+    params.provider,
+    queryClient,
+    router,
+    setClosetId,
+    setSession,
+  ]);
 
   return (
     <View className="flex-1 items-center justify-center bg-bg-light">

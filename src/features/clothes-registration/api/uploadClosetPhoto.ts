@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 
 import { env } from "@/config/env";
+import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
 import { ApiError } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
 
@@ -167,7 +168,7 @@ export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetP
       method: "POST",
       body: formData,
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: createBearerAuthorizationHeader(accessToken),
       },
       signal: abortController.signal,
     });

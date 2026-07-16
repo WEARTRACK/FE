@@ -34,6 +34,7 @@ function AppBootstrap({ children }: PropsWithChildren) {
         session.setSession({
           memberId: testMemberId,
           nickname: "테스트",
+          requiredTermsAgreed: true,
           profileCompleted: true,
           accessToken: testAccessToken,
           refreshToken: "test-refresh-token",

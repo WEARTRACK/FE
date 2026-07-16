@@ -1,10 +1,9 @@
-import type { Href } from "expo-router";
-
+import type { PostLoginIntentSuccessHref } from "@/features/entry/utils/resolvePostLoginRoute";
 import { getStorageItem, removeStorageItem, setStorageItem } from "@/lib/storage/asyncStorage";
 import { storageKeys } from "@/lib/storage/keys";
 
 type SocialAuthIntent = {
-  successHref: Href | null;
+  successHref: PostLoginIntentSuccessHref | null;
 };
 
 export async function saveSocialAuthIntent(intent: SocialAuthIntent) {

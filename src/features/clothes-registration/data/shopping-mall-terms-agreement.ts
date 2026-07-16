@@ -16,3 +16,7 @@ export async function hasAgreedToShoppingMallTerms(memberId: number) {
 export async function saveShoppingMallTermsAgreement(memberId: number) {
   await AsyncStorage.setItem(getAgreementStorageKey(memberId), shoppingMallTermsVersion);
 }
+
+export async function clearShoppingMallTermsAgreement(memberId: number) {
+  await AsyncStorage.removeItem(getAgreementStorageKey(memberId));
+}

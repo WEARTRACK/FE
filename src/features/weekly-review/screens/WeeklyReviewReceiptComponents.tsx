@@ -18,6 +18,7 @@ import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from "react-native-s
 import { env } from "@/config/env";
 import type { WeeklyReceiptReportItem } from "@/features/weekly-review/types/weekly-review";
 import type { WeeklyReceiptTheme } from "@/features/weekly-review/utils/weekly-review-receipt";
+import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 const RECEIPT_CARD_WIDTH = 215;
@@ -201,14 +202,14 @@ function createReceiptImageUri(imageUrl: string) {
 }
 
 function createReceiptImageSource(uri: string, accessToken: string | null) {
-  if (Platform.OS === "web" || !shouldUseApiAuthorizationHeader(uri, accessToken)) {
+  if (Platform.OS === "web" || !accessToken || !shouldUseApiAuthorizationHeader(uri, accessToken)) {
     return { uri };
   }
 
   return {
     cache: "reload" as const,
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: createBearerAuthorizationHeader(accessToken),
     },
     uri,
   };

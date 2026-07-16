@@ -1,14 +1,14 @@
-import { Href } from "expo-router";
 import { useCallback } from "react";
 import { Linking } from "react-native";
 
 import { env } from "@/config/env";
 import type { SocialAuthProvider } from "@/features/entry/api/socialLogin";
 import { saveSocialAuthIntent } from "@/features/entry/oauth/socialAuthIntentStorage";
+import type { PostLoginIntentSuccessHref } from "@/features/entry/utils/resolvePostLoginRoute";
 import { showToast } from "@/lib/ui/showToast";
 
 type UseSocialAuthFlowParams = {
-  successHref?: Href;
+  successHref?: PostLoginIntentSuccessHref;
 };
 
 export function useSocialAuthFlow({ successHref }: UseSocialAuthFlowParams = {}) {

@@ -3,21 +3,21 @@ import { AxiosError } from "axios";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 
-type CheckNicknameDuplicateResponse = {
+export type CheckNicknameDuplicateResponse = {
+  nickname: string;
   isDuplicate: boolean;
 };
 
 type CheckNicknameDuplicateApiResult = {
-  isDuplicate?: boolean;
-  duplicate?: boolean;
-  available?: boolean;
+  nickname: string;
+  available: boolean;
 };
 
 type CheckNicknameDuplicateApiResponse = {
-  isSuccess?: boolean;
-  code?: string;
-  message?: string;
-  result?: CheckNicknameDuplicateApiResult | boolean;
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: CheckNicknameDuplicateApiResult | null;
 };
 
 function createInvalidResponseError(details: unknown) {
@@ -29,6 +29,18 @@ function createInvalidResponseError(details: unknown) {
   });
 }
 
+function createStaleResponseError(requestedNickname: string, responseNickname: string) {
+  return new ApiError({
+    code: "STALE_RESPONSE",
+    message: "닉네임 중복 확인 결과가 현재 요청과 일치하지 않아요.",
+    status: 200,
+    details: {
+      requestedNickname,
+      responseNickname,
+    },
+  });
+}
+
 function isCheckNicknameDuplicateApiResponse(
   value: unknown,
 ): value is CheckNicknameDuplicateApiResponse {
@@ -37,45 +49,35 @@ function isCheckNicknameDuplicateApiResponse(
   }
 
   const candidate = value as Record<string, unknown>;
-  const hasStandardEnvelope =
+
+  return (
     typeof candidate.isSuccess === "boolean" &&
     typeof candidate.code === "string" &&
-    typeof candidate.message === "string";
-
-  const hasDirectDuplicateField =
-    typeof candidate.isDuplicate === "boolean" ||
-    typeof candidate.duplicate === "boolean" ||
-    typeof candidate.available === "boolean";
-
-  const hasBooleanResult = typeof candidate.result === "boolean";
-
-  return hasStandardEnvelope || hasDirectDuplicateField || hasBooleanResult;
+    typeof candidate.message === "string" &&
+    (!candidate.isSuccess || candidate.result === null || typeof candidate.result === "object")
+  );
 }
 
-function resolveDuplicateFlag(result: CheckNicknameDuplicateApiResult): boolean {
-  if (typeof result.isDuplicate === "boolean") {
-    return result.isDuplicate;
+function isCheckNicknameDuplicateResult(value: unknown): value is CheckNicknameDuplicateApiResult {
+  if (!value || typeof value !== "object") {
+    return false;
   }
 
-  if (typeof result.duplicate === "boolean") {
-    return result.duplicate;
-  }
+  const candidate = value as Record<string, unknown>;
 
-  if (typeof result.available === "boolean") {
-    return !result.available;
-  }
-
-  throw createInvalidResponseError(result);
+  return typeof candidate.nickname === "string" && typeof candidate.available === "boolean";
 }
 
 export async function checkNicknameDuplicate(
   nickname: string,
 ): Promise<CheckNicknameDuplicateResponse> {
+  const normalizedNickname = nickname.trim();
+
   try {
     const response = await apiClient.get<CheckNicknameDuplicateApiResponse>(
       "/api/members/nickname/check",
       {
-        params: { nickname: nickname.trim() },
+        params: { nickname: normalizedNickname },
       },
     );
 
@@ -83,38 +85,33 @@ export async function checkNicknameDuplicate(
       throw createInvalidResponseError(response.data);
     }
 
-    if (response.data.isSuccess === false) {
+    if (!response.data.isSuccess) {
       throw new ApiError({
-        code: response.data.code ?? "UNKNOWN_API_ERROR",
-        message: response.data.message ?? "닉네임 중복 확인에 실패했어요.",
+        code: response.data.code,
+        message: response.data.message,
         status: 200,
         details: response.data.result,
       });
     }
 
-    const directResult = response.data as CheckNicknameDuplicateApiResult;
-    if (
-      typeof directResult.isDuplicate === "boolean" ||
-      typeof directResult.duplicate === "boolean" ||
-      typeof directResult.available === "boolean"
-    ) {
-      return { isDuplicate: resolveDuplicateFlag(directResult) };
-    }
-
-    if (typeof response.data.result === "boolean") {
-      return { isDuplicate: response.data.result };
-    }
-
-    if (!response.data.result || typeof response.data.result !== "object") {
+    if (!isCheckNicknameDuplicateResult(response.data.result)) {
       throw createInvalidResponseError(response.data);
     }
 
+    if (response.data.result.nickname !== normalizedNickname) {
+      throw createStaleResponseError(normalizedNickname, response.data.result.nickname);
+    }
+
     return {
-      isDuplicate: resolveDuplicateFlag(response.data.result as CheckNicknameDuplicateApiResult),
+      nickname: response.data.result.nickname,
+      isDuplicate: !response.data.result.available,
     };
   } catch (error) {
     if (error instanceof ApiError && error.code === "MEMBER_409_1") {
-      return { isDuplicate: true };
+      return {
+        nickname: normalizedNickname,
+        isDuplicate: true,
+      };
     }
 
     if (error instanceof AxiosError || error instanceof ApiError) {
