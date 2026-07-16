@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api/errors";
 import {
   assertDailyReviewTodayResultApi,
   assertApiEnvelope,
+  assertWeeklyLongUnwornClothesResultApi,
   assertWeeklyClosetUsageAnalysisResultApi,
   assertWeeklyReviewResultApi,
   assertWeeklyWornClothesResultApi,
@@ -11,16 +12,23 @@ import {
   type DailyReviewTodayResultApi,
   type SaveDailyReviewTodayRequestBody,
   type SaveDailyReviewTodayParams,
+  type WeeklyLongUnwornClothesResultApi,
   type WeeklyClosetUsageAnalysisResultApi,
   type WeeklyReviewResultApi,
   type WeeklyWornClothesResultApi,
   unwrapApiEnvelope,
 } from "./weekly-review-api-types";
+import type {
+  WeeklyLongUnwornClothesCategory,
+  WeeklyLongUnwornClothesItem,
+  WeeklyLongUnwornClothesResult,
+} from "../types/weekly-review";
 
 const DAILY_REVIEWS_TODAY_ENDPOINT = "/api/daily-reviews/today";
 const WEEKLY_REVIEWS_CURRENT_ENDPOINT = "/api/weekly-reviews/current";
 const WEEKLY_CLOSET_USAGE_ANALYSIS_ENDPOINT = "/api/home/weekly-closet-usage/analysis";
 const WEEKLY_CLOSET_USAGE_WORN_CLOTHES_ENDPOINT = "/api/home/weekly-closet-usage/worn-clothes";
+const WEEKLY_LONG_UNWORN_CLOTHES_ENDPOINT = "/api/weekly-reviews/current/long-unworn-clothes";
 
 export async function fetchDailyReviewToday(): Promise<DailyReviewTodayResultApi> {
   const response = await apiClient.get<ApiEnvelope<DailyReviewTodayResultApi>>(
@@ -111,4 +119,46 @@ export async function fetchWeeklyWornClothes(): Promise<WeeklyWornClothesResultA
     unwrapApiEnvelope(envelope, response.status, "이번 주 입은 옷 조회 result가 비어 있어요."),
     "이번 주 입은 옷 조회 result 형식이 올바르지 않아요.",
   );
+}
+
+export async function fetchWeeklyLongUnwornClothes(): Promise<WeeklyLongUnwornClothesResult> {
+  const response = await apiClient.get<ApiEnvelope<WeeklyLongUnwornClothesResultApi>>(
+    WEEKLY_LONG_UNWORN_CLOTHES_ENDPOINT,
+  );
+  const envelope = assertApiEnvelope<WeeklyLongUnwornClothesResultApi>(
+    response.data,
+    "장기 미착용 옷 조회 응답 형식이 올바르지 않아요.",
+  );
+
+  const result = assertWeeklyLongUnwornClothesResultApi(
+    unwrapApiEnvelope(envelope, response.status, "장기 미착용 옷 조회 result가 비어 있어요."),
+    "장기 미착용 옷 조회 result 형식이 올바르지 않아요.",
+  );
+
+  return normalizeWeeklyLongUnwornClothesResult(result);
+}
+
+export function normalizeWeeklyLongUnwornClothesResult(
+  result: WeeklyLongUnwornClothesResultApi,
+): WeeklyLongUnwornClothesResult {
+  const categories: WeeklyLongUnwornClothesCategory[] = result.categories.map((category) => ({
+    category: category.category,
+    unwornCount: category.unwornCount,
+    clothes: category.clothes.map(
+      (item): WeeklyLongUnwornClothesItem => ({
+        clothesId: item.clothesId,
+        imageUrl: item.imageUrl,
+        color: item.color,
+        category: category.category,
+      }),
+    ),
+  }));
+
+  return {
+    periodStartDate: result.periodStartDate,
+    periodEndDate: result.periodEndDate,
+    longUnwornClothesCount: result.longUnwornClothesCount,
+    categories,
+    clothes: categories.flatMap((category) => category.clothes),
+  };
 }

@@ -16,7 +16,6 @@ function AppBootstrap({ children }: PropsWithChildren) {
       return;
     }
 
-    let isActive = true;
     const testAccessToken = env.testAccessToken;
     const testMemberId = env.testMemberId;
     const testClosetId = env.testClosetId;
@@ -28,10 +27,6 @@ function AppBootstrap({ children }: PropsWithChildren) {
 
       if (!useClosetStore.persist.hasHydrated()) {
         await useClosetStore.persist.rehydrate();
-      }
-
-      if (!isActive) {
-        return;
       }
 
       const session = useSessionStore.getState();
@@ -52,10 +47,6 @@ function AppBootstrap({ children }: PropsWithChildren) {
     }
 
     void hydrateTestSession();
-
-    return () => {
-      isActive = false;
-    };
   }, []);
 
   return <FeedbackProvider>{children}</FeedbackProvider>;
