@@ -458,7 +458,7 @@ export function MainHomeScreen() {
 
   const handlePressShoppingMallLink = () => {
     setIsClothesGuideVisible(false);
-    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+    router.push(clothesRegistrationRoutes.shoppingMallLink);
   };
 
   const openClosetSearch = (mode: "color" | "category") => {

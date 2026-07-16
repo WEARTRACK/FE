@@ -549,7 +549,7 @@ export function ClosetSectionScreen() {
 
   const handlePressShoppingMallLink = () => {
     setIsClothesGuideVisible(false);
-    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+    router.push(clothesRegistrationRoutes.shoppingMallLink);
   };
 
   return (
