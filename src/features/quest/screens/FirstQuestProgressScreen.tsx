@@ -40,8 +40,7 @@ export function FirstQuestProgressScreen() {
     (state) => state.registeredItemsByKind.closet,
   );
   const [isClosetGuideVisible, setIsClosetGuideVisible] = useState(false);
-  const isLoading =
-    onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
+  const isLoading = onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
   const hasError = onboardingState.statusQuery.isError || onboardingState.questsQuery.isError;
   const quest = onboardingState.quest;
   const localRegisteredClosetCount = registeredClosetItems.length;

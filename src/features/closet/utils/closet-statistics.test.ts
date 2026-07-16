@@ -11,7 +11,11 @@ const BASE_ITEM: Omit<ClosetItem, "id" | "category" | "categoryLabel"> = {
   colorLabel: "Black",
 };
 
-function createItem(id: number, category: ClosetItem["category"], categoryLabel: string): ClosetItem {
+function createItem(
+  id: number,
+  category: ClosetItem["category"],
+  categoryLabel: string,
+): ClosetItem {
   return {
     id: `item-${id}`,
     category,
@@ -70,14 +74,21 @@ describe("buildClosetStatistics", () => {
   });
 
   it("returns ranks and ratios that can be shared by chart and list", () => {
-    const items = [createItem(1, "shirt", "Shirt"), createItem(2, "shirt", "Shirt"), createItem(3, "coat", "Coat")];
+    const items = [
+      createItem(1, "shirt", "Shirt"),
+      createItem(2, "shirt", "Shirt"),
+      createItem(3, "coat", "Coat"),
+    ];
     const result = buildClosetStatistics(items);
 
     expect(result.rankedCategories[0]).toMatchObject({ category: "shirt", count: 2, rank: 1 });
     expect(result.rankedCategories[1]).toMatchObject({ category: "coat", count: 1, rank: 2 });
     expect(result.rankedCategories[0]?.ratio).toBeCloseTo(2 / 3, 4);
     expect(result.rankedCategories[1]?.ratio).toBeCloseTo(1 / 3, 4);
-    expect(result.rankedCategories.reduce((sum, target) => sum + target.ratio, 0)).toBeCloseTo(1, 4);
+    expect(result.rankedCategories.reduce((sum, target) => sum + target.ratio, 0)).toBeCloseTo(
+      1,
+      4,
+    );
     expect(sumCategoryCounts(result)).toBe(result.totalCount);
   });
 

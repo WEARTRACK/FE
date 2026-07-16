@@ -18,16 +18,19 @@ export function useSocialAuthFlow({ successHref }: UseSocialAuthFlowParams = {})
     return url.toString();
   }, []);
 
-  const startSocialAuth = useCallback(async (provider: SocialAuthProvider) => {
-    try {
-      await saveSocialAuthIntent({
-        successHref: successHref ?? null,
-      });
-      await Linking.openURL(buildAuthorizeEndpoint(provider));
-    } catch {
-      showToast("로그인에 실패했어요. 다시 시도해주세요.");
-    }
-  }, [buildAuthorizeEndpoint, successHref]);
+  const startSocialAuth = useCallback(
+    async (provider: SocialAuthProvider) => {
+      try {
+        await saveSocialAuthIntent({
+          successHref: successHref ?? null,
+        });
+        await Linking.openURL(buildAuthorizeEndpoint(provider));
+      } catch {
+        showToast("로그인에 실패했어요. 다시 시도해주세요.");
+      }
+    },
+    [buildAuthorizeEndpoint, successHref],
+  );
 
   return {
     isPending: false,

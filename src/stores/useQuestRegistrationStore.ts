@@ -70,4 +70,3 @@ export const useQuestRegistrationStore = create<QuestRegistrationState>()((set, 
       activeRegistration: null,
     })),
 }));
-

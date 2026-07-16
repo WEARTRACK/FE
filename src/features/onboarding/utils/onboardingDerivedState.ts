@@ -40,15 +40,13 @@ export function getOrderedOnboardingQuests(
     return [];
   }
 
-  return [...questsResult.quests]
-    .sort(compareQuestOrder)
-    .map((quest) => ({
-      ...onboardingQuestMetadataByType[quest.questType],
-      ...quest,
-      title: quest.title || onboardingQuestMetadataByType[quest.questType].fallbackTitle,
-      description:
-        quest.description || onboardingQuestMetadataByType[quest.questType].fallbackDescription,
-    }));
+  return [...questsResult.quests].sort(compareQuestOrder).map((quest) => ({
+    ...onboardingQuestMetadataByType[quest.questType],
+    ...quest,
+    title: quest.title || onboardingQuestMetadataByType[quest.questType].fallbackTitle,
+    description:
+      quest.description || onboardingQuestMetadataByType[quest.questType].fallbackDescription,
+  }));
 }
 
 export function getFirstQuestCompleted(
@@ -93,7 +91,8 @@ export function deriveOnboardingState(params: {
   const firstQuestCompleted =
     getFirstQuestCompleted(params.quests) ||
     (params.quests == null &&
-      ((params.status?.completedQuestCount ?? 0) > 0 || params.status?.onboardingCompleted === true));
+      ((params.status?.completedQuestCount ?? 0) > 0 ||
+        params.status?.onboardingCompleted === true));
 
   return {
     orderedQuests,
@@ -104,8 +103,7 @@ export function deriveOnboardingState(params: {
     firstQuestCompleted,
     hasNewQuestBadge:
       params.status != null ? !params.status.hidden && params.status.hasNewQuest : false,
-    isWaitingForNextQuest:
-      isStatusResolved && !isOnboardingCompleted && availableQuestCount === 0,
+    isWaitingForNextQuest: isStatusResolved && !isOnboardingCompleted && availableQuestCount === 0,
     isOnboardingCompleted,
     canStartQuest: currentAvailableQuest !== null,
     isStatusResolved,

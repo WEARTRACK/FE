@@ -7,7 +7,11 @@ import { fetchClosetSectionItems } from "@/features/closet/api/closet-section-ap
 import { fetchClosetStatistics } from "@/features/closet/api/closet-statistics-api";
 import { fetchClosetSummary } from "@/features/closet/api/closet-summary-api";
 import { updateClothes as updateClothesApi } from "@/features/closet/api/clothes-update-api";
-import type { ClosetDeleteResultApi, ClosetDetailResult, ClosetUpdateRequestBody } from "@/features/closet/api/closet-api-types";
+import type {
+  ClosetDeleteResultApi,
+  ClosetDetailResult,
+  ClosetUpdateRequestBody,
+} from "@/features/closet/api/closet-api-types";
 import type { ClosetItem } from "@/features/closet/types/closet-item";
 import type { ClosetSectionId, ClosetTemplate } from "@/features/closet/types/closet-layout";
 import type { ClosetSearchPage, ClosetSearchParams } from "@/features/closet/types/closet-search";
@@ -71,15 +75,26 @@ async function resolveApiSectionId(params: { closetId: number; uiSectionId: Clos
 export type ClosetDataRepository = {
   getTemplate: (closetId?: number | null) => Promise<ClosetTemplate>;
   getAllItems: (closetId?: number | null) => Promise<ClosetItem[]>;
-  getItemsBySectionId: (sectionId: ClosetSectionId, closetId?: number | null) => Promise<ClosetItem[]>;
-  getItemById: (sectionId: ClosetSectionId, itemId: string, closetId?: number | null) => Promise<ClosetItem | null>;
+  getItemsBySectionId: (
+    sectionId: ClosetSectionId,
+    closetId?: number | null,
+  ) => Promise<ClosetItem[]>;
+  getItemById: (
+    sectionId: ClosetSectionId,
+    itemId: string,
+    closetId?: number | null,
+  ) => Promise<ClosetItem | null>;
   searchClothes: (params: {
     searchParams: ClosetSearchParams;
     page: number;
     size: number;
   }) => Promise<ClosetSearchPage>;
   getClothesDetail: (clothesId: number) => Promise<ClosetDetailResult>;
-  updateClothes: (clothesId: number, payload: ClosetUpdateRequestBody, closetId?: number | null) => Promise<ClosetDetailResult>;
+  updateClothes: (
+    clothesId: number,
+    payload: ClosetUpdateRequestBody,
+    closetId?: number | null,
+  ) => Promise<ClosetDetailResult>;
   deleteClothes: (clothesId: number) => Promise<ClosetDeleteResultApi>;
 };
 
@@ -111,19 +126,18 @@ export const apiClosetRepository: ClosetDataRepository = {
 
     return items;
   },
-  getItemsBySectionId: async (sectionId, requestedClosetId) =>
-    {
-      const closetId = await resolveClosetId(requestedClosetId);
-      const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
+  getItemsBySectionId: async (sectionId, requestedClosetId) => {
+    const closetId = await resolveClosetId(requestedClosetId);
+    const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });
 
-      return fetchClosetSectionItems({
-        closetId,
-        sectionId: apiSectionId,
-        uiSectionId: sectionId,
-        page: 0,
-        size: 12,
-      });
-    },
+    return fetchClosetSectionItems({
+      closetId,
+      sectionId: apiSectionId,
+      uiSectionId: sectionId,
+      page: 0,
+      size: 12,
+    });
+  },
   getItemById: async (sectionId, itemId, requestedClosetId) => {
     const closetId = await resolveClosetId(requestedClosetId);
     const apiSectionId = await resolveApiSectionId({ closetId, uiSectionId: sectionId });

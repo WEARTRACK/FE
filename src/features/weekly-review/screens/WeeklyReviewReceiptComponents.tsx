@@ -214,11 +214,7 @@ function createReceiptImageSource(uri: string, accessToken: string | null) {
   };
 }
 
-function WeeklyReceiptCarouselCard({
-  accessToken,
-  item,
-  theme,
-}: ReceiptCarouselCardProps) {
+function WeeklyReceiptCarouselCard({ accessToken, item, theme }: ReceiptCarouselCardProps) {
   const imageUri = createReceiptImageUri(item.imageUrl);
 
   return (

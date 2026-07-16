@@ -27,13 +27,15 @@ export function QuestQueryStateScreen({
       }}
     >
       <View className="flex-1 items-center justify-center">
-        <Text className="text-center font-pretendard-semibold text-headline text-text">{title}</Text>
+        <Text className="text-center font-pretendard-semibold text-headline text-text">
+          {title}
+        </Text>
         {description ? (
           <Text className="mt-[15px] text-center font-pretendard text-body text-text-subdued">
             {description}
           </Text>
-      ) : null}
-    </View>
+        ) : null}
+      </View>
 
       {actionLabel && onPressAction ? (
         <Button fullWidth label={actionLabel} className="h-[58px]" onPress={onPressAction} />

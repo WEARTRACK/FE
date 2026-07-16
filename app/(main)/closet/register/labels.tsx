@@ -3,4 +3,3 @@ import { ClosetLabelingScreen } from "@/features/clothes-registration/screens/Cl
 export default function ClosetLabelingRoute() {
   return <ClosetLabelingScreen />;
 }
-

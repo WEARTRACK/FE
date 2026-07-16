@@ -76,7 +76,9 @@ export function ClosetAnalysisResultScreen() {
               className="h-[58px]"
               textClassName="font-pretendard-semibold text-[18px] leading-[30px]"
               onPress={() =>
-                router.push(hasSelectedTemplate ? "/closet/register/labels" : "/closet/register/select")
+                router.push(
+                  hasSelectedTemplate ? "/closet/register/labels" : "/closet/register/select",
+                )
               }
             />
           </View>

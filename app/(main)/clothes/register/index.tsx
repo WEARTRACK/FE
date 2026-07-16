@@ -3,4 +3,3 @@ import { ClothesRegisterPlaceholderScreen } from "@/features/clothes-registratio
 export default function ClothesRegisterRoute() {
   return <ClothesRegisterPlaceholderScreen />;
 }
-

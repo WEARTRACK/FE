@@ -3,4 +3,3 @@ import { ClosetPhotoPreviewScreen } from "@/features/clothes-registration/screen
 export default function ClosetPhotoPreviewRoute() {
   return <ClosetPhotoPreviewScreen />;
 }
-

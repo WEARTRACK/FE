@@ -4,8 +4,7 @@ import { getShouldRedirectQuestProgress } from "@/features/onboarding/utils/getS
 
 export function useOnboardingQuestProgress(questType: OnboardingQuestType) {
   const onboardingState = useOnboardingDerivedState();
-  const quest =
-    onboardingState.orderedQuests.find((item) => item.questType === questType) ?? null;
+  const quest = onboardingState.orderedQuests.find((item) => item.questType === questType) ?? null;
   const shouldRedirectToQuestEntry = getShouldRedirectQuestProgress({
     questCompleted: quest?.completed ?? false,
     targetQuestType: questType,
