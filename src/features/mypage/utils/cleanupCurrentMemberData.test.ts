@@ -9,12 +9,7 @@ const mocks = vi.hoisted(() => ({
   resetQuestRegistrationState: vi.fn(),
   clearSocialAuthIntent: vi.fn(),
   clearNotificationTokenSyncStateForMember: vi.fn(),
-  clearShoppingMallTermsAgreement: vi.fn(),
   clearSession: vi.fn(),
-}));
-
-vi.mock("@/features/clothes-registration/data/shopping-mall-terms-agreement", () => ({
-  clearShoppingMallTermsAgreement: mocks.clearShoppingMallTermsAgreement,
 }));
 
 vi.mock("@/features/entry/oauth/socialAuthIntentStorage", () => ({
@@ -73,7 +68,6 @@ describe("cleanupCurrentMemberData", () => {
     expect(mocks.resetQuestRegistrationState).toHaveBeenCalledOnce();
     expect(mocks.clearSocialAuthIntent).toHaveBeenCalledOnce();
     expect(mocks.clearNotificationTokenSyncStateForMember).toHaveBeenCalledWith(42);
-    expect(mocks.clearShoppingMallTermsAgreement).toHaveBeenCalledWith(42);
     expect(mocks.clearSession).toHaveBeenCalledOnce();
   });
 
@@ -89,7 +83,6 @@ describe("cleanupCurrentMemberData", () => {
 
     expect(mocks.clearNotificationTokenSyncStateForMember).not.toHaveBeenCalled();
     expect(mocks.clearSocialAuthIntent).toHaveBeenCalledOnce();
-    expect(mocks.clearShoppingMallTermsAgreement).toHaveBeenCalledWith(42);
     expect(mocks.clearSession).toHaveBeenCalledOnce();
   });
 });

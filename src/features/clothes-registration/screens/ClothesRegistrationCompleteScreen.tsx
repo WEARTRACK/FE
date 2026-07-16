@@ -23,7 +23,7 @@ export function ClothesRegistrationCompleteScreen() {
 
   const handlePressShoppingMallLink = () => {
     closeClothesGuide();
-    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+    router.push(clothesRegistrationRoutes.shoppingMallLink);
   };
 
   return (

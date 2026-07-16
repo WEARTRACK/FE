@@ -363,7 +363,7 @@ export function ClosetSearchResultsScreen() {
 
   const handlePressShoppingMallLink = () => {
     setIsClothesGuideVisible(false);
-    router.push(clothesRegistrationRoutes.shoppingMallTerms);
+    router.push(clothesRegistrationRoutes.shoppingMallLink);
   };
 
   const handlePageMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {

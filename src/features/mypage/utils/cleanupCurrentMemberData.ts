@@ -1,6 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { clearShoppingMallTermsAgreement } from "@/features/clothes-registration/data/shopping-mall-terms-agreement";
 import { clearSocialAuthIntent } from "@/features/entry/oauth/socialAuthIntentStorage";
 import { clearNotificationTokenSyncStateForMember } from "@/features/notifications/utils/notification-token-sync";
 import { useClosetRegistrationStore } from "@/stores/useClosetRegistrationStore";
@@ -48,12 +47,6 @@ export async function cleanupCurrentMemberData({
   if (!skipNotificationTokenClear) {
     await runCleanupStep("notification token sync state", () =>
       clearNotificationTokenSyncStateForMember(memberId),
-    );
-  }
-
-  if (memberId !== null) {
-    await runCleanupStep("shopping mall terms agreement", () =>
-      clearShoppingMallTermsAgreement(memberId),
     );
   }
 
