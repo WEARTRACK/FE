@@ -92,7 +92,8 @@ export function useClosetSearchResults(
         const nextItems = current.items.filter((item) => item.clothesId !== clothesId);
         const nextTotalCount = Math.max(0, current.totalCount - 1);
         const nextTotalPages = nextTotalCount === 0 ? 0 : Math.ceil(nextTotalCount / pageSize);
-        const nextCurrentPage = nextTotalPages === 0 ? 0 : Math.min(current.currentPage, nextTotalPages - 1);
+        const nextCurrentPage =
+          nextTotalPages === 0 ? 0 : Math.min(current.currentPage, nextTotalPages - 1);
 
         return {
           ...current,

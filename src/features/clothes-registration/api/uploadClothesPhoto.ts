@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
 import { apiClient } from "@/lib/api/client";
+import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
 import { ApiError } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
 
@@ -148,7 +149,7 @@ export async function uploadClothesPhoto(imageUri: string): Promise<ClothesPhoto
     response = await fetch(`${env.apiBaseUrl}/api/clothes/photo`, {
       body: formData,
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: createBearerAuthorizationHeader(accessToken),
       },
       method: "POST",
       signal: abortController.signal,

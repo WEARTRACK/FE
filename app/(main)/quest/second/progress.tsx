@@ -24,11 +24,8 @@ export default function SecondQuestProgressRoute() {
       returnRoute: "/quest/second/progress",
     },
   });
-  const registeredTopItems = useQuestRegistrationStore(
-    (state) => state.registeredItemsByKind.top,
-  );
-  const isLoading =
-    onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
+  const registeredTopItems = useQuestRegistrationStore((state) => state.registeredItemsByKind.top);
+  const isLoading = onboardingState.statusQuery.isPending || onboardingState.questsQuery.isPending;
   const hasError = onboardingState.statusQuery.isError || onboardingState.questsQuery.isError;
   const quest = onboardingState.quest;
   const displayedTopCount = Math.max(quest?.currentCount ?? 0, registeredTopItems.length);
@@ -78,14 +75,16 @@ export default function SecondQuestProgressRoute() {
         onPressAction={handlePressAction}
         progressCardState={isQuestComplete ? "complete" : "default"}
         gridContent={[
-          ...registeredTopItems.slice(0, quest.requiredCount).map((item, index) => (
-            <RegisteredQuestItemTile
-              key={item.id}
-              accessibilityLabel={`등록된 상의 ${index + 1}`}
-              imageSource={{ uri: item.imageUri }}
-              isComplete={isQuestComplete}
-            />
-          )),
+          ...registeredTopItems
+            .slice(0, quest.requiredCount)
+            .map((item, index) => (
+              <RegisteredQuestItemTile
+                key={item.id}
+                accessibilityLabel={`등록된 상의 ${index + 1}`}
+                imageSource={{ uri: item.imageUri }}
+                isComplete={isQuestComplete}
+              />
+            )),
           !isQuestComplete ? (
             <AddQuestItemTile
               key="add-registered-top"

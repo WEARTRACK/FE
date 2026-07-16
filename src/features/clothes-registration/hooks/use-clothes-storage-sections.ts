@@ -17,10 +17,7 @@ export function useClothesStorageSections(): {
   error: Error | null;
 } {
   const { template, isLoading, error } = useClosetTemplate();
-  const clothesCount = useMemo(
-    () => getClosetClothesCount(template.sections),
-    [template.sections],
-  );
+  const clothesCount = useMemo(() => getClosetClothesCount(template.sections), [template.sections]);
   const options = useMemo(() => {
     if (error) {
       return [];

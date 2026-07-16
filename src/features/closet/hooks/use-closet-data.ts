@@ -16,7 +16,9 @@ const EMPTY_CLOSET_TEMPLATE: ClosetTemplate = {
   sections: [],
 };
 
-function isClosetRepository(value: ClosetDataHookOptions | ClosetDataRepository | undefined): value is ClosetDataRepository {
+function isClosetRepository(
+  value: ClosetDataHookOptions | ClosetDataRepository | undefined,
+): value is ClosetDataRepository {
   return Boolean(value && "getTemplate" in value && typeof value.getTemplate === "function");
 }
 
@@ -34,12 +36,13 @@ function resolveHookOptions(optionsOrRepository?: ClosetDataHookOptions | Closet
   };
 }
 
-export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
+export function useClosetTemplate(
+  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+) {
   const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
-  const [template, setTemplate] = useState<Awaited<ReturnType<ClosetDataRepository["getTemplate"]>>>(
-    EMPTY_CLOSET_TEMPLATE,
-  );
+  const [template, setTemplate] =
+    useState<Awaited<ReturnType<ClosetDataRepository["getTemplate"]>>>(EMPTY_CLOSET_TEMPLATE);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const refetch = useCallback(() => {
@@ -62,7 +65,9 @@ export function useClosetTemplate(optionsOrRepository?: ClosetDataHookOptions | 
         if (!isActive) {
           return;
         }
-        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet template"));
+        setError(
+          targetError instanceof Error ? targetError : new Error("Failed to fetch closet template"),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -85,7 +90,9 @@ export function useClosetItemsBySection(
 ) {
   const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
-  const [items, setItems] = useState<Awaited<ReturnType<ClosetDataRepository["getItemsBySectionId"]>>>([]);
+  const [items, setItems] = useState<
+    Awaited<ReturnType<ClosetDataRepository["getItemsBySectionId"]>>
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const refetch = useCallback(() => {
@@ -108,7 +115,9 @@ export function useClosetItemsBySection(
         if (!isActive) {
           return;
         }
-        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet items"));
+        setError(
+          targetError instanceof Error ? targetError : new Error("Failed to fetch closet items"),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -163,7 +172,9 @@ export function useClosetItem(
         if (!isActive) {
           return;
         }
-        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet item"));
+        setError(
+          targetError instanceof Error ? targetError : new Error("Failed to fetch closet item"),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -180,7 +191,9 @@ export function useClosetItem(
   return { item, isLoading, error, refetch };
 }
 
-export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository) {
+export function useClosetStatistics(
+  optionsOrRepository?: ClosetDataHookOptions | ClosetDataRepository,
+) {
   const { closetId, repository } = resolveHookOptions(optionsOrRepository);
   const [revision, setRevision] = useState(0);
   const [statistics, setStatistics] = useState<ClosetStatisticsSummary>({
@@ -209,7 +222,11 @@ export function useClosetStatistics(optionsOrRepository?: ClosetDataHookOptions 
         if (!isActive) {
           return;
         }
-        setError(targetError instanceof Error ? targetError : new Error("Failed to fetch closet statistics"));
+        setError(
+          targetError instanceof Error
+            ? targetError
+            : new Error("Failed to fetch closet statistics"),
+        );
       } finally {
         if (isActive) {
           setIsLoading(false);

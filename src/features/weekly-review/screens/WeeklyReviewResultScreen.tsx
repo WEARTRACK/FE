@@ -1,5 +1,12 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, Text, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import QuestCompleteIcon from "../../../../assets/quest-complete-icon.svg";
@@ -13,6 +20,7 @@ import {
 import { isWeeklyReviewNotFoundError } from "@/features/weekly-review/utils/weekly-review-error";
 import { sortByWeeklyReviewCategory } from "@/features/weekly-review/utils/weekly-review-category";
 import { clampClosetUsageRate } from "@/features/weekly-review/utils/closet-usage";
+import { showToast } from "@/lib/ui/showToast";
 
 import { WeeklyReviewWornCategorySection } from "./WeeklyReviewResultComponents";
 import { WeeklyReviewRouteScaffold } from "./WeeklyReviewRouteScaffold";
@@ -32,6 +40,27 @@ export function WeeklyReviewResultScreen() {
   const hasWeeklyReview = Boolean(currentWeeklyReviewQuery.data);
   const usageRate = clampClosetUsageRate(weeklyReview?.weeklyClosetUsageRate ?? 0);
   const isWeeklyReviewNotFound = isWeeklyReviewNotFoundError(currentWeeklyReviewQuery.error);
+  const longUnwornClothesCount = weeklyReview?.longUnwornClothesCount ?? 0;
+  const hasLongUnwornClothes = longUnwornClothesCount > 0;
+  const insightCardClassName = [
+    "mt-[24px] rounded border-[0.5px]",
+    hasLongUnwornClothes ? "border-red-4 bg-red-2" : "border-cool bg-white",
+  ].join(" ");
+  const insightCardPaddingClassName = hasLongUnwornClothes
+    ? "px-[16px] py-[11px]"
+    : "px-[32px] py-[18px]";
+
+  const handlePressLongUnwornClothes = () => {
+    if (!hasLongUnwornClothes) {
+      return;
+    }
+
+    try {
+      router.push(weeklyReviewRoutes.longUnwornClothes);
+    } catch {
+      showToast("장기 미착용 옷 화면으로 이동하지 못했어요.");
+    }
+  };
 
   const renderHeader = () => (
     <View className="pt-8">
@@ -68,12 +97,27 @@ export function WeeklyReviewResultScreen() {
         이번 주 입은 옷
       </Text>
 
-      <View className="mt-[24px] rounded border-[0.5px] border-cool bg-white px-8 py-4">
-        <Text className="font-pretendard text-heading text-text">이번 주 인사이트</Text>
-        <Text className="mt-[8px] font-pretendard text-subhead text-text-subdued">
-          {weeklyReview?.weeklyInsight ?? ""}
-        </Text>
-      </View>
+      <Pressable
+        accessibilityLabel={
+          hasLongUnwornClothes
+            ? `이번 주 인사이트. 오랫동안 안 입은 옷이 ${longUnwornClothesCount}벌 있어요. 클릭해서 확인해 보세요.`
+            : "이번 주 인사이트"
+        }
+        accessibilityRole={hasLongUnwornClothes ? "button" : "text"}
+        className={insightCardClassName}
+        disabled={!hasLongUnwornClothes}
+        onPress={handlePressLongUnwornClothes}
+        style={({ pressed }) => ({
+          opacity: hasLongUnwornClothes && pressed ? 0.7 : 1,
+        })}
+      >
+        <View className={insightCardPaddingClassName}>
+          <Text className="font-pretendard text-heading text-text">이번 주 인사이트</Text>
+          <Text className="mt-[8px] font-pretendard text-subhead text-text-subdued">
+            {weeklyReview?.weeklyInsight ?? ""}
+          </Text>
+        </View>
+      </Pressable>
     </View>
   );
 

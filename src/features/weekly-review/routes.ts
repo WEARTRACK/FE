@@ -5,4 +5,5 @@ export const weeklyReviewRoutes = {
   result: "/weekly-review/result" as Href,
   analysis: "/weekly-review/analysis" as Href,
   receipt: "/weekly-review/receipt" as Href,
+  longUnwornClothes: "/weekly-review/long-unworn-clothes" as Href,
 };

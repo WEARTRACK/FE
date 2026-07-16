@@ -57,6 +57,7 @@ export type WeeklyReviewResultApi = {
   weekEndDate: string;
   wornClothesCount: number;
   totalClothesCount?: number;
+  longUnwornClothesCount: number;
   weeklyClosetUsageRate: number;
   weeklyInsight: string;
   categories: WeeklyReviewCategoryApi[];
@@ -82,6 +83,25 @@ export type WeeklyWornClothesResultApi = {
   wornClothesCount: number;
   totalWornClothesPrice: number;
   wornClothes: WeeklyWornClothesApi[];
+};
+
+export type WeeklyLongUnwornClothesItemApi = {
+  clothesId: number;
+  imageUrl: string;
+  color: string;
+};
+
+export type WeeklyLongUnwornClothesCategoryApi = {
+  category: string;
+  unwornCount: number;
+  clothes: WeeklyLongUnwornClothesItemApi[];
+};
+
+export type WeeklyLongUnwornClothesResultApi = {
+  periodStartDate: string;
+  periodEndDate: string;
+  longUnwornClothesCount: number;
+  categories: WeeklyLongUnwornClothesCategoryApi[];
 };
 
 function createInvalidResponseError(message: string, details: unknown) {
@@ -230,6 +250,7 @@ export function isWeeklyReviewResultApi(value: unknown): value is WeeklyReviewRe
     typeof value.weekEndDate === "string" &&
     typeof value.wornClothesCount === "number" &&
     totalClothesCountIsValid &&
+    typeof value.longUnwornClothesCount === "number" &&
     typeof value.weeklyClosetUsageRate === "number" &&
     typeof value.weeklyInsight === "string" &&
     Array.isArray(value.categories) &&
@@ -280,6 +301,49 @@ function isWeeklyWornClothesResultApi(value: unknown): value is WeeklyWornClothe
   );
 }
 
+function isWeeklyLongUnwornClothesItemApi(value: unknown): value is WeeklyLongUnwornClothesItemApi {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.clothesId === "number" &&
+    typeof value.imageUrl === "string" &&
+    typeof value.color === "string"
+  );
+}
+
+function isWeeklyLongUnwornClothesCategoryApi(
+  value: unknown,
+): value is WeeklyLongUnwornClothesCategoryApi {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.category === "string" &&
+    typeof value.unwornCount === "number" &&
+    Array.isArray(value.clothes) &&
+    value.clothes.every(isWeeklyLongUnwornClothesItemApi)
+  );
+}
+
+export function isWeeklyLongUnwornClothesResultApi(
+  value: unknown,
+): value is WeeklyLongUnwornClothesResultApi {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.periodStartDate === "string" &&
+    typeof value.periodEndDate === "string" &&
+    typeof value.longUnwornClothesCount === "number" &&
+    Array.isArray(value.categories) &&
+    value.categories.every(isWeeklyLongUnwornClothesCategoryApi)
+  );
+}
+
 export function assertDailyReviewTodayResultApi(
   value: unknown,
   invalidResultMessage: string,
@@ -318,6 +382,17 @@ export function assertWeeklyWornClothesResultApi(
   invalidResultMessage: string,
 ): WeeklyWornClothesResultApi {
   if (!isWeeklyWornClothesResultApi(value)) {
+    throw createInvalidResponseError(invalidResultMessage, value);
+  }
+
+  return value;
+}
+
+export function assertWeeklyLongUnwornClothesResultApi(
+  value: unknown,
+  invalidResultMessage: string,
+): WeeklyLongUnwornClothesResultApi {
+  if (!isWeeklyLongUnwornClothesResultApi(value)) {
     throw createInvalidResponseError(invalidResultMessage, value);
   }
 

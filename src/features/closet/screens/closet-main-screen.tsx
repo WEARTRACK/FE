@@ -92,7 +92,10 @@ function ClosetCarouselCard({
     >
       <View className="mb-[9px] items-start">
         <View className="max-w-full rounded-full border-[0.5px] border-blue-3 bg-blue-1 px-[18px] py-[6px]">
-          <Text className="font-pretendard text-[12px] leading-[18px] text-text" numberOfLines={1}>
+          <Text
+            className="font-pretendard text-[12px] leading-[18px] text-text"
+            numberOfLines={1}
+          >
             {displayName}
           </Text>
         </View>

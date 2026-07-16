@@ -15,7 +15,9 @@ import {
 import type { ClosetTemplate } from "@/features/closet/types/closet-layout";
 
 export async function fetchClosetSummary(closetId: number): Promise<ClosetTemplate> {
-  const response = await apiClient.get<ApiEnvelope<ClosetSummaryResultApi>>(`/api/closets/${closetId}`);
+  const response = await apiClient.get<ApiEnvelope<ClosetSummaryResultApi>>(
+    `/api/closets/${closetId}`,
+  );
 
   if (!isApiEnvelope(response.data)) {
     throw createInvalidResponseError("옷장 조회 응답 형식이 올바르지 않아요.", response.data);

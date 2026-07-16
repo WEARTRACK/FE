@@ -1,11 +1,5 @@
 import { useRef } from "react";
-import {
-  Animated,
-  Image,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Image, Pressable, Text, View } from "react-native";
 
 import CheckActiveIcon from "../../../../assets/check-active.svg";
 import type { DailyReviewCategoryApi } from "@/features/weekly-review/api/weekly-review-api-types";

@@ -16,7 +16,6 @@ function AppBootstrap({ children }: PropsWithChildren) {
       return;
     }
 
-    let isActive = true;
     const testAccessToken = env.testAccessToken;
     const testMemberId = env.testMemberId;
     const testClosetId = env.testClosetId;
@@ -30,15 +29,12 @@ function AppBootstrap({ children }: PropsWithChildren) {
         await useClosetStore.persist.rehydrate();
       }
 
-      if (!isActive) {
-        return;
-      }
-
       const session = useSessionStore.getState();
       if (!session.accessToken) {
         session.setSession({
           memberId: testMemberId,
           nickname: "테스트",
+          requiredTermsAgreed: true,
           profileCompleted: true,
           accessToken: testAccessToken,
           refreshToken: "test-refresh-token",
@@ -51,10 +47,6 @@ function AppBootstrap({ children }: PropsWithChildren) {
     }
 
     void hydrateTestSession();
-
-    return () => {
-      isActive = false;
-    };
   }, []);
 
   return <FeedbackProvider>{children}</FeedbackProvider>;

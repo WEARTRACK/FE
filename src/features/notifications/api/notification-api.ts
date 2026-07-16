@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
 
 import {
   type ApiEnvelope,
@@ -65,7 +66,7 @@ export async function registerNotificationFcmToken(
     accessToken
       ? {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: createBearerAuthorizationHeader(accessToken),
           },
         }
       : undefined,
@@ -84,7 +85,7 @@ export async function deleteNotificationFcmToken(
       data: requestBody,
       headers: accessToken
         ? {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: createBearerAuthorizationHeader(accessToken),
           }
         : undefined,
     },

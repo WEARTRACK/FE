@@ -84,12 +84,10 @@ export type ClosetUpdateRequestBody = {
   sectionId: ClosetSectionId | number | null;
 };
 
-export type ClosetDeleteResultApi =
-  | null
-  | {
-      id?: number;
-      createdAt?: string;
-    };
+export type ClosetDeleteResultApi = null | {
+  id?: number;
+  createdAt?: string;
+};
 
 export type ClosetSummarySectionApi = {
   sectionId: number;
@@ -140,10 +138,7 @@ export function createInvalidResponseError(message: string, details: unknown) {
   });
 }
 
-export function assertExclusiveFilterQuery(query: {
-  color?: string;
-  category?: string;
-}) {
+export function assertExclusiveFilterQuery(query: { color?: string; category?: string }) {
   const hasColor = typeof query.color === "string" && query.color.trim().length > 0;
   const hasCategory = typeof query.category === "string" && query.category.trim().length > 0;
 
