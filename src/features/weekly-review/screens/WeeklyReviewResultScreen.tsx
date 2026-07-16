@@ -43,12 +43,13 @@ export function WeeklyReviewResultScreen() {
   const longUnwornClothesCount = weeklyReview?.longUnwornClothesCount ?? 0;
   const hasLongUnwornClothes = longUnwornClothesCount > 0;
   const insightCardClassName = [
-    "mt-[24px] rounded border-[0.5px]",
-    hasLongUnwornClothes ? "border-red-4 bg-red-2" : "border-cool bg-white",
+    "mt-[24px] h-[100px] justify-center rounded border-[0.5px]",
+    hasLongUnwornClothes ? "border-red-4 bg-red-1" : "border-cool bg-white",
   ].join(" ");
-  const insightCardPaddingClassName = hasLongUnwornClothes
-    ? "px-[16px] py-[11px]"
-    : "px-[32px] py-[18px]";
+  const insightBodyTextClassName = [
+    "mt-[10px] text-left font-pretendard text-caption",
+    hasLongUnwornClothes ? "text-text" : "text-text-subdued",
+  ].join(" ");
 
   const handlePressLongUnwornClothes = () => {
     if (!hasLongUnwornClothes) {
@@ -111,11 +112,9 @@ export function WeeklyReviewResultScreen() {
           opacity: hasLongUnwornClothes && pressed ? 0.7 : 1,
         })}
       >
-        <View className={insightCardPaddingClassName}>
-          <Text className="font-pretendard text-heading text-text">이번 주 인사이트</Text>
-          <Text className="mt-[8px] font-pretendard text-subhead text-text-subdued">
-            {weeklyReview?.weeklyInsight ?? ""}
-          </Text>
+        <View className="w-full items-start" style={{ paddingHorizontal: 30 }}>
+          <Text className="text-left font-pretendard text-heading text-text">이번 주 인사이트</Text>
+          <Text className={insightBodyTextClassName}>{weeklyReview?.weeklyInsight ?? ""}</Text>
         </View>
       </Pressable>
     </View>
