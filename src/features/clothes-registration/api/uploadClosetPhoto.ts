@@ -155,13 +155,6 @@ export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetP
   const timeoutId = setTimeout(() => abortController.abort(), 60000);
   const requestUrl = `${env.apiBaseUrl}/api/closets/photo`;
 
-  if (__DEV__) {
-    console.warn("[Closet photo analysis] request started", {
-      url: requestUrl,
-      imageType: getImageFile(imageUri).type,
-    });
-  }
-
   let response: Response;
   try {
     response = await fetch(requestUrl, {
@@ -184,14 +177,6 @@ export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetP
   }
 
   const data = (await response.json().catch(() => null)) as unknown;
-
-  if (__DEV__) {
-    console.warn("[Closet photo analysis] response received", {
-      status: response.status,
-      ok: response.ok,
-      body: data,
-    });
-  }
 
   if (!response.ok) {
     const errorResponse = getApiErrorResponse(data);

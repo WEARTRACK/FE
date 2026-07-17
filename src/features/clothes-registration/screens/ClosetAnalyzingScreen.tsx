@@ -49,14 +49,6 @@ export function ClosetAnalyzingScreen() {
           result.recommendedTemplates.map((template) => template.sectionCount),
         );
 
-        if (__DEV__) {
-          console.warn("[Closet photo analysis] result", {
-            analysisStatus: result.analysisStatus,
-            detectedSectionCount: result.detectedSectionCount,
-            recommendedTemplateIds,
-          });
-        }
-
         setClosetDraft({
           imageUri,
           imageUrl: result.imageUrl,
@@ -71,11 +63,7 @@ export function ClosetAnalyzingScreen() {
         }
 
         router.replace(clothesRegistrationRoutes.failure);
-      } catch (error) {
-        if (__DEV__) {
-          console.error("[Closet photo analysis] request failed", error);
-        }
-
+      } catch {
         router.replace(clothesRegistrationRoutes.failure);
       }
     };
