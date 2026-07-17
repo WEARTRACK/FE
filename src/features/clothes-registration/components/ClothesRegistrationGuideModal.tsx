@@ -7,7 +7,7 @@ type ClothesRegistrationGuideModalProps = {
   onClose: () => void;
   onPressCapture: () => void;
   onPressSelectImage: () => void;
-  onPressShoppingMallLink?: () => void;
+  onPressShoppingMallLink: () => void;
 };
 
 export function ClothesRegistrationGuideModal({
@@ -37,12 +37,12 @@ export function ClothesRegistrationGuideModal({
             <ClotheExample width={180} height={257} />
           </View>
 
-          <Text className="mt-[33px] text-center font-pretendard text-[14px] leading-[20px] text-bg-dark">
-            예시 이미지처럼 옷 전체가 보이도록 촬영해주세요.
+          <Text className="mt-[23px] text-center font-pretendard text-[14px] leading-[20px] text-bg-dark">
+            예시 이미지처럼 옷 전체가 보이는{"\n"} 사진을 등록해주세요.
           </Text>
 
           <Pressable
-            className="mt-[30px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
+            className="mt-[20px] h-[50px] w-full items-center justify-center rounded-lg border-[0.5px] border-text-subdued bg-white"
             onPress={onPressCapture}
             style={({ pressed }) => ({
               opacity: pressed ? 0.72 : 1,
@@ -65,19 +65,17 @@ export function ClothesRegistrationGuideModal({
             </Text>
           </Pressable>
 
-          {onPressShoppingMallLink ? (
-            <Pressable
-              className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
-              onPress={onPressShoppingMallLink}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.72 : 1,
-              })}
-            >
-              <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-white">
-                쇼핑몰 링크
-              </Text>
-            </Pressable>
-          ) : null}
+          <Pressable
+            className="mt-[8px] h-[50px] w-full items-center justify-center rounded-lg bg-bg-dark"
+            onPress={onPressShoppingMallLink}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.72 : 1,
+            })}
+          >
+            <Text className="font-pretendard-semibold text-[18px] leading-[20px] text-white">
+              쇼핑몰 링크
+            </Text>
+          </Pressable>
         </View>
       </View>
     </Modal>

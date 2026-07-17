@@ -16,6 +16,7 @@ export default function ThirdQuestProgressRoute() {
     closeClothesGuide,
     handlePressClothesCapture,
     handlePressClothesImageSelect,
+    handlePressShoppingMallLink,
     isClothesGuideVisible,
     openClothesGuide,
   } = useClothesRegistrationGuide({
@@ -102,6 +103,7 @@ export default function ThirdQuestProgressRoute() {
         onClose={closeClothesGuide}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );

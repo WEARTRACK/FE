@@ -5,6 +5,7 @@ import {
   launchClothesCamera,
   launchClothesImageLibrary,
 } from "@/features/clothes-registration/utils/launchClothesCamera";
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 import { showToast } from "@/lib/ui/showToast";
 import {
   type QuestRegistrationKind,
@@ -79,10 +80,21 @@ export function useClothesRegistrationGuide(options?: UseClothesRegistrationGuid
     }
   };
 
+  const handlePressShoppingMallLink = () => {
+    setIsClothesGuideVisible(false);
+
+    if (options?.questRegistration) {
+      startQuestRegistration(options.questRegistration);
+    }
+
+    router.push(clothesRegistrationRoutes.shoppingMallLink);
+  };
+
   return {
     closeClothesGuide,
     handlePressClothesCapture,
     handlePressClothesImageSelect,
+    handlePressShoppingMallLink,
     isClothesGuideVisible,
     openClothesGuide,
   };

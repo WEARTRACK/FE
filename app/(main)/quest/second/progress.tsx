@@ -16,6 +16,7 @@ export default function SecondQuestProgressRoute() {
     closeClothesGuide,
     handlePressClothesCapture,
     handlePressClothesImageSelect,
+    handlePressShoppingMallLink,
     isClothesGuideVisible,
     openClothesGuide,
   } = useClothesRegistrationGuide({
@@ -100,6 +101,7 @@ export default function SecondQuestProgressRoute() {
         onClose={closeClothesGuide}
         onPressCapture={handlePressClothesCapture}
         onPressSelectImage={handlePressClothesImageSelect}
+        onPressShoppingMallLink={handlePressShoppingMallLink}
       />
     </>
   );
