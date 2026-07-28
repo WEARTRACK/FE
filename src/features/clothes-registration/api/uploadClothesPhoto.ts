@@ -1,8 +1,7 @@
 import { env } from "@/config/env";
 import { apiClient } from "@/lib/api/client";
-import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
+import { authorizedFetch } from "@/lib/api/authorizedFetch";
 import { ApiError } from "@/lib/api/errors";
-import { useSessionStore } from "@/stores/useSessionStore";
 
 export type ClothesPhotoAnalysisStatus = "PENDING" | "SUCCESS" | "FAIL" | "FAILED";
 
@@ -123,20 +122,6 @@ function getImageFile(uri: string) {
 }
 
 export async function uploadClothesPhoto(imageUri: string): Promise<ClothesPhotoUploadResult> {
-  if (!useSessionStore.persist.hasHydrated()) {
-    await useSessionStore.persist.rehydrate();
-  }
-
-  const accessToken = useSessionStore.getState().accessToken;
-
-  if (!accessToken) {
-    throw new ApiError({
-      code: "AUTH_REQUIRED",
-      message: "인증이 필요합니다.",
-      status: 401,
-    });
-  }
-
   const formData = new FormData();
   formData.append("image", getImageFile(imageUri) as unknown as Blob);
 
@@ -146,15 +131,16 @@ export async function uploadClothesPhoto(imageUri: string): Promise<ClothesPhoto
   let response: Response;
 
   try {
-    response = await fetch(`${env.apiBaseUrl}/api/clothes/photo`, {
+    response = await authorizedFetch(`${env.apiBaseUrl}/api/clothes/photo`, {
       body: formData,
-      headers: {
-        Authorization: createBearerAuthorizationHeader(accessToken),
-      },
       method: "POST",
       signal: abortController.signal,
     });
   } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError({
       code: "NETWORK_ERROR",
       message: "Network error. Please check your connection and try again.",

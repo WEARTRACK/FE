@@ -1,7 +1,10 @@
-import { View } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { useEffect, useState } from "react";
+import { Platform, View } from "react-native";
 
 import { Button } from "@/components/common/Button";
 import { useSocialAuthFlow } from "@/features/entry/hooks/useSocialAuthFlow";
+import AppleLogo from "../../../../assets/apple.svg";
 import GoogleLogo from "../../../../assets/google.svg";
 import KakaoLogo from "../../../../assets/kakao.svg";
 import NaverLogo from "../../../../assets/naver.svg";
@@ -12,9 +15,18 @@ type SocialActionButtonsProps = {
 
 export function SocialActionButtons({ mode }: SocialActionButtonsProps) {
   const suffix = mode === "login" ? "로그인" : "시작하기";
+  const [isAppleLoginAvailable, setIsAppleLoginAvailable] = useState(false);
   const { isPending, startSocialAuth } = useSocialAuthFlow({
     successHref: mode === "signup" ? "/auth/sign-up-success" : undefined,
   });
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") {
+      return;
+    }
+
+    void AppleAuthentication.isAvailableAsync().then(setIsAppleLoginAvailable);
+  }, []);
 
   return (
     <View className="w-[345px] gap-3 self-center">
@@ -52,6 +64,20 @@ export function SocialActionButtons({ mode }: SocialActionButtonsProps) {
         disabled={isPending}
         onPress={() => void startSocialAuth("NAVER")}
       />
+      {isAppleLoginAvailable ? (
+        <Button
+          label={`애플로 ${suffix}`}
+          variant="secondary"
+          size="lg"
+          fullWidth
+          className="border-[#373536] bg-[#373536]"
+          textClassName="font-pretendard-semibold text-[18px] text-white"
+          leadingIcon={<AppleLogo width={34} height={34} />}
+          leadingIconClassName="left-[5px]"
+          disabled={isPending}
+          onPress={() => void startSocialAuth("APPLE")}
+        />
+      ) : null}
     </View>
   );
 }

@@ -1,9 +1,8 @@
 import { Platform } from "react-native";
 
 import { env } from "@/config/env";
-import { createBearerAuthorizationHeader } from "@/lib/api/authToken";
+import { authorizedFetch } from "@/lib/api/authorizedFetch";
 import { ApiError } from "@/lib/api/errors";
-import { useSessionStore } from "@/stores/useSessionStore";
 
 export type ClosetPhotoAnalysisStatus = string;
 
@@ -135,19 +134,6 @@ async function appendImageToFormData(formData: FormData, imageUri: string) {
 }
 
 export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetPhotoResult> {
-  if (!useSessionStore.persist.hasHydrated()) {
-    await useSessionStore.persist.rehydrate();
-  }
-
-  const accessToken = useSessionStore.getState().accessToken;
-  if (!accessToken) {
-    throw new ApiError({
-      code: "AUTH_REQUIRED",
-      message: "인증이 필요합니다.",
-      status: 401,
-    });
-  }
-
   const formData = new FormData();
   await appendImageToFormData(formData, imageUri);
 
@@ -157,15 +143,16 @@ export async function uploadClosetPhoto(imageUri: string): Promise<UploadClosetP
 
   let response: Response;
   try {
-    response = await fetch(requestUrl, {
+    response = await authorizedFetch(requestUrl, {
       method: "POST",
       body: formData,
-      headers: {
-        Authorization: createBearerAuthorizationHeader(accessToken),
-      },
       signal: abortController.signal,
     });
   } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError({
       code: "NETWORK_ERROR",
       message: "Network error. Please check your connection and try again.",

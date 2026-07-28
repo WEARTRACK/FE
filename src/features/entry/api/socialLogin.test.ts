@@ -29,10 +29,14 @@ describe("socialLogin", () => {
     });
 
     const { socialLogin } = await import("./socialLogin");
-    const result = await socialLogin({ provider: "KAKAO", handoffToken: "token" });
+    const result = await socialLogin({ provider: "KAKAO", accessToken: "provider-token" });
 
     expect(result.closetId).toBe(3);
     expect(result.requiredTermsAgreed).toBe(true);
+    expect(postMock).toHaveBeenCalledWith("/api/auth/social/login", {
+      provider: "KAKAO",
+      accessToken: "provider-token",
+    });
   });
 
   it("normalizes bearer-prefixed access tokens before returning a login result", async () => {
@@ -155,6 +159,9 @@ describe("socialLogin", () => {
         result: {
           accessToken: "access-secret",
           refreshToken: "refresh-secret",
+          idToken: "id-secret",
+          authorizationCode: "code-secret",
+          handoffToken: "handoff-secret",
           providerEmail: "user@example.com",
         },
       },
