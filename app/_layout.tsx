@@ -1,20 +1,33 @@
 import "../global.css";
 
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppProvider } from "@/providers/AppProvider";
 
 export default function RootLayout() {
-  return (
-    <AppProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: "#F8FAFC" },
-        }}
-      />
-    </AppProvider>
+  const [, error] = useFonts({
+    PretendardLight: require("../assets/fonts/Pretendard-Light.otf"),
+    PretendardSemiBold: require("../assets/fonts/Pretendard-SemiBold.otf"),
+    PretendardRegular: require("../assets/fonts/Pretendard-Regular.otf"),
+    PretendardBold: require("../assets/fonts/Pretendard-Bold.otf"),
+  });
+
+  const layout = (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
+
+  if (error) {
+    console.error("Failed to load custom fonts", error);
+  }
+
+  return layout;
 }

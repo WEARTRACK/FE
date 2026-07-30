@@ -1,8 +1,61 @@
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 
+import { useNotificationSetup } from "@/features/notifications/useNotificationSetup";
+import { env } from "@/config/env";
 import { queryClient } from "@/lib/queryClient";
+import { useClosetStore } from "@/stores/useClosetStore";
+import { useSessionStore } from "@/stores/useSessionStore";
+import { FeedbackProvider } from "@/providers/FeedbackProvider";
+
+function AppBootstrap({ children }: PropsWithChildren) {
+  useNotificationSetup();
+
+  useEffect(() => {
+    if (!env.enableTestAccessToken || !env.testAccessToken || !env.testMemberId) {
+      return;
+    }
+
+    const testAccessToken = env.testAccessToken;
+    const testMemberId = env.testMemberId;
+    const testClosetId = env.testClosetId;
+
+    async function hydrateTestSession() {
+      if (!useSessionStore.persist.hasHydrated()) {
+        await useSessionStore.persist.rehydrate();
+      }
+
+      if (!useClosetStore.persist.hasHydrated()) {
+        await useClosetStore.persist.rehydrate();
+      }
+
+      const session = useSessionStore.getState();
+      if (!session.accessToken) {
+        session.setSession({
+          memberId: testMemberId,
+          nickname: "테스트",
+          requiredTermsAgreed: true,
+          profileCompleted: true,
+          accessToken: testAccessToken,
+          refreshToken: "test-refresh-token",
+        });
+      }
+
+      if (testClosetId && useClosetStore.getState().closetId === null) {
+        useClosetStore.getState().setClosetId(testClosetId);
+      }
+    }
+
+    void hydrateTestSession();
+  }, []);
+
+  return <FeedbackProvider>{children}</FeedbackProvider>;
+}
 
 export function AppProvider({ children }: PropsWithChildren) {
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppBootstrap>{children}</AppBootstrap>
+    </QueryClientProvider>
+  );
 }

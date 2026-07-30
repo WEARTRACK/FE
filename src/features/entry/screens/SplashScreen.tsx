@@ -1,25 +1,78 @@
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { EntryLogo } from "@/features/entry/components/EntryLogo";
+import { resolvePostLoginRoute } from "@/features/entry/utils/resolvePostLoginRoute";
+import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
+import { queryClient } from "@/lib/queryClient";
+import { useSessionStore } from "@/stores/useSessionStore";
+
+function waitForMinimumSplashDuration() {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 2000);
+  });
+}
 
 export function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      router.replace("/auth/sign-in");
-    }, 2000);
+    let active = true;
 
-    return () => clearTimeout(timeout);
+    async function resolveInitialRoute() {
+      await waitForMinimumSplashDuration();
+
+      if (!useSessionStore.persist.hasHydrated()) {
+        await useSessionStore.persist.rehydrate();
+      }
+
+      const session = useSessionStore.getState();
+
+      if (!session.accessToken && !session.refreshToken) {
+        return "/auth" as Href;
+      }
+
+      const routeResolution = resolvePostLoginRoute({
+        requiredTermsAgreed: session.requiredTermsAgreed,
+        profileCompleted: session.profileCompleted,
+      });
+
+      if (!routeResolution.isValid) {
+        return "/auth" as Href;
+      }
+
+      if (!routeResolution.requiresOnboardingResolution) {
+        return routeResolution.route;
+      }
+
+      const entryResolution = await fetchOnboardingEntryResolution(queryClient);
+      const refreshedSession = useSessionStore.getState();
+
+      if (!refreshedSession.accessToken && !refreshedSession.refreshToken) {
+        return "/auth" as Href;
+      }
+
+      return entryResolution.route;
+    }
+
+    void resolveInitialRoute().then((route) => {
+      if (active) {
+        router.replace(route);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-brand px-6">
-      <Text className="text-4xl font-semibold tracking-[3px] text-brand-foreground">WEARTRACK</Text>
-      <Text className="mt-3 text-base text-brand-foreground/80">
-        Your AI-powered digital closet
-      </Text>
-      <ActivityIndicator className="mt-8" color="#F8FAFC" />
-    </View>
+    <SafeAreaView className="flex-1 bg-bg-dark">
+      <View className="flex-1 items-center justify-center px-6">
+        <EntryLogo showSubtitle={false} size="splash" />
+      </View>
+    </SafeAreaView>
   );
 }

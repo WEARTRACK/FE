@@ -1,0 +1,130 @@
+const { withPodfile } = require("expo/config-plugins");
+
+const googleServicesFile = process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist";
+const apsEnvironment =
+  process.env.EAS_BUILD_PROFILE === "production" || process.env.EAS_BUILD_PROFILE === "preview"
+    ? "production"
+    : "development";
+
+const withFirebaseModularHeaders = (config) =>
+  withPodfile(config, (config) => {
+    const marker = "use_modular_headers!";
+
+    if (!config.modResults.contents.includes(marker)) {
+      config.modResults.contents = config.modResults.contents.replace(
+        "prepare_react_native_project!\n",
+        `prepare_react_native_project!\n\n${marker}\n`,
+      );
+    }
+
+    return config;
+  });
+
+module.exports = {
+  expo: {
+    name: "WEARTRACK",
+    slug: "weartrack",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "light",
+    newArchEnabled: true,
+    scheme: "weartrack",
+    splash: {
+      image: "./assets/native-splash-logo.png",
+      resizeMode: "contain",
+      backgroundColor: "#070117",
+    },
+    ios: {
+      supportsTablet: true,
+      googleServicesFile,
+      bundleIdentifier: "com.weartrack.app",
+      usesAppleSignIn: true,
+      entitlements: {
+        "aps-environment": apsEnvironment,
+      },
+      infoPlist: {
+        CFBundleAllowMixedLocalizations: true,
+        ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["remote-notification"],
+      },
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#ffffff",
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      permissions: ["android.permission.RECORD_AUDIO"],
+      package: "com.weartrack.app",
+    },
+    web: {
+      favicon: "./assets/favicon.png",
+    },
+    plugins: [
+      "expo-router",
+      "expo-font",
+      "./plugins/with-fmt-consteval-fix",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          iosUrlScheme:
+            "com.googleusercontent.apps.580898159630-g9sksvq1sj8vn4vi5v54p3qaspq437lr",
+        },
+      ],
+      [
+        "@react-native-seoul/kakao-login",
+        {
+          kakaoAppKey: "2faa046f0d856e6d6f67a80d11f4c3aa",
+        },
+      ],
+      [
+        "@react-native-seoul/naver-login",
+        {
+          urlScheme: "weartracknaverlogin",
+        },
+      ],
+      "expo-apple-authentication",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      withFirebaseModularHeaders,
+      [
+        "expo-dev-client",
+        {
+          launchMode: "launcher",
+        },
+      ],
+      [
+        "expo-image-picker",
+        {
+          cameraPermission: "옷 사진을 촬영하려면 카메라 권한이 필요합니다.",
+          photosPermission: "촬영한 옷 사진을 불러오려면 사진 접근 권한이 필요합니다.",
+        },
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            extraMavenRepos: ["https://devrepo.kakao.com/nexus/content/groups/public/"],
+          },
+          ios: {
+            useFrameworks: "static",
+            buildReactNativeFromSource: true,
+            forceStaticLinking: ["RNFBApp", "RNFBMessaging"],
+          },
+        },
+      ],
+    ],
+    experiments: {
+      typedRoutes: true,
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: "1f83e63f-5218-484a-8ee4-81a37c7720d6",
+      },
+    },
+  },
+};
