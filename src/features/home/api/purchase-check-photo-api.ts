@@ -5,8 +5,8 @@ import type {
   PurchaseCheckClothesItem,
   PurchaseCheckLinkResult,
 } from "@/features/home/api/purchase-check-link-api";
+import { authorizedFetch } from "@/lib/api/authorizedFetch";
 import { ApiError } from "@/lib/api/errors";
-import { useSessionStore } from "@/stores/useSessionStore";
 
 export type PurchaseCheckPhotoResult = PurchaseCheckLinkResult;
 
@@ -127,20 +127,6 @@ export async function purchaseCheckPhoto({
   page = 0,
   size = 10,
 }: PurchaseCheckPhotoPayload): Promise<PurchaseCheckPhotoResult> {
-  if (!useSessionStore.persist.hasHydrated()) {
-    await useSessionStore.persist.rehydrate();
-  }
-
-  const accessToken = useSessionStore.getState().accessToken;
-
-  if (!accessToken) {
-    throw new ApiError({
-      code: "AUTH_REQUIRED",
-      message: "인증이 필요합니다.",
-      status: 401,
-    });
-  }
-
   const formData = new FormData();
   await appendImageToFormData(formData, imageUri);
 
@@ -154,15 +140,19 @@ export async function purchaseCheckPhoto({
   let response: Response;
 
   try {
-    response = await fetch(`${env.apiBaseUrl}/api/purchase-check/photo?${params.toString()}`, {
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    response = await authorizedFetch(
+      `${env.apiBaseUrl}/api/purchase-check/photo?${params.toString()}`,
+      {
+        body: formData,
+        method: "POST",
+        signal: abortController.signal,
       },
-      method: "POST",
-      signal: abortController.signal,
-    });
+    );
   } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError({
       code: "NETWORK_ERROR",
       message: "Network error. Please check your connection and try again.",

@@ -3,10 +3,12 @@ import { isValidClosetId } from "@/features/closet/utils/closet-id";
 import { normalizeAccessToken, normalizeRefreshToken } from "@/lib/api/authToken";
 import { ApiError } from "@/lib/api/errors";
 
-export type SocialAuthProvider = "GOOGLE" | "KAKAO" | "NAVER";
+export type SocialAuthProvider = "GOOGLE" | "KAKAO" | "NAVER" | "APPLE";
 
 export type SocialLoginPayload = {
   provider: SocialAuthProvider;
+  accessToken?: string | null;
+  idToken?: string | null;
   authorizationCode?: string | null;
   state?: string | null;
   handoffToken?: string | null;
@@ -29,6 +31,15 @@ type SocialLoginResponse = {
   result?: SocialLoginResult | null;
 };
 
+type SocialLoginRequestBody = {
+  provider: SocialAuthProvider;
+  accessToken?: string;
+  idToken?: string;
+  authorizationCode?: string;
+  state?: string;
+  handoffToken?: string;
+};
+
 function redactSocialLoginTokens(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(redactSocialLoginTokens);
@@ -40,7 +51,14 @@ function redactSocialLoginTokens(value: unknown): unknown {
 
   return Object.fromEntries(
     Object.entries(value as Record<string, unknown>)
-      .filter(([key]) => key !== "accessToken" && key !== "refreshToken")
+      .filter(
+        ([key]) =>
+          key !== "accessToken" &&
+          key !== "refreshToken" &&
+          key !== "idToken" &&
+          key !== "authorizationCode" &&
+          key !== "handoffToken",
+      )
       .map(([key, nestedValue]) => [key, redactSocialLoginTokens(nestedValue)]),
   );
 }
@@ -112,18 +130,40 @@ function isSocialLoginResponse(value: unknown): value is SocialLoginResponse {
   );
 }
 
-export async function socialLogin({
+function setTokenField(
+  body: SocialLoginRequestBody,
+  key: Exclude<keyof SocialLoginRequestBody, "provider">,
+  value: string | null | undefined,
+) {
+  if (typeof value === "string" && value.length > 0) {
+    body[key] = value;
+  }
+}
+
+function createSocialLoginRequestBody({
   provider,
-  authorizationCode = null,
-  state = null,
-  handoffToken = null,
-}: SocialLoginPayload): Promise<SocialLoginResult> {
-  const response = await apiClient.post<SocialLoginResponse>("/api/auth/social/login", {
-    provider,
-    authorizationCode,
-    state,
-    handoffToken,
-  });
+  accessToken,
+  idToken,
+  authorizationCode,
+  state,
+  handoffToken,
+}: SocialLoginPayload): SocialLoginRequestBody {
+  const body: SocialLoginRequestBody = { provider };
+
+  setTokenField(body, "accessToken", accessToken);
+  setTokenField(body, "idToken", idToken);
+  setTokenField(body, "authorizationCode", authorizationCode);
+  setTokenField(body, "state", state);
+  setTokenField(body, "handoffToken", handoffToken);
+
+  return body;
+}
+
+export async function socialLogin(payload: SocialLoginPayload): Promise<SocialLoginResult> {
+  const response = await apiClient.post<SocialLoginResponse>(
+    "/api/auth/social/login",
+    createSocialLoginRequestBody(payload),
+  );
 
   if (!isSocialLoginResponse(response.data)) {
     throw createInvalidResponseError(response.data);

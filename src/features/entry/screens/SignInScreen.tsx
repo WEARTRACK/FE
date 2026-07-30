@@ -6,16 +6,14 @@ import { SocialActionButtons } from "@/features/entry/components/SocialActionBut
 
 export function SignInScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-bg-dark">
-      <View className="flex-1 items-center justify-center px-6 pb-10 pt-6">
-        <View className="items-center">
+    <View className="flex-1 bg-bg-dark">
+      <SafeAreaView className="flex-1">
+        <View className="flex-1 items-center justify-center px-6 pb-[120px] pt-6">
           <EntryLogo subtitleClassName="mt-7" />
         </View>
+      </SafeAreaView>
 
-        <View className="mt-[102px]">
-          <SocialActionButtons mode="login" />
-        </View>
-      </View>
-    </SafeAreaView>
+      <SocialActionButtons mode="login" />
+    </View>
   );
 }

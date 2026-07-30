@@ -10,7 +10,7 @@ type EntryLogoProps = {
 };
 
 export function EntryLogo({
-  subtitle = "스마트한 옷장 관리를 시작",
+  subtitle = "스마트한 옷장 관리의 시작",
   showSubtitle = true,
   size = "default",
   subtitleClassName,

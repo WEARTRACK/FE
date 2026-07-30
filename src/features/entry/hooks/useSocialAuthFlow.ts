@@ -1,8 +1,11 @@
-import { useCallback } from "react";
-import { Linking } from "react-native";
+import { useCallback, useState } from "react";
 
-import { env } from "@/config/env";
 import type { SocialAuthProvider } from "@/features/entry/api/socialLogin";
+import { useSocialLoginMutation } from "@/features/entry/hooks/useSocialLoginMutation";
+import {
+  createNativeSocialLoginPayload,
+  isNativeSocialAuthCancelledError,
+} from "@/features/entry/oauth/nativeSocialAuth";
 import { saveSocialAuthIntent } from "@/features/entry/oauth/socialAuthIntentStorage";
 import type { PostLoginIntentSuccessHref } from "@/features/entry/utils/resolvePostLoginRoute";
 import { showToast } from "@/lib/ui/showToast";
@@ -12,28 +15,42 @@ type UseSocialAuthFlowParams = {
 };
 
 export function useSocialAuthFlow({ successHref }: UseSocialAuthFlowParams = {}) {
-  const buildAuthorizeEndpoint = useCallback((provider: SocialAuthProvider) => {
-    const url = new URL(`/api/auth/social/authorize/${provider.toLowerCase()}`, env.apiBaseUrl);
-    url.searchParams.set("client", "MOBILE");
-    return url.toString();
-  }, []);
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
+  const socialLoginMutation = useSocialLoginMutation({ successHref });
 
   const startSocialAuth = useCallback(
     async (provider: SocialAuthProvider) => {
+      if (isAuthorizing || socialLoginMutation.isPending) {
+        return;
+      }
+
+      setIsAuthorizing(true);
+
       try {
         await saveSocialAuthIntent({
           successHref: successHref ?? null,
         });
-        await Linking.openURL(buildAuthorizeEndpoint(provider));
-      } catch {
+        const payload = await createNativeSocialLoginPayload(provider);
+        try {
+          await socialLoginMutation.mutateAsync(payload);
+        } catch {
+          // useSocialLoginMutation shows the API failure toast.
+        }
+      } catch (error) {
+        if (isNativeSocialAuthCancelledError(error)) {
+          return;
+        }
+
         showToast("로그인에 실패했어요. 다시 시도해주세요.");
+      } finally {
+        setIsAuthorizing(false);
       }
     },
-    [buildAuthorizeEndpoint, successHref],
+    [isAuthorizing, socialLoginMutation, successHref],
   );
 
   return {
-    isPending: false,
+    isPending: isAuthorizing || socialLoginMutation.isPending,
     startSocialAuth,
   };
 }

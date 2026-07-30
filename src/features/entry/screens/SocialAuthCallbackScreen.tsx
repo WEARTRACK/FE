@@ -15,7 +15,7 @@ import { showToast } from "@/lib/ui/showToast";
 import { useClosetStore } from "@/stores/useClosetStore";
 import { useSessionStore } from "@/stores/useSessionStore";
 
-const providers: SocialAuthProvider[] = ["GOOGLE", "KAKAO", "NAVER"];
+const providers: SocialAuthProvider[] = ["GOOGLE", "KAKAO", "NAVER", "APPLE"];
 
 function normalizeValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;

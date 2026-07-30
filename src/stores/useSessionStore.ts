@@ -25,6 +25,7 @@ type SessionState = SessionStoreData & {
     accessToken: string;
     refreshToken: string;
   }) => void;
+  updateTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   updateProfile: (profile: SessionProfilePatch) => void;
   clearSession: () => void;
 };
@@ -45,6 +46,11 @@ export const useSessionStore = create<SessionState>()(
           profileCompleted: session.profileCompleted,
           accessToken: normalizeAccessToken(session.accessToken),
           refreshToken: normalizeRefreshToken(session.refreshToken),
+        })),
+      updateTokens: (tokens) =>
+        set(() => ({
+          accessToken: normalizeAccessToken(tokens.accessToken),
+          refreshToken: normalizeRefreshToken(tokens.refreshToken),
         })),
       updateProfile: (profile) =>
         set((state) => ({
