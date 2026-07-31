@@ -15,9 +15,9 @@
     },
     "production": {
       "environment": "production"
-    },
-    "submit": {
-      "production": {}
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
