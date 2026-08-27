@@ -21,27 +21,39 @@ describe("navigateFromNotificationData", () => {
     expect(pushMock).toHaveBeenCalledWith("/weekly-review");
   });
 
-  it("opens the report screen for the week in the notification", () => {
+  it("opens the daily review screen from notification list copy", () => {
+    expect(
+      navigateFromNotificationData({
+        title: "WEARTRACK",
+        body: "오늘은 어떤 옷을 입었나요? 기록 후 패션소비를 확인해보세요.",
+        type: "DAILY_REVIEW",
+      }),
+    ).toBe(true);
+    expect(pushMock).toHaveBeenCalledWith("/weekly-review");
+  });
+
+  it("opens the weekly spending screen for weekly fashion report notifications", () => {
     expect(
       navigateFromNotificationData({
         screen: "WEEKLY_FASHION_REPORT",
-        weekStartDate: "2026-06-14",
       }),
     ).toBe(true);
-    expect(pushMock).toHaveBeenCalledWith({
-      pathname: "/report",
-      params: { weekStartDate: "2026-06-14" },
-    });
+    expect(pushMock).toHaveBeenCalledWith("/home/weekly-spending");
   });
 
-  it("does not navigate when a weekly report date is missing or malformed", () => {
-    expect(navigateFromNotificationData({ type: "WEEKLY_FASHION_REPORT" })).toBe(false);
+  it("opens the weekly spending screen from notification list copy", () => {
     expect(
       navigateFromNotificationData({
-        type: "WEEKLY_FASHION_REPORT",
-        weekStartDate: "2026/06/14",
+        title: "WEARTRACK",
+        body: "이번 주 패션 지출 리포트가 도착했어요. 지금 확인해보세요.",
+        type: "FASHION_REPORT",
       }),
-    ).toBe(false);
+    ).toBe(true);
+    expect(pushMock).toHaveBeenCalledWith("/home/weekly-spending");
+  });
+
+  it("does not navigate when the notification target is unknown", () => {
+    expect(navigateFromNotificationData({ type: "LONG_UNWORN_CLOTHES" })).toBe(false);
     expect(pushMock).not.toHaveBeenCalled();
   });
 });

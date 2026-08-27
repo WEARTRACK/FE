@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -59,20 +59,45 @@ export function ShoppingMallLinkRegistrationScreen() {
   const keyboardAccessory = useKeyboardAccessoryNavigation(1);
   const [errorMessage, setErrorMessage] = useState<string>();
   const setDraft = useShoppingMallRegistrationStore((state) => state.setDraft);
+  const requestIdRef = useRef(0);
+  const requestInFlightRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      requestIdRef.current += 1;
+    };
+  }, []);
 
   const handleFetchProductInfo = async () => {
-    if (!url.trim()) {
+    const trimmedUrl = url.trim();
+
+    if (!trimmedUrl) {
       showAlert({
         title: "상품 페이지 링크를 입력해주세요",
       });
       return;
     }
 
+    if (requestInFlightRef.current) {
+      return;
+    }
+
+    requestInFlightRef.current = true;
+    const requestId = ++requestIdRef.current;
+
     setFetchState("loading");
     setErrorMessage(undefined);
 
     try {
-      const preview = await fetchProductLinkPreview(url.trim());
+      const preview = await fetchProductLinkPreview(trimmedUrl);
+
+      if (!mountedRef.current || requestIdRef.current !== requestId) {
+        return;
+      }
 
       setDraft({
         sourceUrl: preview.sourceUrl,
@@ -88,15 +113,25 @@ export function ShoppingMallLinkRegistrationScreen() {
       });
       router.push(clothesRegistrationRoutes.shoppingMallStyle);
     } catch {
+      if (!mountedRef.current || requestIdRef.current !== requestId) {
+        return;
+      }
+
       setErrorMessage(
         "상품 정보를 불러올 수 없습니다. 상품 페이지를 확인하거나 직접 입력해 주세요.",
       );
       setFetchState("error");
+    } finally {
+      if (requestIdRef.current === requestId) {
+        requestInFlightRef.current = false;
+      }
     }
   };
 
   const handlePressBack = () => {
     if (fetchState === "loading" || fetchState === "error") {
+      requestIdRef.current += 1;
+      requestInFlightRef.current = false;
       setFetchState("idle");
       return;
     }
@@ -138,6 +173,7 @@ export function ShoppingMallLinkRegistrationScreen() {
               setErrorMessage(undefined);
             }
           }}
+          editable={fetchState !== "loading"}
           placeholder="https://www.musinsa.com/..."
           placeholderTextColor={colors.disabled}
           style={{ paddingBottom: 0, paddingTop: 3 }}

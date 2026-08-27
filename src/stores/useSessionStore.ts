@@ -1,9 +1,9 @@
 import { create } from "zustand";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { normalizeAccessToken, normalizeRefreshToken } from "@/lib/api/authToken";
 import { storageKeys } from "@/lib/storage/keys";
+import { flushSessionStorageWrites, sessionStorage } from "@/lib/storage/sessionStorage";
 import {
   defaultSessionStoreData,
   mergeSessionStoreData,
@@ -27,7 +27,7 @@ type SessionState = SessionStoreData & {
   }) => void;
   updateTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
   updateProfile: (profile: SessionProfilePatch) => void;
-  clearSession: () => void;
+  clearSession: () => Promise<void>;
 };
 
 export const useSessionStore = create<SessionState>()(
@@ -58,7 +58,7 @@ export const useSessionStore = create<SessionState>()(
           requiredTermsAgreed: profile.requiredTermsAgreed ?? state.requiredTermsAgreed,
           profileCompleted: profile.profileCompleted ?? state.profileCompleted,
         })),
-      clearSession: () =>
+      clearSession: async () => {
         set(() => ({
           memberId: null,
           nickname: null,
@@ -66,17 +66,19 @@ export const useSessionStore = create<SessionState>()(
           profileCompleted: false,
           accessToken: null,
           refreshToken: null,
-        })),
+        }));
+        await flushSessionStorageWrites();
+      },
     }),
     {
       name: storageKeys.session,
-      version: 1,
+      version: 2,
       migrate: migratePersistedSessionState,
       merge: (persistedState, currentState) => ({
         ...currentState,
         ...mergeSessionStoreData(currentState, persistedState),
       }),
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => sessionStorage),
     },
   ),
 );

@@ -6,7 +6,6 @@ import {
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Platform,
   Pressable,
   Text,
   TouchableOpacity,
@@ -17,7 +16,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ClosetFrame from "../../../../assets/closet-frame.svg";
 import DeleteIcon from "../../../../assets/delete.svg";
-import EditIcon from "../../../../assets/edit.svg";
 import { BackButton } from "@/components/common/BackButton";
 import { Button } from "@/components/common/Button";
 import { colors } from "@/constants/colors";
@@ -92,10 +90,7 @@ function ClosetCarouselCard({
     >
       <View className="mb-[9px] items-start">
         <View className="max-w-full rounded-full border-[0.5px] border-blue-3 bg-blue-1 px-[18px] py-[6px]">
-          <Text
-            className="font-pretendard text-[12px] leading-[18px] text-text"
-            numberOfLines={1}
-          >
+          <Text className="font-pretendard text-[12px] leading-[18px] text-text" numberOfLines={1}>
             {displayName}
           </Text>
         </View>
@@ -252,36 +247,6 @@ export function ClosetMainScreen() {
     ]);
   };
 
-  const handlePressRename = () => {
-    setIsActionsMenuVisible(false);
-
-    if (Platform.OS !== "ios") {
-      Alert.alert("옷장 이름 수정", "이름 입력 알럿은 iOS에서만 지원합니다.", [{ text: "확인" }]);
-      return;
-    }
-
-    Alert.prompt(
-      "옷장 이름 수정",
-      "이름을 입력해주세요.",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "확인",
-          onPress: (nextName?: string) => {
-            if (!nextName?.trim()) {
-              showToast("옷장 이름을 입력해주세요.");
-              return;
-            }
-
-            showToast("옷장 이름 수정 기능은 준비 중입니다.");
-          },
-        },
-      ],
-      "plain-text",
-      selectedCloset?.closetName ?? "",
-    );
-  };
-
   const handleConfirmDelete = async () => {
     if (!selectedCloset || isDeleting) {
       return;
@@ -380,18 +345,6 @@ export function ClosetMainScreen() {
                 옷장 삭제
               </Text>
             </Pressable>
-            <View className="h-[0.5px] bg-disabled" />
-            <Pressable
-              accessibilityRole="button"
-              className="h-[40px] flex-row items-center gap-[12px]"
-              onPress={handlePressRename}
-              style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
-            >
-              <EditIcon height={24} width={24} />
-              <Text className="font-pretendard text-[14px] leading-[20px] text-text">
-                이름 수정하기
-              </Text>
-            </Pressable>
           </View>
         </>
       ) : null}
@@ -428,7 +381,7 @@ export function ClosetMainScreen() {
             <Button
               fullWidth
               label="옷장 등록하기"
-              onPress={() => router.push("/closet/register/preview")}
+              onPress={() => router.push("/closet/register")}
             />
           </View>
         </View>

@@ -135,6 +135,8 @@ function MainTabBar({
           >
             <TabBarIcon focused={focused} tab={tab.name} />
             <Text
+              allowFontScaling={false}
+              numberOfLines={1}
               style={{
                 color: focused ? colors.bg.dark : colors.disabled,
                 fontFamily: "PretendardLight",

@@ -6,6 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BackButton } from "@/components/common/BackButton";
 import type { NotificationItem } from "@/features/notifications/api/notification-api-types";
 import { useNotifications } from "@/features/notifications/hooks/use-notifications";
+import {
+  canNavigateFromNotificationData,
+  navigateFromNotificationData,
+} from "@/features/notifications/notification-navigation";
 import { formatNotificationTime } from "@/features/notifications/utils/notification-time";
 
 import QuestionIcon from "../../../assets/question-icon.svg";
@@ -20,15 +24,22 @@ const NOTIFICATION_SETTINGS_ROUTE = "/notifications/settings" as Href;
 
 function NotificationCard({ notification }: { notification: NotificationItem }) {
   const timeText = formatNotificationTime(notification.sentAt);
+  const canNavigate = canNavigateFromNotificationData(notification);
 
   return (
-    <View className="h-[98px] justify-center rounded-lg border border-gray bg-white px-8">
+    <Pressable
+      accessibilityRole={canNavigate ? "button" : undefined}
+      className="min-h-[112px] justify-center rounded-lg border border-gray bg-white px-8 py-[22px]"
+      disabled={!canNavigate}
+      onPress={() => void navigateFromNotificationData(notification)}
+      style={({ pressed }) => ({ opacity: pressed && canNavigate ? 0.72 : 1 })}
+    >
       <Text className="font-pretendard text-heading text-text" numberOfLines={1}>
         {notification.title}
       </Text>
 
-      <View className="mt-[14px] flex-row items-center gap-3">
-        <Text className="flex-1 font-pretendard text-body text-text-subdued" numberOfLines={1}>
+      <View className="mt-[14px] flex-row items-end gap-3">
+        <Text className="flex-1 font-pretendard text-body text-text-subdued" numberOfLines={2}>
           {notification.body}
         </Text>
         {timeText ? (
@@ -37,7 +48,7 @@ function NotificationCard({ notification }: { notification: NotificationItem }) 
           </Text>
         ) : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 

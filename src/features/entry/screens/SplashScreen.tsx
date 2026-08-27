@@ -7,6 +7,7 @@ import { EntryLogo } from "@/features/entry/components/EntryLogo";
 import { resolvePostLoginRoute } from "@/features/entry/utils/resolvePostLoginRoute";
 import { fetchOnboardingEntryResolution } from "@/features/onboarding/utils/fetchOnboardingEntryResolution";
 import { queryClient } from "@/lib/queryClient";
+import { hasValidAuthenticatedSession } from "@/stores/sessionState";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 function waitForMinimumSplashDuration() {
@@ -30,7 +31,11 @@ export function SplashScreen() {
 
       const session = useSessionStore.getState();
 
-      if (!session.accessToken && !session.refreshToken) {
+      if (!hasValidAuthenticatedSession(session)) {
+        if (session.memberId !== null || session.accessToken || session.refreshToken) {
+          await session.clearSession();
+        }
+
         return "/auth" as Href;
       }
 
@@ -50,7 +55,7 @@ export function SplashScreen() {
       const entryResolution = await fetchOnboardingEntryResolution(queryClient);
       const refreshedSession = useSessionStore.getState();
 
-      if (!refreshedSession.accessToken && !refreshedSession.refreshToken) {
+      if (!hasValidAuthenticatedSession(refreshedSession)) {
         return "/auth" as Href;
       }
 

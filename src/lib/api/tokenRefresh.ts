@@ -1,11 +1,12 @@
-import axios, { AxiosError } from "axios";
+import { AxiosError, create as createAxiosClient } from "axios";
 
 import { env } from "@/config/env";
+import { expireCurrentSession } from "@/features/entry/utils/expireCurrentSession";
 import { normalizeAccessToken, normalizeRefreshToken } from "@/lib/api/authToken";
 import { ApiError, createApiError } from "@/lib/api/errors";
 import { useSessionStore } from "@/stores/useSessionStore";
 
-const tokenRefreshClient = axios.create({
+const tokenRefreshClient = createAxiosClient({
   baseURL: env.apiBaseUrl,
   timeout: 10000,
   headers: {
@@ -95,6 +96,7 @@ async function requestTokenRefresh(): Promise<TokenRefreshResult> {
   const refreshToken = useSessionStore.getState().refreshToken;
 
   if (!refreshToken) {
+    await expireCurrentSession();
     throw new ApiError({
       code: "AUTH_REFRESH_REQUIRED",
       message: "Refresh Token이 필요합니다.",
@@ -133,7 +135,7 @@ async function requestTokenRefresh(): Promise<TokenRefreshResult> {
     return tokens;
   } catch (error) {
     if (shouldClearSessionAfterRefreshError(error)) {
-      useSessionStore.getState().clearSession();
+      await expireCurrentSession();
     }
 
     if (error instanceof ApiError) {

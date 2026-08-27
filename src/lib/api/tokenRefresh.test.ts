@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  clearSession: vi.fn(),
+  expireCurrentSession: vi.fn(),
   getState: vi.fn(),
   hasHydrated: vi.fn(),
   post: vi.fn(),
@@ -10,18 +10,20 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("axios", () => ({
-  default: {
-    create: vi.fn(() => ({
-      post: mocks.post,
-    })),
-  },
   AxiosError: class AxiosError extends Error {},
+  create: vi.fn(() => ({
+    post: mocks.post,
+  })),
 }));
 
 vi.mock("@/config/env", () => ({
   env: {
     apiBaseUrl: "https://example.com",
   },
+}));
+
+vi.mock("@/features/entry/utils/expireCurrentSession", () => ({
+  expireCurrentSession: mocks.expireCurrentSession,
 }));
 
 vi.mock("@/stores/useSessionStore", () => ({
@@ -37,17 +39,17 @@ vi.mock("@/stores/useSessionStore", () => ({
 describe("refreshSessionTokens", () => {
   beforeEach(() => {
     vi.resetModules();
-    mocks.clearSession.mockReset();
+    mocks.expireCurrentSession.mockReset();
     mocks.getState.mockReset();
     mocks.hasHydrated.mockReset();
     mocks.post.mockReset();
     mocks.rehydrate.mockReset();
     mocks.updateTokens.mockReset();
     mocks.hasHydrated.mockReturnValue(true);
+    mocks.expireCurrentSession.mockResolvedValue(undefined);
     mocks.rehydrate.mockResolvedValue(undefined);
     mocks.getState.mockReturnValue({
       accessToken: "old-access-token",
-      clearSession: mocks.clearSession,
       refreshToken: "old-refresh-token",
       updateTokens: mocks.updateTokens,
     });
@@ -125,6 +127,23 @@ describe("refreshSessionTokens", () => {
       message: "Invalid JWT token.",
       status: 401,
     });
-    expect(mocks.clearSession).toHaveBeenCalledOnce();
+    expect(mocks.expireCurrentSession).toHaveBeenCalledOnce();
+  });
+
+  it("expires the session when no refresh token is available", async () => {
+    mocks.getState.mockReturnValue({
+      accessToken: "old-access-token",
+      refreshToken: null,
+      updateTokens: mocks.updateTokens,
+    });
+
+    const { refreshSessionTokens } = await import("./tokenRefresh");
+
+    await expect(refreshSessionTokens()).rejects.toMatchObject({
+      code: "AUTH_REFRESH_REQUIRED",
+      status: 401,
+    });
+    expect(mocks.expireCurrentSession).toHaveBeenCalledOnce();
+    expect(mocks.post).not.toHaveBeenCalled();
   });
 });

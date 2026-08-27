@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Rect } from "react-native-svg";
 
 import CloseIcon from "../../../../assets/close.svg";
-import ClothesIcon from "../../../../assets/clothes-icon.svg";
+import ClothesIconImage from "../../../../assets/clothes-icon.png";
 import GridActiveIcon from "../../../../assets/grid-active.svg";
 import GridInactiveIcon from "../../../../assets/grid-inactive.svg";
 import ListActiveIcon from "../../../../assets/list-active.svg";
@@ -584,7 +584,13 @@ export function ClosetItemBrowserScreen({
 
         {!isLoading && !error && visibleItems.length === 0 ? (
           <View className="flex-1 items-center justify-center pb-20">
-            {emptyIcon ?? <ClothesIcon width={157} height={145} />}
+            {emptyIcon ?? (
+              <Image
+                resizeMode="contain"
+                source={ClothesIconImage}
+                style={{ height: 145, width: 157 }}
+              />
+            )}
             <Text className="mt-8 font-pretendard-semibold text-headline text-bg-dark">
               {emptyTitle}
             </Text>

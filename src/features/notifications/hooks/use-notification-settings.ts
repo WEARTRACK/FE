@@ -6,6 +6,7 @@ import {
 } from "@/features/notifications/api/notification-api";
 import { notificationQueryKeys } from "@/features/notifications/api/notification-query-keys";
 import type { NotificationSettings } from "@/features/notifications/api/notification-api-types";
+import { refreshNotificationTokenSync } from "@/features/notifications/utils/notification-token-sync";
 import { useSessionStore } from "@/stores/useSessionStore";
 
 export function useNotificationSettings() {
@@ -33,6 +34,7 @@ export function useUpdateNotificationSettings() {
       }
 
       queryClient.setQueryData(notificationQueryKeys.settings(memberId), settings);
+      refreshNotificationTokenSync();
     },
   });
 }

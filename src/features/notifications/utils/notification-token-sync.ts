@@ -38,6 +38,10 @@ function notifyNotificationTokenSyncRevisionListeners() {
   });
 }
 
+export function refreshNotificationTokenSync() {
+  notifyNotificationTokenSyncRevisionListeners();
+}
+
 export function getNotificationDeviceType(): NotificationDeviceType {
   return Platform.OS === "ios" ? "IOS" : "ANDROID";
 }

@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ClothesIcon from "../../../../assets/clothes-icon.svg";
+import ClothesIconImage from "../../../../assets/clothes-icon.png";
 import { Button } from "@/components/common/Button";
 import { ClothesRegistrationHeader } from "@/features/clothes-registration/screens/ClothesRegistrationHeader";
 import { launchClothesCamera } from "@/features/clothes-registration/utils/launchClothesCamera";
@@ -72,7 +72,11 @@ export function ClothesAnalysisFailureScreen() {
 
       <View className="flex-1 items-center justify-center pb-[112px]">
         <View>
-          <ClothesIcon width={170} height={157} />
+          <Image
+            resizeMode="contain"
+            source={ClothesIconImage}
+            style={{ height: 157, width: 170 }}
+          />
           <View className="absolute right-[20px] top-[-7px]">
             <ErrorBadge />
           </View>

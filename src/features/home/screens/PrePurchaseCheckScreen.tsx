@@ -189,9 +189,7 @@ function WeartrackResponse({
       <View className="mt-[24px]">
         <ChatLogo height={10} width={81} />
         <View className="mt-[14px] self-start rounded-[10px] rounded-tl-none border border-green-3 bg-green-1 px-[19px] py-[15px]">
-          <Text className="font-pretendard text-[14px] leading-[20px] text-text">
-            {message}
-          </Text>
+          <Text className="font-pretendard text-[14px] leading-[20px] text-text">{message}</Text>
         </View>
       </View>
     );
@@ -204,9 +202,7 @@ function WeartrackResponse({
     <View className="mt-[24px]">
       <ChatLogo height={10} width={81} />
       <View className="mt-[14px] self-start rounded-[10px] rounded-tl-none border border-yellow-3 bg-yellow-1 px-[19px] py-[15px]">
-        <Text className="font-pretendard text-[14px] leading-[20px] text-text">
-          {message}
-        </Text>
+        <Text className="font-pretendard text-[14px] leading-[20px] text-text">{message}</Text>
       </View>
 
       <ScrollView
@@ -242,11 +238,13 @@ function WeartrackResponse({
 }
 
 function ActionRow({
+  disabled = false,
   icon,
   isLast = false,
   label,
   onPress,
 }: {
+  disabled?: boolean;
   icon: React.ReactNode;
   isLast?: boolean;
   label: string;
@@ -257,8 +255,9 @@ function ActionRow({
       accessibilityLabel={label}
       accessibilityRole="button"
       className="h-[56px] px-6"
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+      style={({ pressed }) => ({ opacity: disabled ? 0.45 : pressed ? 0.65 : 1 })}
     >
       <View className={`h-full flex-row items-center ${isLast ? "" : "border-b border-disabled"}`}>
         <View className="mr-[14px]">{icon}</View>
@@ -269,19 +268,21 @@ function ActionRow({
 }
 
 function LinkInputModal({
+  disabled,
   link,
   onChangeLink,
   onClose,
   onSubmit,
   visible,
 }: {
+  disabled: boolean;
   link: string;
   onChangeLink: (value: string) => void;
   onClose: () => void;
   onSubmit: () => void;
   visible: boolean;
 }) {
-  const canSubmit = link.trim().length > 0;
+  const canSubmit = link.trim().length > 0 && !disabled;
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
@@ -357,8 +358,29 @@ export function PrePurchaseCheckScreen() {
   const [submittedLinkImageUri, setSubmittedLinkImageUri] = useState<string | null>(null);
   const [submittedLink, setSubmittedLink] = useState<string | null>(null);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [isChoosingSource, setIsChoosingSource] = useState(false);
+  const comparisonRequestIdRef = useRef(0);
+  const comparisonInFlightRef = useRef(false);
+  const sourcePickerInFlightRef = useRef(false);
+  const mountedRef = useRef(true);
+  const isInteractionLocked = comparisonStatus === "loading" || isChoosingSource;
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      comparisonRequestIdRef.current += 1;
+    };
+  }, []);
 
   const startImageComparison = (imageUri: string) => {
+    if (comparisonInFlightRef.current) {
+      return;
+    }
+
+    comparisonInFlightRef.current = true;
+    const requestId = ++comparisonRequestIdRef.current;
     setSelectedImageUri(imageUri);
     setSubmittedLinkImageUri(null);
     setSubmittedLink(null);
@@ -369,10 +391,20 @@ export function PrePurchaseCheckScreen() {
       { imageUri, page: 0, size: 10 },
       {
         onError: () => {
+          if (!mountedRef.current || comparisonRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          comparisonInFlightRef.current = false;
           setComparisonStatus("idle");
           showToast("사진 구매 전 중복 확인에 실패했어요. 다시 시도해주세요.");
         },
         onSuccess: (result) => {
+          if (!mountedRef.current || comparisonRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          comparisonInFlightRef.current = false;
           setComparisonResult(result);
           setComparisonStatus(result.totalCount > 0 ? "similar" : "noSimilar");
         },
@@ -381,6 +413,13 @@ export function PrePurchaseCheckScreen() {
   };
 
   const handlePressUpload = async () => {
+    if (sourcePickerInFlightRef.current || comparisonInFlightRef.current) {
+      return;
+    }
+
+    sourcePickerInFlightRef.current = true;
+    setIsChoosingSource(true);
+
     try {
       const imageUri = await launchClothesImageLibrary();
 
@@ -392,10 +431,22 @@ export function PrePurchaseCheckScreen() {
       startImageComparison(imageUri);
     } catch {
       showToast("사진을 불러오지 못했어요. 다시 시도해주세요.");
+    } finally {
+      sourcePickerInFlightRef.current = false;
+      if (mountedRef.current) {
+        setIsChoosingSource(false);
+      }
     }
   };
 
   const handlePressCamera = async () => {
+    if (sourcePickerInFlightRef.current || comparisonInFlightRef.current) {
+      return;
+    }
+
+    sourcePickerInFlightRef.current = true;
+    setIsChoosingSource(true);
+
     try {
       const imageUri = await launchClothesCamera();
 
@@ -407,6 +458,11 @@ export function PrePurchaseCheckScreen() {
       startImageComparison(imageUri);
     } catch {
       showToast("카메라를 실행하지 못했어요. 다시 시도해주세요.");
+    } finally {
+      sourcePickerInFlightRef.current = false;
+      if (mountedRef.current) {
+        setIsChoosingSource(false);
+      }
     }
   };
 
@@ -418,6 +474,13 @@ export function PrePurchaseCheckScreen() {
       return;
     }
 
+    if (comparisonInFlightRef.current || sourcePickerInFlightRef.current) {
+      return;
+    }
+
+    comparisonInFlightRef.current = true;
+    const requestId = ++comparisonRequestIdRef.current;
+
     setIsLinkModalVisible(false);
     setSelectedImageUri(null);
     setSubmittedLinkImageUri(null);
@@ -426,19 +489,35 @@ export function PrePurchaseCheckScreen() {
     setComparisonStatus("loading");
 
     void fetchProductLinkPreview(trimmedLink)
-      .then((preview) => setSubmittedLinkImageUri(preview.imageUrl))
+      .then((preview) => {
+        if (mountedRef.current && comparisonRequestIdRef.current === requestId) {
+          setSubmittedLinkImageUri(preview.imageUrl);
+        }
+      })
       .catch(() => {
-        setSubmittedLinkImageUri(null);
+        if (mountedRef.current && comparisonRequestIdRef.current === requestId) {
+          setSubmittedLinkImageUri(null);
+        }
       });
 
     purchaseCheckLinkMutation.mutate(
       { page: 0, size: 10, url: trimmedLink },
       {
         onError: () => {
+          if (!mountedRef.current || comparisonRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          comparisonInFlightRef.current = false;
           setComparisonStatus("idle");
           showToast("구매 전 중복 확인에 실패했어요. 다시 시도해주세요.");
         },
         onSuccess: (result) => {
+          if (!mountedRef.current || comparisonRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          comparisonInFlightRef.current = false;
           setComparisonResult(result);
           setComparisonStatus(result.totalCount > 0 ? "similar" : "noSimilar");
         },
@@ -447,6 +526,8 @@ export function PrePurchaseCheckScreen() {
   };
 
   const handleResetComparison = () => {
+    comparisonRequestIdRef.current += 1;
+    comparisonInFlightRef.current = false;
     purchaseCheckLinkMutation.reset();
     purchaseCheckPhotoMutation.reset();
     setComparisonStatus("idle");
@@ -505,25 +586,33 @@ export function PrePurchaseCheckScreen() {
             <View className="h-[4px] w-[72px] rounded-full bg-disabled" />
           </View>
           <ActionRow
+            disabled={isInteractionLocked}
             icon={<UploadIcon height={24} width={24} />}
             label="사진 업로드"
             onPress={handlePressUpload}
           />
           <ActionRow
+            disabled={isInteractionLocked}
             icon={<CameraIcon height={24} width={24} />}
             label="사진 촬영"
             onPress={handlePressCamera}
           />
           <ActionRow
+            disabled={isInteractionLocked}
             icon={<LinkIcon height={24} width={24} />}
             isLast
             label="링크 붙여넣기"
-            onPress={() => setIsLinkModalVisible(true)}
+            onPress={() => {
+              if (!isInteractionLocked) {
+                setIsLinkModalVisible(true);
+              }
+            }}
           />
         </View>
       ) : null}
 
       <LinkInputModal
+        disabled={isInteractionLocked}
         link={purchaseLink}
         onChangeLink={setPurchaseLink}
         onClose={() => setIsLinkModalVisible(false)}
