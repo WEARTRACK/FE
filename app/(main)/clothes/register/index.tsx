@@ -1,5 +1,7 @@
-import { ClothesRegisterPlaceholderScreen } from "@/features/clothes-registration/screens/ClothesRegisterPlaceholderScreen";
+import { Redirect } from "expo-router";
+
+import { clothesRegistrationRoutes } from "@/features/clothes-registration/routes";
 
 export default function ClothesRegisterRoute() {
-  return <ClothesRegisterPlaceholderScreen />;
+  return <Redirect href={clothesRegistrationRoutes.clothesPreview} />;
 }

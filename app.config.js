@@ -30,11 +30,6 @@ module.exports = {
     userInterfaceStyle: "light",
     newArchEnabled: true,
     scheme: "weartrack",
-    splash: {
-      image: "./assets/native-splash-logo.png",
-      resizeMode: "contain",
-      backgroundColor: "#070117",
-    },
     ios: {
       supportsTablet: true,
       googleServicesFile,
@@ -63,14 +58,23 @@ module.exports = {
       favicon: "./assets/favicon.png",
     },
     plugins: [
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/icon.png",
+          imageWidth: 220,
+          resizeMode: "contain",
+          backgroundColor: "#030027",
+        },
+      ],
       "expo-router",
       "expo-font",
+      "expo-secure-store",
       "./plugins/with-fmt-consteval-fix",
       [
         "@react-native-google-signin/google-signin",
         {
-          iosUrlScheme:
-            "com.googleusercontent.apps.580898159630-g9sksvq1sj8vn4vi5v54p3qaspq437lr",
+          iosUrlScheme: "com.googleusercontent.apps.580898159630-g9sksvq1sj8vn4vi5v54p3qaspq437lr",
         },
       ],
       [

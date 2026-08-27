@@ -1,4 +1,9 @@
-import axios, { AxiosError, AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
+import {
+  AxiosError,
+  AxiosHeaders,
+  create as createAxiosClient,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 import { env } from "@/config/env";
 import { resolveApiAuthPolicy } from "@/lib/api/authPolicy";
@@ -11,7 +16,7 @@ type RefreshRetryConfig = InternalAxiosRequestConfig & {
   _tokenRefreshRetried?: boolean;
 };
 
-export const apiClient = axios.create({
+export const apiClient = createAxiosClient({
   baseURL: env.apiBaseUrl,
   timeout: 10000,
   headers: {

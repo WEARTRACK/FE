@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 
 import {
   DAILY_REVIEW_REMINDER_TYPE,
@@ -10,48 +10,67 @@ import {
 } from "@/features/notifications/constants";
 
 type NotificationData = {
+  body?: unknown;
   screen?: unknown;
+  title?: unknown;
   type?: unknown;
-  weekStartDate?: unknown;
 };
 
+const DAILY_REVIEW_TEXT_PATTERNS = ["오늘은 어떤 옷을 입었나요", "오늘 입은 옷을"];
+const WEEKLY_FASHION_REPORT_TEXT_PATTERNS = [
+  "이번 주 패션 지출",
+  "이번주 패션 지출",
+  "이번 주 패션소비",
+  "이번주 패션소비",
+];
+
+function hasNotificationText(data: NotificationData | undefined, patterns: string[]) {
+  const title = typeof data?.title === "string" ? data.title : "";
+  const body = typeof data?.body === "string" ? data.body : "";
+  const text = `${title} ${body}`;
+
+  return patterns.some((pattern) => text.includes(pattern));
+}
+
 export function isDailyReviewReminderData(data: NotificationData | undefined) {
-  return data?.type === DAILY_REVIEW_REMINDER_TYPE || data?.screen === DAILY_REVIEW_SCREEN;
+  return (
+    data?.type === DAILY_REVIEW_REMINDER_TYPE ||
+    data?.screen === DAILY_REVIEW_SCREEN ||
+    hasNotificationText(data, DAILY_REVIEW_TEXT_PATTERNS)
+  );
 }
 
 export function isWeeklyFashionReportData(data: NotificationData | undefined) {
-  return data?.type === WEEKLY_FASHION_REPORT_TYPE || data?.screen === WEEKLY_FASHION_REPORT_SCREEN;
+  return (
+    data?.type === WEEKLY_FASHION_REPORT_TYPE ||
+    data?.screen === WEEKLY_FASHION_REPORT_SCREEN ||
+    hasNotificationText(data, WEEKLY_FASHION_REPORT_TEXT_PATTERNS)
+  );
 }
 
-function getWeekStartDate(data: NotificationData | undefined) {
-  if (typeof data?.weekStartDate !== "string") {
-    return null;
-  }
-
-  const weekStartDate = data.weekStartDate.trim();
-
-  return /^\d{4}-\d{2}-\d{2}$/.test(weekStartDate) ? weekStartDate : null;
-}
-
-export function navigateFromNotificationData(data: NotificationData | undefined) {
+function getNotificationRoute(data: NotificationData | undefined): Href | null {
   if (isDailyReviewReminderData(data)) {
-    router.push(DAILY_REVIEW_ROUTE);
-    return true;
+    return DAILY_REVIEW_ROUTE;
   }
 
   if (isWeeklyFashionReportData(data)) {
-    const weekStartDate = getWeekStartDate(data);
-
-    if (!weekStartDate) {
-      return false;
-    }
-
-    router.push({
-      pathname: WEEKLY_FASHION_REPORT_ROUTE,
-      params: { weekStartDate },
-    });
-    return true;
+    return WEEKLY_FASHION_REPORT_ROUTE;
   }
 
-  return false;
+  return null;
+}
+
+export function canNavigateFromNotificationData(data: NotificationData | undefined) {
+  return getNotificationRoute(data) !== null;
+}
+
+export function navigateFromNotificationData(data: NotificationData | undefined) {
+  const route = getNotificationRoute(data);
+
+  if (!route) {
+    return false;
+  }
+
+  router.push(route);
+  return true;
 }

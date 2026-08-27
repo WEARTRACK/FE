@@ -12,6 +12,7 @@ import {
 
 import {
   deleteNotificationFcmToken,
+  fetchNotificationSettings,
   registerNotificationFcmToken,
 } from "@/features/notifications/api/notification-api";
 import type { NotificationTokenSyncState } from "@/features/notifications/api/notification-api-types";
@@ -32,7 +33,7 @@ import {
   subscribeNotificationTokenSyncRevision,
 } from "@/features/notifications/utils/notification-token-sync";
 import { navigateFromNotificationData } from "@/features/notifications/notification-navigation";
-import { requestNotificationPermission } from "@/features/notifications/notification-permission";
+import { hasNotificationPermission } from "@/features/notifications/notification-permission";
 import { showAlert } from "@/lib/ui/showAlert";
 import { useSessionStore } from "@/stores/useSessionStore";
 
@@ -124,7 +125,7 @@ async function registerNotificationToken({
 }
 
 async function getCurrentNotificationToken() {
-  const granted = await requestNotificationPermission();
+  const granted = await hasNotificationPermission();
 
   if (!granted) {
     return null;
@@ -145,6 +146,7 @@ export function useNotificationSetup() {
   const hasAccessToken = Boolean(accessToken);
   const accessTokenRef = useRef(accessToken);
   const memberIdRef = useRef(memberId);
+  const pushEnabledRef = useRef(false);
   const lastSyncedTokenStateRef = useRef<NotificationTokenSyncState | null>(null);
   const tokenRefreshUnsubscribeRef = useRef<null | (() => void)>(null);
   const [syncRevision, setSyncRevision] = useState(getNotificationTokenSyncRevision);
@@ -199,6 +201,7 @@ export function useNotificationSetup() {
     }
 
     let active = true;
+    pushEnabledRef.current = false;
     let registrationQueue = Promise.resolve<NotificationTokenSyncState | null>(null);
     let tokenStateForCleanup: NotificationTokenSyncState | null =
       lastSyncedTokenStateRef.current?.memberId === memberId &&
@@ -253,6 +256,34 @@ export function useNotificationSetup() {
           rememberTokenState(storedState);
         }
 
+        return fetchNotificationSettings();
+      })
+      .then((settings) => {
+        if (!active || memberIdRef.current !== memberId) {
+          return null;
+        }
+
+        pushEnabledRef.current = settings.pushEnabled;
+
+        if (!pushEnabledRef.current) {
+          if (!tokenStateForCleanup) {
+            return null;
+          }
+
+          const tokenStateToDelete = tokenStateForCleanup;
+
+          return deleteNotificationTokenSnapshot(cleanupAccessToken, tokenStateToDelete).then(
+            () => {
+              if (tokenStateForCleanup === tokenStateToDelete) {
+                tokenStateForCleanup = null;
+                lastSyncedTokenStateRef.current = null;
+              }
+
+              return null;
+            },
+          );
+        }
+
         return getCurrentNotificationToken();
       })
       .then((token) => {
@@ -273,7 +304,7 @@ export function useNotificationSetup() {
 
     tokenRefreshUnsubscribeRef.current?.();
     tokenRefreshUnsubscribeRef.current = onTokenRefresh(messaging, (token) => {
-      if (!active || isNotificationTokenSyncPaused()) {
+      if (!active || !pushEnabledRef.current || isNotificationTokenSyncPaused()) {
         return;
       }
 
@@ -290,6 +321,7 @@ export function useNotificationSetup() {
 
     return () => {
       active = false;
+      pushEnabledRef.current = false;
       tokenRefreshUnsubscribeRef.current?.();
       tokenRefreshUnsubscribeRef.current = null;
 

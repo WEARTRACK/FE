@@ -14,9 +14,18 @@ import type { SocialAuthProvider, SocialLoginPayload } from "@/features/entry/ap
 const googleIosClientId =
   "580898159630-g9sksvq1sj8vn4vi5v54p3qaspq437lr.apps.googleusercontent.com";
 const naverClientId = "pBXowk7IH0N_OHULLlJl";
-const naverClientSecret = "QdlRcsSdX5";
 const naverUrlScheme = "weartracknaverlogin";
 const naverAppName = "WEARTRACK";
+
+function getNaverClientSecret() {
+  const value = process.env.EXPO_PUBLIC_NAVER_CLIENT_SECRET?.trim();
+
+  if (!value) {
+    throw new Error("EXPO_PUBLIC_NAVER_CLIENT_SECRET is not configured.");
+  }
+
+  return value;
+}
 
 let googleConfigured = false;
 let naverConfigured = false;
@@ -67,7 +76,7 @@ function ensureNaverConfigured() {
 
   NaverLogin.initialize({
     consumerKey: naverClientId,
-    consumerSecret: naverClientSecret,
+    consumerSecret: getNaverClientSecret(),
     appName: naverAppName,
     serviceUrlSchemeIOS: naverUrlScheme,
   });

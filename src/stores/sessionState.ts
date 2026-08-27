@@ -20,6 +20,12 @@ export const defaultSessionStoreData: SessionStoreData = {
   refreshToken: null,
 };
 
+export function hasValidAuthenticatedSession(
+  session: Pick<SessionStoreData, "memberId" | "accessToken" | "refreshToken">,
+) {
+  return session.memberId !== null && Boolean(session.accessToken || session.refreshToken);
+}
+
 function normalizeNullableAccessToken(token: string) {
   const normalizedToken = normalizeAccessToken(token);
   return normalizedToken.length > 0 ? normalizedToken : null;

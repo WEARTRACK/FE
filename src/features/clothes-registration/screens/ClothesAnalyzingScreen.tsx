@@ -1,9 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import ClothesIcon from "../../../../assets/clothes-icon.svg";
+import ClothesIconImage from "../../../../assets/clothes-icon.png";
 import {
   fetchClothesPhotoAnalysis,
   uploadClothesPhoto,
@@ -169,7 +169,7 @@ export function ClothesAnalyzingScreen() {
       }}
     >
       <View className="flex-1 items-center justify-center pb-[112px]">
-        <ClothesIcon width={124} height={124} />
+        <Image resizeMode="contain" source={ClothesIconImage} style={{ height: 124, width: 124 }} />
 
         <Text className="mt-[52px] text-center font-pretendard-bold text-[20px] leading-[28px] text-text">
           {ANALYSIS_MESSAGES[messageIndex]}

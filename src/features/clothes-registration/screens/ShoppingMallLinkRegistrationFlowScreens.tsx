@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -167,6 +167,8 @@ export function ShoppingMallLinkDetailsScreen() {
   const [selectedClosetId, setSelectedClosetId] = useState<number | null>(closetId);
   const [selectedClosetSectionId, setSelectedClosetSectionId] = useState<number | null>(sectionId);
   const [isSaving, setIsSaving] = useState(false);
+  const saveInFlightRef = useRef(false);
+  const mountedRef = useRef(true);
   const closetOptions = useMemo(
     () =>
       closets.map((closet, index) => ({
@@ -196,6 +198,14 @@ export function ShoppingMallLinkDetailsScreen() {
   );
 
   useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectedCloset || selectedCloset.closetId === selectedClosetId) {
       return;
     }
@@ -220,6 +230,7 @@ export function ShoppingMallLinkDetailsScreen() {
 
     if (
       isSaving ||
+      saveInFlightRef.current ||
       !sourceUrl ||
       !imageUrl ||
       !productName ||
@@ -253,6 +264,7 @@ export function ShoppingMallLinkDetailsScreen() {
       sectionId: selectedSectionOption.requestSectionId,
     };
 
+    saveInFlightRef.current = true;
     setIsSaving(true);
 
     try {
@@ -269,15 +281,25 @@ export function ShoppingMallLinkDetailsScreen() {
         queryClient.invalidateQueries({ queryKey: ["closet"] }),
       ]);
       resetDraft();
+
+      if (!mountedRef.current) {
+        return;
+      }
+
       router.replace(clothesRegistrationRoutes.clothesComplete);
 
       if (parsedPrice === 0) {
         showToast("가격 미입력 항목은 패션소비 리포트에서 제외됩니다.");
       }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");
+      if (mountedRef.current) {
+        showToast(error instanceof Error ? error.message : "저장에 실패했어요. 다시 시도해주세요.");
+      }
     } finally {
-      setIsSaving(false);
+      saveInFlightRef.current = false;
+      if (mountedRef.current) {
+        setIsSaving(false);
+      }
     }
   };
 

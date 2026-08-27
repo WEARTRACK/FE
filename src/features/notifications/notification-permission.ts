@@ -1,6 +1,7 @@
 import {
   AuthorizationStatus,
   getMessaging,
+  hasPermission,
   isDeviceRegisteredForRemoteMessages,
   registerDeviceForRemoteMessages,
   requestPermission,
@@ -8,6 +9,11 @@ import {
 
 function isNotificationPermissionGranted(status: number) {
   return status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL;
+}
+
+export async function hasNotificationPermission() {
+  const status = await hasPermission(getMessaging());
+  return isNotificationPermissionGranted(status);
 }
 
 export async function requestNotificationPermission() {
